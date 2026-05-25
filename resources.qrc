@@ -1,0 +1,38 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/">
+        <file>images/Sympsel.png</file>
+
+<!--    窗口相关    -->
+        <file>images/关闭.png</file>
+        <file>images/最小化.png</file>
+        <file>images/最大化.png</file>
+<!--    功能相关    -->
+        <file>images/下载.png</file>
+        <file>images/设置.png</file>
+<!--    图标    -->
+        <file>images/在线.png</file>
+        <file>images/我的.png</file>
+<!--    播放相关    -->
+        <file>images/播放.png</file>
+        <file>images/停止.png</file>
+        <file>images/上一首.png</file>
+        <file>images/下一首.png</file>
+        <file>images/词.png</file>
+        <file>images/随机播放.png</file>
+        <file>images/列表播放.png</file>
+        <file>images/单曲循环.png</file>
+        <file>images/音量.png</file>
+        <file>images/添加.png</file>
+        <file>images/最近播放.png</file>
+        <file>images/喜欢.png</file>
+        <file>images/下载.png</file>
+        <file>images/推荐.png</file>
+        <file>images/电台.png</file>
+        <file>images/漫游.png</file>
+
+<!--    样式表相关    -->
+        <file>style/vscode.qss</file>
+        <file>style/vscode-light.qss</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,46 @@
+/* VS Code 风格扁平化主题 - 浅色 (类似 VS Code Light+) */
+QWidget {
+    color: #3c3c3c;
+    background-color: #ffffff;
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+QPushButton {
+    background-color: #007acc;
+    color: #ffffff;
+    border: none;
+    border-radius: 2px;
+    padding: 6px 14px;
+}
+
+QPushButton:hover { background-color: #0062a3; }
+QPushButton:pressed { background-color: #005a9e; }
+
+QLineEdit {
+    background-color: #ffffff;
+    color: #3c3c3c;
+    border: 1px solid #c8c8c8;
+    border-radius: 2px;
+}
+
+QLineEdit:focus { border-color: #007acc; }
+
+QTableView, QTableWidget {
+    background-color: #ffffff;
+    gridline-color: #e0e0e0;
+    selection-background-color: #add6ff;
+}
+
+QTabBar::tab {
+    background-color: #ececec;
+    color: #424242;
+}
+
+QTabBar::tab:selected {
+    background-color: #ffffff;
+    color: #3c3c3c;
+    border-top: 2px solid #007acc;
+}
+
+/* ... 其他控件类似调整 ... */
