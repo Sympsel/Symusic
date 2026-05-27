@@ -7,7 +7,8 @@
 class Sync {
 public:
     static void buttonBackground(const std::initializer_list<QPushButton*>& buttons,
-                                     const QString& backgroundColor, const QString& hoverColor, const QString& pressedColor) {
+                                 const QString& backgroundColor, const QString& hoverColor,
+                                 const QString& pressedColor) {
         for (const auto button : buttons) {
             button->setStyleSheet(QString(
                 "QPushButton {"
@@ -19,7 +20,7 @@ public:
                 "QPushButton:pressed {"
                 "    background-color: rgb(%3);"
                 "}"
-                ).arg(backgroundColor, hoverColor, pressedColor));
+            ).arg(backgroundColor, hoverColor, pressedColor));
         }
     }
 
@@ -53,6 +54,12 @@ public:
     static void widgetParent(QWidget* parent, const std::initializer_list<QWidget*>& widgets) {
         for (const auto widget : widgets) {
             widget->setParent(parent);
+        }
+    }
+
+    static void widgetContain(std::vector<QWidget*> contain, const std::initializer_list<QWidget*>& widgets) {
+        for (const auto& widget : widgets) {
+            contain.emplace_back(widget);
         }
     }
 };

@@ -8,7 +8,6 @@
 #include "Sync.hpp"
 #include "Create.hpp"
 #include "HeadWidget.h"
-#include "NavigationButton.h"
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent) {
@@ -65,11 +64,15 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     Sync::widgetToLayout(leftLayout, {
                              onlineMusic, myMusic
                          });
+    syncButtonContain(_navigationButtons, {
+                          推荐, 电台, 漫游, 我喜欢的, 本地下载, 最近播放
+                      });
+
     leftLayout->addStretch(1);
     return leftWidget;
 }
 
-QWidget* MainWindow::createControlWidget(QWidget* parent) const {
+QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto controlWidget = new QWidget(parent);
     const auto controlLayout = new QHBoxLayout(controlWidget);
     controlLayout->setContentsMargins(4, 0, 4, 0);
@@ -128,14 +131,15 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) const {
     return controlWidget;
 }
 
-QWidget* MainWindow::createBodyRightWidget(QWidget* parent) const {
+QWidget* MainWindow::createBodyRightWidget(QWidget* parent) {
     const auto bodyRightWidget = new QWidget(parent);
     const auto bodyRightLayout = new QVBoxLayout(bodyRightWidget);
     bodyRightLayout->setContentsMargins(4, 0, 4, 0);
 
-    const auto mainWidget = new QStackedWidget(bodyRightWidget);
+    _mainStackedWidget = new QStackedWidget(bodyRightWidget);
 
-    { // todo: 替换这段代码
+    {
+        // todo: 替换这段代码
         // 为每个页面创建独立的按钮和布局
         auto createPage = [](const QString& text, QWidget* stack) -> QWidget* {
             const auto page = new QWidget(stack);
@@ -146,14 +150,14 @@ QWidget* MainWindow::createBodyRightWidget(QWidget* parent) const {
             return page;
         };
 
-        QWidget* 推荐_页 = createPage("推荐页面", mainWidget);
-        QWidget* 电台_页 = createPage("电台页面", mainWidget);
-        QWidget* 漫游_页 = createPage("漫游页面", mainWidget);
-        QWidget* 我喜欢的_页 = createPage("我喜欢的页面", mainWidget);
-        QWidget* 本地下载_页 = createPage("本地下载页面", mainWidget);
-        QWidget* 最近播放_页 = createPage("最近播放页面", mainWidget);
+        QWidget* 推荐_页 = createPage("推荐页面", _mainStackedWidget);
+        QWidget* 电台_页 = createPage("电台页面", _mainStackedWidget);
+        QWidget* 漫游_页 = createPage("漫游页面", _mainStackedWidget);
+        QWidget* 我喜欢的_页 = createPage("我喜欢的页面", _mainStackedWidget);
+        QWidget* 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
+        QWidget* 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
-        Sync::widgetToStackedWidget(mainWidget, {
+        Sync::widgetToStackedWidget(_mainStackedWidget, {
                                         推荐_页, 电台_页, 漫游_页, 我喜欢的_页, 本地下载_页, 最近播放_页
                                     });
     }
@@ -166,12 +170,12 @@ QWidget* MainWindow::createBodyRightWidget(QWidget* parent) const {
     // 控制按钮区
     QWidget* controlWidget = createControlWidget(bodyRightWidget);
 
-    Sync::widgetToLayout(bodyRightLayout, {mainWidget, slider, controlWidget});
+    Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, slider, controlWidget});
 
     return bodyRightWidget;
 }
 
-QWidget* MainWindow::createBodyWidget(QWidget* parent) const {
+QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     const auto bodyWidget = new QWidget(parent);
 
     bodyWidget->setMinimumHeight(100);
@@ -183,6 +187,45 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) const {
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
+
+    // 将按钮与页面连接
+    const size_t size = static_cast<size_t>(_mainStackedWidget->count());
+    if (size != _navigationButtons.size()) {
+        LOG_FATAL() << "页面数(" << _mainStackedWidget->count()
+            << ")与按钮数(" << _navigationButtons.size() << ")不匹配";
+        exit(EXIT_FAILURE);
+    }
+
+    // 保存每个按钮的原始样式表
+    std::vector<QString> originalStyleSheets;
+    for (size_t i = 0; i < _navigationButtons.size(); ++i) {
+        originalStyleSheets.emplace_back(_navigationButtons[i]->styleSheet());
+        LOG_DEBUG() << "按钮 " << i << " 的原始样式长度: " << originalStyleSheets[i].length();
+    }
+
+    // 点击按钮切换页面
+    for (size_t i = 0; i < size; ++i) {
+        connect(_navigationButtons[i], &QPushButton::clicked, this, [this, i]() {
+            _mainStackedWidget->setCurrentIndex(static_cast<int>(i));
+        });
+    }
+
+    const Color& color = ColorTheme::getInstance().getColor();
+    // 监听页面切换信号，自动更新按钮高亮
+    connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
+            [this, originalStyleSheets, color](const int index) {
+                for (size_t i = 0; i < _navigationButtons.size(); ++i) {
+                    const bool selected = (static_cast<int>(i) == index);
+                    _navigationButtons[i]->setSelected(selected, originalStyleSheets[i], color);
+                }
+                LOG_DEBUG() << "已切换到第 " << index << " 页";
+            });
+
+    // 默认选中第一个页面
+    if (!_navigationButtons.empty()) {
+        _navigationButtons[0]->setSelected(true, originalStyleSheets[0], color);
+    }
+
     return bodyWidget;
 }
 
@@ -209,30 +252,39 @@ QWidget* MainWindow::createFunctionWidget(QWidget* parent) {
     return functionWidget;
 }
 
-void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) const {
-    Sync::buttonBackground(buttons, _color.background, _color.hoverOn, _color.pressed);
+void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
+    const Color& color = ColorTheme::getInstance().getColor();
+    Sync::buttonBackground(buttons, color.background, color.hoverOn, color.pressed);
 }
 
-void MainWindow::setBorder(const bool enabled = false) {
-    QWidget* cw = this->centralWidget();
+void MainWindow::syncButtonContain(std::vector<NavigationButton*>& navigationButtonList,
+                                   const std::initializer_list<NavigationButton*>& buttons) {
+    for (const auto& button : buttons) {
+        navigationButtonList.emplace_back(button);
+    }
+}
+
+void MainWindow::setBorder(const bool enabled = false) const {
+    const Color& color = ColorTheme::getInstance().getColor();
+    QWidget* currentWidget = this->centralWidget();
     if (enabled) {
-        if (cw) {
+        if (currentWidget) {
             LOG_DEBUG() << "启用调试边框";
-            cw->setStyleSheet(QString(
+            currentWidget->setStyleSheet(QString(
                 "background-color: rgb(%1);"
                 "border: 2px solid rgb(%2);"
-                ).arg(_color.background, _color.border));
+            ).arg(color.background, color.border));
         }
     } else {
         LOG_DEBUG() << "启用常规边框";
-        if (cw) {
-            cw->setObjectName("MainCentralWidget");
-            cw->setStyleSheet(QString(
+        if (currentWidget) {
+            currentWidget->setObjectName("MainCentralWidget");
+            currentWidget->setStyleSheet(QString(
                 "#MainCentralWidget {"
                 "   background-color: rgb(%1);"
                 "   border: 2px solid rgb(%2);"
                 "}"
-                ).arg(_color.background, _color.border));
+            ).arg(color.background, color.border));
         }
     }
 }

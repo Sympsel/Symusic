@@ -2,21 +2,13 @@
 
 #include <QMainWindow>
 #include <QStatusBar>
-#include <QIcon>
-#include <QPushButton>
-#include <QPushButton>
-#include <QStackedWidget>
-#include <QProgressBar>
 #include <QListWidget>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
 #include <QLineEdit>
 #include <QPainter>
 #include <initializer_list>
 #include <QPainterPath>
 
-#include "Color.hpp"
+#include "NavigationButton.h"
 #include "Sync.hpp"
 
 
@@ -26,19 +18,21 @@ class MainWindow final : public QMainWindow {
     explicit MainWindow(QWidget *parent = nullptr, bool statusBarVisible = true, bool debugBorder = false);
     ~MainWindow() override;
 private:
-    QWidget* createControlWidget(QWidget* parent = nullptr) const;
-    QWidget* createBodyWidget(QWidget* parent = nullptr) const;
-    QWidget* createBodyRightWidget(QWidget* parent) const;
+    QWidget* createBodyWidget(QWidget* parent = nullptr);
+    QWidget* createBodyRightWidget(QWidget* parent);
     QWidget* createFunctionWidget(QWidget* parent = nullptr);
-    void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) const;
+    QWidget* createBodyLeftWidget(QWidget* bodyWidget);
     // 显示调试边框，可以显示子控件的边界
-    void setBorder(bool enabled);
+    void setBorder(bool enabled) const;
 
-    static QWidget* createBodyLeftWidget(QWidget* bodyWidget);
+    static QWidget* createControlWidget(QWidget* parent = nullptr);
+    static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
+    static void syncButtonContain(std::vector<NavigationButton*>& navigationButtonList, const std::initializer_list<NavigationButton*>& buttons);
 protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
 private:
-    Color _color;
     QPoint _dragPos;
+    QStackedWidget* _mainStackedWidget;
+    std::vector<NavigationButton*> _navigationButtons;
 };
