@@ -1,7 +1,6 @@
 #pragma once
 
-#include <qpushbutton.h>
-
+#include <QPushButton>
 #include <QWidget>
 
 #include "Color.hpp"
@@ -13,8 +12,10 @@ public:
     QWidget* createFunctionWidget(QWidget* parent);
     void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) const;
 signals:
-    // 向父窗口发送关闭请求
+    // 向父窗口发送请求
     void closeRequested();
+    void minimizeRequested();
+    void maximizeRequested();
 
 private:
     Color _color;

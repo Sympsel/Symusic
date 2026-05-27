@@ -26,10 +26,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     const auto headBodyLayout = new QVBoxLayout(centralWidget);
 
     const auto headWidget = new HeadWidget(this);
-    connect(headWidget, &HeadWidget::closeRequested, this, [this]() {
-        LOG_INFO() << "程序正常退出";
-        this->close();
-    });
+    handleRequestFromHeadButton(headWidget);
 
     QWidget* bodyWidget = createBodyWidget();
     QFrame* line = Create::line(QFrame::HLine);
@@ -96,11 +93,15 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto centralWidget = new QWidget(controlWidget);
     const auto centralLayout = new QHBoxLayout(centralWidget);
     const auto playModeButton = new QPushButton(QIcon(":/images/随机播放.png"), "", centralWidget);
+    playModeButton->setToolTip("点击切换到xxx模式");
+    playModeButton->setToolTipDuration(3000);
     const auto prevButton = new QPushButton(QIcon(":/images/上一首.png"), "", centralWidget);
     const auto playButton = new QPushButton(QIcon(":/images/播放.png"), "", centralWidget);
     const auto nextButton = new QPushButton(QIcon(":/images/下一首.png"), "", centralWidget);
     const auto volumeButton = new QPushButton(QIcon(":/images/音量.png"), "", centralWidget);
     const auto addToButton = new QPushButton(QIcon(":/images/添加.png"), "", centralWidget);
+    addToButton->setToolTip("添加到");
+    addToButton->setToolTipDuration(3000);
 
     // QSlider* volumeSlider = new QSlider(Qt::Horizontal);
     // volumeSlider->setRange(0, 100);
@@ -131,12 +132,12 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     return controlWidget;
 }
 
-QWidget* MainWindow::createBodyRightWidget(QWidget* parent) {
-    const auto bodyRightWidget = new QWidget(parent);
-    const auto bodyRightLayout = new QVBoxLayout(bodyRightWidget);
+QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
+    const auto mainWidget = new QWidget(parent);
+    const auto bodyRightLayout = new QVBoxLayout(mainWidget);
     bodyRightLayout->setContentsMargins(4, 0, 4, 0);
 
-    _mainStackedWidget = new QStackedWidget(bodyRightWidget);
+    _mainStackedWidget = new QStackedWidget(mainWidget);
 
     {
         // todo: 替换这段代码
@@ -162,17 +163,17 @@ QWidget* MainWindow::createBodyRightWidget(QWidget* parent) {
                                     });
     }
 
-    const auto slider = new QSlider(Qt::Horizontal, bodyRightWidget);
+    const auto slider = new QSlider(Qt::Horizontal, mainWidget);
     slider->setRange(0, 100);
     // 刻度显示在下方
     slider->setTickPosition(QSlider::TicksBelow);
 
     // 控制按钮区
-    QWidget* controlWidget = createControlWidget(bodyRightWidget);
+    QWidget* controlWidget = createControlWidget(mainWidget);
 
     Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, slider, controlWidget});
 
-    return bodyRightWidget;
+    return mainWidget;
 }
 
 QWidget* MainWindow::createBodyWidget(QWidget* parent) {
@@ -183,13 +184,13 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
     QFrame* line = Create::line(QFrame::VLine);
 
-    QWidget* rightWidget = createBodyRightWidget(bodyWidget);
+    QWidget* rightWidget = createMainStackedWidget(bodyWidget);
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
 
     // 将按钮与页面连接
-    const size_t size = static_cast<size_t>(_mainStackedWidget->count());
+    const auto size = static_cast<size_t>(_mainStackedWidget->count());
     if (size != _navigationButtons.size()) {
         LOG_FATAL() << "页面数(" << _mainStackedWidget->count()
             << ")与按钮数(" << _navigationButtons.size() << ")不匹配";
@@ -229,29 +230,6 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     return bodyWidget;
 }
 
-QWidget* MainWindow::createFunctionWidget(QWidget* parent) {
-    const auto functionWidget = new QWidget(parent);
-
-    const auto layout = new QHBoxLayout(functionWidget);
-
-    const auto settingsButton = new QPushButton(QIcon(":/images/设置.png"), "", functionWidget);
-    const auto minimizeButton = new QPushButton(QIcon(":/images/最小化.png"), "", functionWidget);
-    const auto maximizeButton = new QPushButton(QIcon(":/images/最大化.png"), "", functionWidget);
-    const auto closeButton = new QPushButton(QIcon(":/images/关闭.png"), "", functionWidget);
-    connect(closeButton, &QPushButton::clicked, this, [this]() {
-        LOG_INFO() << "程序正常退出";
-        this->close();
-    });
-    const auto buttons = {settingsButton, minimizeButton, maximizeButton, closeButton};
-    this->syncButtonBackground(buttons);
-    Sync::buttonSize(QSize(30, 30), buttons);
-
-    layout->addStretch(1);
-    Sync::buttonToLayout(layout, buttons);
-
-    return functionWidget;
-}
-
 void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
     const Color& color = ColorTheme::getInstance().getColor();
     Sync::buttonBackground(buttons, color.background, color.hoverOn, color.pressed);
@@ -262,6 +240,26 @@ void MainWindow::syncButtonContain(std::vector<NavigationButton*>& navigationBut
     for (const auto& button : buttons) {
         navigationButtonList.emplace_back(button);
     }
+}
+
+void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
+    connect(headWidget, &HeadWidget::maximizeRequested, this, [this]() {
+        LOG_INFO() << "程序最大化";
+        // todo 切换一下按钮图标
+        if (this->isMaximized()) {
+            this->showNormal();
+        } else {
+            this->showMaximized();
+        }
+    });
+    connect(headWidget, &HeadWidget::minimizeRequested, this, [this]() {
+        LOG_INFO() << "程序最小化";
+        this->showMinimized();
+    });
+    connect(headWidget, &HeadWidget::closeRequested, this, [this]() {
+        LOG_INFO() << "程序正常退出";
+        this->close();
+    });
 }
 
 void MainWindow::setBorder(const bool enabled = false) const {

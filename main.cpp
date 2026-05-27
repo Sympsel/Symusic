@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QFile>
+#include <QLoggingCategory>
 
 #include "mainwindow.h"
 #include "Log.hpp"
@@ -13,7 +14,13 @@ QString loadQss(const QString& path) {
     return file.readAll();
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
+    // 抑制 libpng 警告
+    // qSetMessagePattern("%{if-debug}%{message}%{endif}");
+    // 禁用 libpng 相关的警告
+    QLoggingCategory::setFilterRules("qt.image.svg.debug=false\n"
+                                     "default.debug=false");
+
     // 启用 Windows 控制台 ANSI 颜色支持，用于输出带颜色的调试信息
     sym::InitAnsiSupport();
     QApplication a(argc, argv);
