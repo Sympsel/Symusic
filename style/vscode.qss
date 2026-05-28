@@ -231,44 +231,66 @@ QProgressBar::chunk {
 /* ===== 滚动条 ===== */
 QScrollBar:vertical {
     background-color: #1e1e1e;
-    width: 14px;
+    width: 10px;
     border: none;
+    margin: 0px;
 }
 
 QScrollBar::handle:vertical {
     background-color: #424242;
-    border-radius: 7px;
+    border-radius: 5px;
     min-height: 30px;
-    margin: 2px;
 }
 
 QScrollBar::handle:vertical:hover {
     background-color: #4f4f4f;
 }
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+QScrollBar::handle:vertical:pressed {
+    background-color: #5a5a5a;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
     height: 0px;
+    border: none;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
 }
 
 QScrollBar:horizontal {
     background-color: #1e1e1e;
-    height: 14px;
+    height: 10px;
     border: none;
+    margin: 0px;
 }
 
 QScrollBar::handle:horizontal {
     background-color: #424242;
-    border-radius: 7px;
+    border-radius: 5px;
     min-width: 30px;
-    margin: 2px;
 }
 
 QScrollBar::handle:horizontal:hover {
     background-color: #4f4f4f;
 }
 
-QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+QScrollBar::handle:horizontal:pressed {
+    background-color: #5a5a5a;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
     width: 0px;
+    border: none;
+}
+
+QScrollBar::add-page:horizontal,
+QScrollBar::sub-page:horizontal {
+    background: none;
 }
 
 /* ===== 标签 ===== */

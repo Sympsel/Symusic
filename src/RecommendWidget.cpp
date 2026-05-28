@@ -1,10 +1,14 @@
 #include "RecommendWidget.h"
 
 #include <QScrollArea>
+#include <string>
 
-void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons) {
+#include "PlaylistBox.h"
+
+void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons, const int width, const int height) {
     const auto& color = ColorTheme::getInstance().getColor();
-    QString width = "30", height = "80";
+    QString widthStr = std::to_string(width).c_str();
+    QString heightStr = std::to_string(height).c_str();
     for (const auto button : buttons) {
         button->setObjectName("navArrowButton");
 
@@ -26,7 +30,7 @@ void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>&
             "QPushButton#navArrowButton:pressed {"
             "    background-color: rgb(%2);"
             "}"
-        ).arg(color.arrowButtonHover, color.arrowButtonPressed, width, height);
+        ).arg(color.arrowButtonHover, color.arrowButtonPressed, widthStr, heightStr);
 
         button->setStyleSheet(style);
     }
@@ -41,11 +45,19 @@ RecommendWidget::RecommendWidget(QWidget* parent): QWidget(parent) {
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setFrameShape(QFrame::NoFrame);
-    auto scrollContent = new QWidget();
-    auto contentLayout = new QVBoxLayout(scrollContent);
-    contentLayout->setContentsMargins(0, 0, 0, 0);
-    auto recommendWidget = createWidgetItem("今日推荐");
-    auto youMayLikeWidget = createWidgetItem("猜你喜欢");
+    const auto scrollContent = new QWidget();
+    const auto contentLayout = new QVBoxLayout(scrollContent);
+    // contentLayout->setContentsMargins(0, 0, 0, 0);
+    auto recommendWidget = createWidgetItem("今日推荐", {
+        new PlaylistBox(":/images/Sympsel.png", "111"),
+        new PlaylistBox(":/images/Sympsel.png", "222"),
+        new PlaylistBox(":/images/Sympsel.png", "333")
+    });
+    auto youMayLikeWidget = createWidgetItem("猜你喜欢", {
+        new PlaylistBox(":/images/Sympsel.png", "111"),
+        new PlaylistBox(":/images/Sympsel.png", "222"),
+        new PlaylistBox(":/images/Sympsel.png", "333")
+    });
 
     Sync::widgetToLayout(contentLayout, {
                              recommendWidget, youMayLikeWidget
@@ -56,7 +68,7 @@ RecommendWidget::RecommendWidget(QWidget* parent): QWidget(parent) {
     mainLayout->addWidget(scrollArea);
 }
 
-QWidget* RecommendWidget::createWidgetItem(const QString& name) {
+QWidget* RecommendWidget::createWidgetItem(const QString& name, const std::initializer_list<PlaylistBox*>& boxs) {
     const auto vWidget = new QWidget();
     const auto vWidgetLayout = new QVBoxLayout(vWidget);
     vWidgetLayout->setContentsMargins(0, 0, 0, 0);
@@ -67,17 +79,22 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
     label->setStyleSheet("font-size: 25px;");
 
     auto leftButton = new QPushButton(QIcon(":/images/向左.png"), "");
-    // auto centralWidget = new QWidget();
+    auto centralWidget = new QWidget();
+    const auto centralHLayout = new QHBoxLayout(centralWidget);
+    centralHLayout->setContentsMargins(10, 0, 10, 0);
+    for (const auto& box : boxs) {
+        centralHLayout->addWidget(box);
+    }
     auto rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
-    syncButtonStyle({leftButton, rightButton});
+    syncButtonStyle({leftButton, rightButton}, 30, 120);
     auto widgetH = new QWidget();
     widgetH->setContentsMargins(0, 0, 0, 0);
 
     const auto hWidgetLayout = new QHBoxLayout(widgetH);
-    hWidgetLayout->addWidget(leftButton);
-    // todo replace it
-    hWidgetLayout->addStretch(1);
-    hWidgetLayout->addWidget(rightButton);
+    Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
+    //hWidgetLayout->addWidget(leftButton);
+    //hWidgetLayout->addStretch(1);
+    //hWidgetLayout->addWidget(rightButton);
 
     Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
     return vWidget;
