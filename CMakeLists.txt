@@ -14,17 +14,21 @@ find_package(Qt6 REQUIRED COMPONENTS
         Widgets
 )
 
+include_directories(include)
+
 add_executable(SymMusic_2
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
+        Main.cpp
         resources.qrc
-        ListWidget.cpp
-        ListWidget.h
-        HeadWidget.cpp
-        HeadWidget.h
-        NavigationButton.cpp
-        NavigationButton.h
+        src/MainWindow.cpp
+        include/MainWindow.h
+        src/ListWidget.cpp
+        include/ListWidget.h
+        src/HeadWidget.cpp
+        include/HeadWidget.h
+        src/NavigationButton.cpp
+        include/NavigationButton.h
+        src/RecommendWidget.cpp
+        include/RecommendWidget.h
 )
 
 target_link_libraries(SymMusic_2
@@ -59,7 +63,6 @@ if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
                 "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
     endif ()
 
-    # 复制 Qt6 的 DLL（修改为 Qt6）
     foreach (QT_LIB Core Gui Widgets)
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy
