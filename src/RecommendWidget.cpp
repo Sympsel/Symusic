@@ -1,9 +1,11 @@
 #include "RecommendWidget.h"
 
 #include <QScrollArea>
+#include <QVBoxLayout>
 #include <string>
 
 #include "PlaylistBox.h"
+#include "Sync.hpp"
 
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons, const int width, const int height) {
     const auto& color = ColorTheme::getInstance().getColor();
