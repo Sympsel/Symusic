@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QLoggingCategory>
+#include <random>
 
 #include "MainWindow.h"
 #include "Log.hpp"
@@ -20,10 +21,8 @@ int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
     // a.setStyleSheet(loadQss(":/style/vscode-light.qss"));
     a.setStyleSheet(loadQss(":/style/vscode.qss"));
-    MainWindow w(nullptr, true, false);
-
+    MainWindow w(nullptr, true, true);
     w.show();
 
-
-    return a.exec();
+    return QApplication::exec();
 }

@@ -14,7 +14,7 @@
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent) {
     {
-        this->resize(800, 600);
+        this->resize(846, 600);
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel("就绪"));
@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     }
 
     const auto centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
+    this->setCentralWidget(centralWidget);
 
     const auto headBodyLayout = new QVBoxLayout(centralWidget);
 
@@ -74,22 +74,22 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
 QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto controlWidget = new QWidget(parent);
     const auto controlLayout = new QHBoxLayout(controlWidget);
-    controlLayout->setContentsMargins(4, 0, 4, 0);
+    controlWidget->setContentsMargins(0, 0, 0, 0);
 
     // [图片 歌名/歌手]
-    QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 40);
+    QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
     const auto leftWidget = new QWidget(controlWidget);
-    const auto leftInnerWidget = new QWidget(leftWidget);
-    const auto songInfoLayout = new QHBoxLayout(leftWidget);
+    const auto songInfoWidget = new QWidget(leftWidget);
+    const auto leftLayout = new QHBoxLayout(leftWidget);
 
-    const auto songInfoInnerLayout = new QVBoxLayout(leftInnerWidget);
+    const auto songInfoLayout = new QVBoxLayout(songInfoWidget);
     const auto songName = new QLabel("歌曲");
     const auto singer = new QLabel("歌手");
-    songInfoInnerLayout->addWidget(songName);
-    songInfoInnerLayout->addWidget(singer);
+    songInfoLayout->addWidget(songName);
+    songInfoLayout->addWidget(singer);
 
-    songInfoLayout->addWidget(songCover);
-    songInfoLayout->addWidget(leftInnerWidget);
+    leftLayout->addWidget(songCover);
+    leftLayout->addWidget(songInfoWidget);
 
     // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
     const auto centralWidget = new QWidget(controlWidget);
@@ -112,25 +112,27 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto buttons = {
         playModeButton, prevButton, playButton, nextButton, volumeButton, addToButton
     };
-    Sync::buttonSize(QSize(30, 30), buttons);
-    Sync::buttonToLayout(centralLayout, buttons);
+    constexpr QSize buttonsSize(30, 30);
+    Sync::buttonFixedSize(buttonsSize, buttons);
+    Sync::buttonToHLayout(centralLayout, buttons);
 
     // [进度]
     const auto rightWidget = new QWidget(controlWidget);
     const auto rightLayout = new QHBoxLayout(rightWidget);
     const auto processLabel = new QLabel("00:00/3:14");
-    const auto lyricsButton = new QPushButton(QIcon(":/images/词.png"), "", rightWidget);
-    lyricsButton->setFixedSize(QSize(30, 30));
+    const auto lyricsButton = new QPushButton(QIcon(":/images/词.png"), "");
+    lyricsButton->setFixedSize(buttonsSize);
     syncButtonBackground(buttons);
     syncButtonBackground({lyricsButton});
     rightLayout->addWidget(processLabel);
-    rightLayout->addWidget(lyricsButton);
+    rightLayout->addWidget(lyricsButton, 0, Qt::AlignCenter);
 
     controlLayout->addWidget(leftWidget);
     controlLayout->addStretch(1);
     controlLayout->addWidget(centralWidget);
     controlLayout->addStretch(1);
     controlLayout->addWidget(rightWidget);
+    Sync::clearLayoutVMargins({controlLayout, leftLayout, centralLayout, rightLayout});
     return controlWidget;
 }
 
@@ -175,7 +177,8 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
     QWidget* controlWidget = createControlWidget(mainWidget);
 
     Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, slider, controlWidget});
-
+    bodyRightLayout->setContentsMargins(0, 0, 0, 0);
+    bodyRightLayout->setSpacing(0);
     return mainWidget;
 }
 
@@ -191,7 +194,6 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
-
     // 将按钮与页面连接
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
     if (size != _navigationButtons.size()) {
@@ -309,4 +311,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
     QWidget::mousePressEvent(event);
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    qDebug() << this->width();
+}

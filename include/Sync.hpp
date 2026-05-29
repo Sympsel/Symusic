@@ -24,7 +24,7 @@ public:
         }
     }
 
-    static void buttonSize(const QSize size, const std::initializer_list<QPushButton*>& buttons) {
+    static void buttonFixedSize(const QSize size, const std::initializer_list<QPushButton*>& buttons) {
         for (const auto button : buttons) {
             button->setFixedSize(size);
         }
@@ -33,6 +33,30 @@ public:
     static void buttonToLayout(QLayout* layout, const std::initializer_list<QPushButton*>& buttons) {
         for (const auto button : buttons) {
             layout->addWidget(button);
+        }
+    }
+
+    static void buttonToHLayout(QHBoxLayout* layout,
+                                const std::initializer_list<QPushButton*>& buttons,
+                                const bool isCentral = true) {
+        for (const auto button : buttons) {
+            if (isCentral) {
+                layout->addWidget(button, 0, Qt::AlignCenter);
+            } else {
+                layout->addWidget(button);
+            }
+        }
+    }
+
+    static void buttonToVLayout(QVBoxLayout* layout,
+                                const std::initializer_list<QPushButton*>& buttons,
+                                const bool isCentral = true) {
+        for (const auto button : buttons) {
+            if (isCentral) {
+                layout->addWidget(button, 0, Qt::AlignCenter);
+            } else {
+                layout->addWidget(button);
+            }
         }
     }
 
@@ -60,6 +84,13 @@ public:
     static void widgetContain(std::vector<QWidget*> contain, const std::initializer_list<QWidget*>& widgets) {
         for (const auto& widget : widgets) {
             contain.emplace_back(widget);
+        }
+    }
+
+    static void clearLayoutVMargins(const std::initializer_list<QLayout*>& layouts) {
+        for (const auto& layout : layouts) {
+            auto margins = layout->contentsMargins();
+            layout->setContentsMargins(margins.left(), 0, margins.right(), 0);
         }
     }
 };

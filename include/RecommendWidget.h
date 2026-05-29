@@ -1,17 +1,35 @@
 #pragma once
 
 #include "ListWidget.h"
+#include "Log.hpp"
 #include "PlaylistItem.h"
 
 class RecommendWidget : public QWidget {
+    using Items = std::vector<PlaylistItem*>;
+
 private:
     static void syncButtonStyle(const std::initializer_list<QPushButton*>& buttons, int width, int height);
+
+    void initPlaylist();
+
+    [[nodiscard]] Items displayList(const Items& items, int begin) const;
+
+    static QWidget* createWidgetItem(const QString& name, const Items& items);
+
 
 public:
     explicit RecommendWidget(QWidget* parent);
 
-    static QWidget* createWidgetItem(const QString& name, const std::initializer_list<PlaylistItem*>& boxs);
+    void setRowSize(const int rowSize) {
+        _rowSize = rowSize;
+    }
+
+    ~RecommendWidget() override;;
 
 private:
-    std::vector<PlaylistItem*> _playlist;
+    Items _todayRecommendList;
+    int _todyRecommendBegin;
+    Items _youMayLikeList;
+    int _youMayLikeBegin;
+    int _rowSize = 4;
 };

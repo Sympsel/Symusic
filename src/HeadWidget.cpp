@@ -70,7 +70,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
     });
     const auto buttons = {settingsButton, minimizeButton, maximizeButton, closeButton};
     this->syncButtonBackground(buttons);
-    Sync::buttonSize(QSize(30, 30), buttons);
+    Sync::buttonFixedSize(QSize(30, 30), buttons);
 
     layout->addStretch(1);
     Sync::buttonToLayout(layout, buttons);

@@ -36,8 +36,6 @@ PlaylistItem::PlaylistItem(QString coverPath, QString description, QWidget* pare
     descriptionLabel->setFixedSize(coverLength - 16, coverHeight - coverLength - 4);
     descriptionLabel->setAlignment(Qt::AlignCenter);
 
-    // layout->addWidget(_button);
-    // layout->addWidget(descriptionLabel);
     layout->addWidget(_button, 0, Qt::AlignHCenter);
     layout->addWidget(descriptionLabel, 0, Qt::AlignHCenter);
 }
