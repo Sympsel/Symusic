@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
     // a.setStyleSheet(loadQss(":/style/vscode-light.qss"));
     a.setStyleSheet(loadQss(":/style/vscode.qss"));
-    MainWindow w(nullptr, true, true);
+    MainWindow w(nullptr, true, false);
     w.show();
 
     return QApplication::exec();
