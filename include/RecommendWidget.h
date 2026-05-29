@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ListWidget.h"
-#include "PlaylistBox.h"
+#include "PlaylistItem.h"
 
 class RecommendWidget : public QWidget {
 private:
@@ -10,5 +10,8 @@ private:
 public:
     explicit RecommendWidget(QWidget* parent);
 
-    static QWidget* createWidgetItem(const QString& name, const std::initializer_list<PlaylistBox*>& boxs);
+    static QWidget* createWidgetItem(const QString& name, const std::initializer_list<PlaylistItem*>& boxs);
+
+private:
+    std::vector<PlaylistItem*> _playlist;
 };

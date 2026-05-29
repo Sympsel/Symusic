@@ -2,6 +2,7 @@
 
 #include <QMouseEvent>
 #include <QGraphicsDropShadowEffect>
+#include <QStatusBar>
 
 #include "ListWidget.h"
 #include "Log.hpp"

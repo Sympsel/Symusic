@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QStatusBar>
 #include <QListWidget>
 #include <QLineEdit>
 #include <QPainter>
@@ -21,7 +20,6 @@ class MainWindow final : public QMainWindow {
 private:
     QWidget* createBodyWidget(QWidget* parent = nullptr);
     QWidget* createMainStackedWidget(QWidget* parent);
-    // QWidget* createFunctionWidget(QWidget* parent = nullptr);
     QWidget* createBodyLeftWidget(QWidget* bodyWidget);
     // 显示调试边框，可以显示子控件的边界
     void setBorder(bool enabled) const;

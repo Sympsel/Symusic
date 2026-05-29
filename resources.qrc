@@ -3,19 +3,19 @@
     <qresource prefix="/">
         <file>images/Sympsel.png</file>
 
-<!--    窗口相关    -->
+        <!--    窗口相关    -->
         <file>images/关闭.png</file>
         <file>images/最小化.png</file>
         <file>images/最大化.png</file>
-<!--    功能相关    -->
+        <!--    功能相关    -->
         <file>images/下载.png</file>
         <file>images/设置.png</file>
         <file>images/向左.png</file>
         <file>images/向右.png</file>
-<!--    图标    -->
+        <!--    图标    -->
         <file>images/在线.png</file>
         <file>images/我的.png</file>
-<!--    播放相关    -->
+        <!--    播放相关    -->
         <file>images/播放.png</file>
         <file>images/停止.png</file>
         <file>images/上一首.png</file>
@@ -33,7 +33,43 @@
         <file>images/电台.png</file>
         <file>images/漫游.png</file>
 
-<!--    样式表相关    -->
+        <!--    资源相关    -->
+        <file>images/items/1.png</file>
+        <file>images/items/2.png</file>
+        <file>images/items/3.png</file>
+        <file>images/items/4.png</file>
+        <file>images/items/5.png</file>
+        <file>images/items/6.png</file>
+        <file>images/items/7.png</file>
+        <file>images/items/8.png</file>
+        <file>images/items/9.png</file>
+        <file>images/items/10.png</file>
+        <file>images/items/11.png</file>
+        <file>images/items/12.png</file>
+        <file>images/items/13.png</file>
+        <file>images/items/14.png</file>
+        <file>images/items/15.png</file>
+        <file>images/items/16.png</file>
+        <file>images/items/17.png</file>
+        <file>images/items/18.png</file>
+        <file>images/items/19.png</file>
+        <file>images/items/20.png</file>
+        <file>images/items/21.png</file>
+        <file>images/items/22.png</file>
+        <file>images/items/23.png</file>
+        <file>images/items/24.png</file>
+        <file>images/items/25.png</file>
+        <file>images/items/26.png</file>
+        <file>images/items/27.png</file>
+        <file>images/items/28.png</file>
+        <file>images/items/29.png</file>
+        <file>images/items/30.png</file>
+        <file>images/items/31.png</file>
+        <file>images/items/32.png</file>
+        <file>images/items/33.png</file>
+        <file>images/items/34.png</file>
+        <file>images/items/35.png</file>
+        <!--    样式表相关    -->
         <file>style/vscode.qss</file>
         <file>style/vscode-light.qss</file>
     </qresource>

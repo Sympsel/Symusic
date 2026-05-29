@@ -29,8 +29,8 @@ add_executable(SymMusic_2
         include/NavigationButton.h
         src/RecommendWidget.cpp
         include/RecommendWidget.h
-        src/PlaylistBox.cpp
-        include/PlaylistBox.h
+        src/PlaylistItem.cpp
+        include/PlaylistItem.h
 )
 
 target_link_libraries(SymMusic_2

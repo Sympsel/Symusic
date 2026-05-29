@@ -4,7 +4,6 @@
 #include <QVBoxLayout>
 #include <string>
 
-#include "PlaylistBox.h"
 #include "Sync.hpp"
 
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons, const int width, const int height) {
@@ -42,23 +41,22 @@ RecommendWidget::RecommendWidget(QWidget* parent): QWidget(parent) {
     const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
-    auto scrollArea = new QScrollArea(this);
+    const auto scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setFrameShape(QFrame::NoFrame);
     const auto scrollContent = new QWidget();
     const auto contentLayout = new QVBoxLayout(scrollContent);
-    // contentLayout->setContentsMargins(0, 0, 0, 0);
     auto recommendWidget = createWidgetItem("今日推荐", {
-        new PlaylistBox(":/images/Sympsel.png", "111"),
-        new PlaylistBox(":/images/Sympsel.png", "222"),
-        new PlaylistBox(":/images/Sympsel.png", "333")
+        new PlaylistItem(":/images/items/1.png", "111"),
+        new PlaylistItem(":/images/items/2.png", "222"),
+        new PlaylistItem(":/images/items/3.png", "333")
     });
     auto youMayLikeWidget = createWidgetItem("猜你喜欢", {
-        new PlaylistBox(":/images/Sympsel.png", "111"),
-        new PlaylistBox(":/images/Sympsel.png", "222"),
-        new PlaylistBox(":/images/Sympsel.png", "333")
+        new PlaylistItem(":/images/items/4.png", "111"),
+        new PlaylistItem(":/images/items/5.png", "222"),
+        new PlaylistItem(":/images/items/6.png", "333")
     });
 
     Sync::widgetToLayout(contentLayout, {
@@ -70,7 +68,7 @@ RecommendWidget::RecommendWidget(QWidget* parent): QWidget(parent) {
     mainLayout->addWidget(scrollArea);
 }
 
-QWidget* RecommendWidget::createWidgetItem(const QString& name, const std::initializer_list<PlaylistBox*>& boxs) {
+QWidget* RecommendWidget::createWidgetItem(const QString& name, const std::initializer_list<PlaylistItem*>& boxs) {
     const auto vWidget = new QWidget();
     const auto vWidgetLayout = new QVBoxLayout(vWidget);
     vWidgetLayout->setContentsMargins(0, 0, 0, 0);
