@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPushButton>
+#include <QVBoxLayout>
 
 #include "NavigationButton.h"
 
@@ -16,4 +17,5 @@ private:
     QPushButton* _button;
     QString _coverPath;
     QString _description;
+    QVBoxLayout* _layout;
 };

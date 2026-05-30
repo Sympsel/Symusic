@@ -12,9 +12,9 @@ PlaylistItem::PlaylistItem(QString coverPath, QString description, QWidget* pare
     constexpr int coverLength = 120, coverHeight = 150;
     this->setFixedSize(coverLength, coverHeight);
 
-    const auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(8, 8, 8, 4);
-    layout->setSpacing(4);
+    _layout = new QVBoxLayout(this);
+    _layout->setContentsMargins(8, 8, 8, 4);
+    _layout->setSpacing(4);
 
     _button = new QPushButton(this);
     _button->setFixedSize(coverLength - 16, coverLength - 16);
@@ -36,8 +36,8 @@ PlaylistItem::PlaylistItem(QString coverPath, QString description, QWidget* pare
     descriptionLabel->setFixedSize(coverLength - 16, coverHeight - coverLength - 4);
     descriptionLabel->setAlignment(Qt::AlignCenter);
 
-    layout->addWidget(_button, 0, Qt::AlignHCenter);
-    layout->addWidget(descriptionLabel, 0, Qt::AlignHCenter);
+    _layout->addWidget(_button, 0, Qt::AlignHCenter);
+    _layout->addWidget(descriptionLabel, 0, Qt::AlignHCenter);
 }
 
 bool PlaylistItem::eventFilter(QObject* watched, QEvent* event) {

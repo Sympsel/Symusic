@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QResizeEvent>
+#include <QTimer>
 
 #include "ListWidget.h"
 #include "Log.hpp"
@@ -27,6 +28,13 @@ private:
 
     QWidget* createWidgetItem(const QString& name);
 
+    void updateWidgetLayout(const QString& name);
+
+    // resize 事件处理
+    void resizeEvent(QResizeEvent* event) override;
+
+    void updateRowSize();
+
 public:
     explicit RecommendWidget(QWidget* parent);
 
@@ -35,9 +43,6 @@ public:
     }
 
     ~RecommendWidget() override;;
-
-    bool eventFilter(QObject* watched, QEvent* event) override;
-
 
     [[nodiscard]] int getRowSize() const {
         for (const auto& [key, value] : _contain) {
@@ -49,8 +54,7 @@ public:
 
 private:
     std::unordered_map<QString, Alist> _contain;
-    // std::vector<Alist> _contain;
-    // int _todyRecommendBegin;
-    // int _youMayLikeBegin;
     int _rowSize = 4;
+    // 防抖定时器
+    QTimer* _resizeTimer = nullptr;
 };

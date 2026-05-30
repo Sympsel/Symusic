@@ -60,7 +60,7 @@ void RecommendWidget::initPlaylist() {
             new PlaylistItem(
                 ":/images/items/" + id + ".png",
                 id,
-                // 这里先不挂载到对象树上，等待布局管理器挂载
+                // 这里先不挂载到对象树上，等待布局管理器自己处理
                 nullptr
             )
         );
@@ -83,24 +83,30 @@ RecommendWidget::Items RecommendWidget::displayList(const QString& name) const {
         LOG_ERROR() << "越界访问";
         throw std::runtime_error("越界访问");
     }
-    return Items{
+    Items playlist_items{
         alist.list.begin() + alist.begin,
         std::min(
             alist.list.begin() + alist.begin + _rowSize,
             alist.list.end()
         )
     };
+    return playlist_items;
 }
 
 RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
-    // 安装事件过滤器
-    installEventFilter(this);
+    // 初始化防抖定时器
+    _resizeTimer = new QTimer(this);
+    _resizeTimer->setSingleShot(true);
+    connect(_resizeTimer, &QTimer::timeout, this, [this]() {
+        // 定时器触发时，窗口已经稳定
+        updateRowSize();
+    });
     const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     const auto scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setFrameShape(QFrame::NoFrame);
     const auto scrollContent = new QWidget();
@@ -118,6 +124,29 @@ RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
 
     scrollArea->setWidget(scrollContent);
     mainLayout->addWidget(scrollArea);
+}
+
+void RecommendWidget::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    // 启动防抖定时器，延迟启动防止更新错误
+    _resizeTimer->start(100);
+}
+
+void RecommendWidget::updateRowSize() {
+    const int widgetWidth = this->width();
+    const int itemLen = 120;
+    constexpr int spaceLen = 8;
+    // 减去左右箭头按钮和边距的总宽度（约 120px）
+    const int availableWidth = widgetWidth - 120;
+    const int newRowSize = availableWidth / (itemLen + spaceLen);
+
+    if (newRowSize > 0 && newRowSize != _rowSize) {
+        qDebug() << "Resized: " << "old:" << _rowSize << "new:" << newRowSize
+                 << "width:" << widgetWidth;
+        _rowSize = newRowSize;
+        updateWidgetLayout("今日推荐");
+        updateWidgetLayout("猜你喜欢");
+    }
 }
 
 QWidget* RecommendWidget::createWidgetItem(const QString& name) {
@@ -150,9 +179,6 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
 
     const auto hWidgetLayout = new QHBoxLayout(widgetH);
     Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
-    //hWidgetLayout->addWidget(leftButton);
-    //hWidgetLayout->addStretch(1);
-    //hWidgetLayout->addWidget(rightButton);
 
     Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
     if (_contain.find(name) != _contain.end()) {
@@ -160,6 +186,46 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
         alist.widget = centralWidget;
     }
     return vWidget;
+}
+
+void RecommendWidget::updateWidgetLayout(const QString& name) {
+    if (const auto it = _contain.find(name); it != _contain.end() && it->second.widget != nullptr) {
+        const auto& alist = it->second;
+        const auto centralWidget = alist.widget;
+
+        if (auto* layout = qobject_cast<QHBoxLayout*>(centralWidget->layout())) {
+            const int currentItemCount = layout->count() - 2;
+            const auto newItems = displayList(name);
+            const int newItemCount = static_cast<int>(newItems.size());
+
+            if (newItemCount == currentItemCount) {
+                return;
+            }
+
+            if (newItemCount > currentItemCount) {
+                // 扩容
+                for (int i = currentItemCount; i < newItemCount; ++i) {
+                    auto* item = newItems[i];
+                    layout->insertWidget(1 + i, item);
+                }
+            } else {
+                // 缩容
+                for (int i = currentItemCount - 1; i >= newItemCount; --i) {
+                    if (const auto layoutItem = layout->takeAt(1 + i)) {
+                        if (auto* widget = layoutItem->widget()) {
+                            // 恢复父对象为 this，避免重复释放
+                            widget->setParent(this);
+                        }
+                        delete layoutItem;
+                    }
+                }
+            }
+
+            layout->invalidate();
+            layout->activate();
+            centralWidget->update();
+        }
+    }
 }
 
 RecommendWidget::~RecommendWidget() {
@@ -170,30 +236,3 @@ RecommendWidget::~RecommendWidget() {
     }
     _contain.clear();
 }
-
-bool RecommendWidget::eventFilter(QObject* watched, QEvent* event) {
-    if (event->type() == QEvent::Resize) {
-        for (const auto& [key, alist] : _contain) {
-            if (alist.widget != nullptr && alist.widget != this) {
-                qDebug() << "当前宽度: " << alist.widget->width();
-            }
-        }
-    }
-    return QWidget::eventFilter(watched, event);
-}
-
-// bool RecommendWidget::eventFilter(QObject* watched, QEvent* event) {
-//     if (event->type() == QEvent::Resize) {
-//         qDebug() << "RecommendWidget resized, current width:" << this->width();
-//
-//         constexpr int itemWidth = 120;
-//         constexpr int spacing = 8;
-//         const int availableWidth = this->width() - 40;
-//
-//         if (const int newRowSize = availableWidth / (itemWidth + spacing); newRowSize > 0 && newRowSize != _rowSize) {
-//             qDebug() << "Calculated new rowSize:" << newRowSize;
-//             _rowSize = newRowSize;
-//         }
-//     }
-//     return QWidget::eventFilter(watched, event);
-// }

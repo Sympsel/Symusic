@@ -14,7 +14,7 @@
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent) {
     {
-        this->resize(846, 600);
+        this->resize(848, 600);
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel("就绪"));
@@ -204,9 +204,8 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
     // 保存每个按钮的原始样式表
     std::vector<QString> originalStyleSheets;
-    for (size_t i = 0; i < _navigationButtons.size(); ++i) {
-        originalStyleSheets.emplace_back(_navigationButtons[i]->styleSheet());
-        LOG_DEBUG() << "按钮 " << i << " 的原始样式长度: " << originalStyleSheets[i].length();
+    for (const auto& _navigationButton : _navigationButtons) {
+        originalStyleSheets.emplace_back(_navigationButton->styleSheet());
     }
 
     // 点击按钮切换页面
