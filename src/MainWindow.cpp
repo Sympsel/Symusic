@@ -14,7 +14,7 @@
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent) {
     {
-        this->resize(848, 600);
+        this->resize(848, 655);
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel("就绪"));
@@ -311,5 +311,5 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
 }
 
 MainWindow::~MainWindow() {
-    qDebug() << this->width();
+    qDebug() << this->width() << " " << this->height();
 }

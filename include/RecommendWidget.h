@@ -14,6 +14,9 @@ public:
     using Items = std::vector<PlaylistItem*>;
 
     struct Alist {
+        QPushButton* leftButton;
+        QPushButton* rightButton;
+
         QWidget* widget;
         Items list;
         int begin = 0;
@@ -26,7 +29,7 @@ private:
 
     [[nodiscard]] Items displayList(const QString& name) const;
 
-    QWidget* createWidgetItem(const QString& name);
+    QWidget* createPlateWidget(const QString& name);
 
     void updateWidgetLayout(const QString& name);
 
@@ -34,6 +37,8 @@ private:
     void resizeEvent(QResizeEvent* event) override;
 
     void updateRowSize();
+
+    void updateButtonVisibility(const QString& name);
 
 public:
     explicit RecommendWidget(QWidget* parent);

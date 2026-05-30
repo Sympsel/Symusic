@@ -59,7 +59,7 @@ void RecommendWidget::initPlaylist() {
         _contain["今日推荐"].list.emplace_back(
             new PlaylistItem(
                 ":/images/items/" + id + ".png",
-                id,
+                QString("推荐-%1").arg(i + 1, 3, 10, '0'),
                 // 这里先不挂载到对象树上，等待布局管理器自己处理
                 nullptr
             )
@@ -70,7 +70,7 @@ void RecommendWidget::initPlaylist() {
         _contain["猜你喜欢"].list.emplace_back(
             new PlaylistItem(
                 ":/images/items/" + id + ".png",
-                id,
+                QString("推荐-%1").arg(i + 1, 3, 10, '0'),
                 nullptr
             )
         );
@@ -106,7 +106,7 @@ RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
 
     const auto scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
-scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scrollArea->setFrameShape(QFrame::NoFrame);
     const auto scrollContent = new QWidget();
@@ -114,8 +114,8 @@ scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // 初始化推荐列表
     initPlaylist();
-    auto recommendWidget = createWidgetItem("今日推荐");
-    auto youMayLikeWidget = createWidgetItem("猜你喜欢");
+    auto recommendWidget = createPlateWidget("今日推荐");
+    auto youMayLikeWidget = createPlateWidget("猜你喜欢");
 
     Sync::widgetToLayout(contentLayout, {
                              recommendWidget, youMayLikeWidget
@@ -141,15 +141,42 @@ void RecommendWidget::updateRowSize() {
 
     if (const int newRowSize = availableWidth / (itemLen + spaceLen);
         newRowSize > 0 && newRowSize != _rowSize) {
-        // qDebug() << "Resized: " << "old:" << _rowSize << "new:" << newRowSize
-                 // << "width:" << widgetWidth;
         _rowSize = newRowSize;
+
+        // 调整列表的begin，确保不会越界，防止窗口放大不会往前扩容
+        for (auto& [key, alist] : _contain) {
+            if (const int totalSize = static_cast<int>(alist.list.size());
+                alist.begin + _rowSize > totalSize) {
+                alist.begin = std::max(0, totalSize - _rowSize);
+            }
+        }
+
         updateWidgetLayout("今日推荐");
         updateWidgetLayout("猜你喜欢");
     }
 }
 
-QWidget* RecommendWidget::createWidgetItem(const QString& name) {
+void RecommendWidget::updateButtonVisibility(const QString& name) {
+    if (_contain.find(name) != _contain.end()) {
+        const auto& alist = _contain.at(name);
+
+        if (const bool couldGoLeft = alist.begin != 0) {
+            alist.leftButton->setEnabled(couldGoLeft);
+            alist.leftButton->setIcon(QIcon(":/images/向左.png"));
+        } else {
+            alist.leftButton->setIcon(QIcon());
+        }
+
+        if (const bool couldGoRight = alist.begin + _rowSize < alist.list.size()) {
+            alist.rightButton->setEnabled(couldGoRight);
+            alist.rightButton->setIcon(QIcon(":/images/向右.png"));
+        } else {
+            alist.rightButton->setIcon(QIcon());
+        }
+    }
+}
+
+QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     const auto items = displayList(name);
     const auto vWidget = new QWidget();
     const auto vWidgetLayout = new QVBoxLayout(vWidget);
@@ -160,7 +187,8 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
     label->setFixedHeight(30);
     label->setStyleSheet("font-size: 25px;");
 
-    auto leftButton = new QPushButton(QIcon(":/images/向左.png"), "");
+    auto& leftButton = _contain.at(name).leftButton;
+    leftButton = new QPushButton(QIcon(":/images/向左.png"), "");
     auto centralWidget = new QWidget();
     const auto centralHLayout = new QHBoxLayout(centralWidget);
     Sync::clearLayoutVMargins({centralHLayout});
@@ -172,7 +200,8 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
     }
     centralHLayout->addStretch(1);
 
-    auto rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
+    auto& rightButton = _contain.at(name).rightButton;
+    rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
     syncButtonStyle({leftButton, rightButton}, 30, 120);
     auto widgetH = new QWidget();
     widgetH->setContentsMargins(0, 0, 0, 0);
@@ -181,9 +210,29 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
     Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
 
     Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
+
     if (_contain.find(name) != _contain.end()) {
         auto& alist = _contain.at(name);
         alist.widget = centralWidget;
+
+        // 连接左右按钮信号
+        connect(leftButton, &QPushButton::clicked, this, [this, name, &alist]() {
+            if (int& begin = alist.begin; begin > 0) {
+                --begin;
+                LOG_DEBUG() << std::string(name.toUtf8()) << " begin: " << begin;
+                updateWidgetLayout(name);
+            }
+        });
+        connect(rightButton, &QPushButton::clicked, this, [this, name, &alist]() {
+            if (int& begin = alist.begin;
+                begin + _rowSize < static_cast<int>(alist.list.size())) {
+                ++begin;
+                LOG_DEBUG() << std::string(name.toUtf8()) << " begin: " << begin;
+                updateWidgetLayout(name);
+            }
+        });
+
+        updateButtonVisibility(name);
     }
     return vWidget;
 }
@@ -191,39 +240,51 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
 void RecommendWidget::updateWidgetLayout(const QString& name) {
     if (const auto it = _contain.find(name); it != _contain.end() && it->second.widget != nullptr) {
         const auto& alist = it->second;
-        const auto centralWidget = alist.widget;
+        auto* centralWidget = alist.widget;
 
-        if (auto* layout = qobject_cast<QHBoxLayout*>(centralWidget->layout())) {
-            const int currentItemCount = layout->count() - 2;
+        if (const auto layout = qobject_cast<QHBoxLayout*>(centralWidget->layout())) {
+            const int currItemCount = layout->count() - 2;
             const auto newItems = displayList(name);
             const int newItemCount = static_cast<int>(newItems.size());
 
-            if (newItemCount == currentItemCount) {
-                return;
-            }
-
-            if (newItemCount > currentItemCount) {
-                // 扩容
-                for (int i = currentItemCount; i < newItemCount; ++i) {
-                    auto* item = newItems[i];
-                    layout->insertWidget(1 + i, item);
-                }
-            } else {
-                // 缩容
-                for (int i = currentItemCount - 1; i >= newItemCount; --i) {
-                    if (const auto layoutItem = layout->takeAt(1 + i)) {
-                        if (auto* widget = layoutItem->widget()) {
-                            // 恢复父对象为 this，避免重复释放
-                            widget->setParent(this);
+            if (newItemCount == currItemCount) {
+                // 检查begin是否改变，即是否触发了滚动
+                bool needUpdate = false;
+                for (int i{}; i < currItemCount; ++i) {
+                    if (const auto layoutItem = layout->itemAt(1 + i)) {
+                        if (const auto currWidget = layoutItem->widget()) {
+                            if (currWidget != newItems[i]) {
+                                needUpdate = true;
+                                break;
+                            }
                         }
-                        delete layoutItem;
                     }
                 }
+                if (!needUpdate) {
+                    updateButtonVisibility(name);
+                    return;
+                }
             }
 
+            // 清空当前布局中除弹簧外所有项目
+            while (layout->count() > 2) {
+                if (const auto layoutItem = layout->takeAt(1)) {
+                    if (auto* widget = layoutItem->widget()) {
+                        widget->setParent(this);
+                    }
+                    delete layoutItem;
+                }
+            }
+
+            // 重新添加新项目
+            for (int i{}; i < newItemCount; ++i) {
+                layout->insertWidget(1 + i, newItems[i]);
+            }
             layout->invalidate();
             layout->activate();
             centralWidget->update();
+
+            updateButtonVisibility(name);
         }
     }
 }
