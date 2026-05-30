@@ -134,15 +134,15 @@ void RecommendWidget::resizeEvent(QResizeEvent* event) {
 
 void RecommendWidget::updateRowSize() {
     const int widgetWidth = this->width();
-    const int itemLen = 120;
+    constexpr int itemLen = 120;
     constexpr int spaceLen = 8;
-    // 减去左右箭头按钮和边距的总宽度（约 120px）
+    // 减去左右箭头按钮和边距的总宽度
     const int availableWidth = widgetWidth - 120;
-    const int newRowSize = availableWidth / (itemLen + spaceLen);
 
-    if (newRowSize > 0 && newRowSize != _rowSize) {
-        qDebug() << "Resized: " << "old:" << _rowSize << "new:" << newRowSize
-                 << "width:" << widgetWidth;
+    if (const int newRowSize = availableWidth / (itemLen + spaceLen);
+        newRowSize > 0 && newRowSize != _rowSize) {
+        // qDebug() << "Resized: " << "old:" << _rowSize << "new:" << newRowSize
+                 // << "width:" << widgetWidth;
         _rowSize = newRowSize;
         updateWidgetLayout("今日推荐");
         updateWidgetLayout("猜你喜欢");
@@ -164,14 +164,14 @@ QWidget* RecommendWidget::createWidgetItem(const QString& name) {
     auto centralWidget = new QWidget();
     const auto centralHLayout = new QHBoxLayout(centralWidget);
     Sync::clearLayoutVMargins({centralHLayout});
-    centralHLayout->addStretch(1);
 
-    // todo 动态行扩容
+    centralHLayout->addStretch(1);
     for (const auto& item : items) {
         // 添加到布局的同时设置父控件
         centralHLayout->addWidget(item);
     }
     centralHLayout->addStretch(1);
+
     auto rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
     syncButtonStyle({leftButton, rightButton}, 30, 120);
     auto widgetH = new QWidget();

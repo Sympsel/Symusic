@@ -5,7 +5,6 @@
 #include "../include/NavigationButton.h"
 #include "../include/Sync.hpp"
 
-// ListWidget::ListWidget(QWidget* parent, const QString& path, const QString& groupName, const std::initializer_list<QPushButton*>& buttons) {
 ListWidget::ListWidget(QWidget* parent, const QString& path, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
     this->setParent(parent);
     if (parent == nullptr) {
@@ -14,7 +13,6 @@ ListWidget::ListWidget(QWidget* parent, const QString& path, const QString& grou
 
     // 组名行
     _groupHead = new QWidget(this);
-    // _groupHead->setStyleSheet("background-color: #0A0A0A;");
     const auto labelLayout = new QHBoxLayout(_groupHead);
 
     // 让图标贴左边
