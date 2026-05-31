@@ -31,6 +31,12 @@ add_executable(SymMusic_2
         include/RecommendWidget.h
         src/PlaylistItem.cpp
         include/PlaylistItem.h
+        src/CommonPageWidget.cpp
+        include/CommonPageWidget.h
+        src/ListItem.cpp
+        include/ListItem.h
+        src/Song.cpp
+        include/Song.h
 )
 
 target_link_libraries(SymMusic_2

@@ -4,6 +4,7 @@
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
 
+#include "CommonPageWidget.h"
 #include "ListWidget.h"
 #include "Log.hpp"
 #include "Sync.hpp"
@@ -74,7 +75,7 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
 QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto controlWidget = new QWidget(parent);
     const auto controlLayout = new QHBoxLayout(controlWidget);
-    controlWidget->setContentsMargins(0, 0, 0, 0);
+    Sync::clearWidgetMargins(controlWidget);
 
     // [图片 歌名/歌手]
     QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
@@ -85,11 +86,9 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto songInfoLayout = new QVBoxLayout(songInfoWidget);
     const auto songName = new QLabel("歌曲");
     const auto singer = new QLabel("歌手");
-    songInfoLayout->addWidget(songName);
-    songInfoLayout->addWidget(singer);
 
-    leftLayout->addWidget(songCover);
-    leftLayout->addWidget(songInfoWidget);
+    Sync::widgetToLayout(songInfoLayout, {songName, singer});
+    Sync::widgetToLayout(leftLayout, {songCover, songInfoWidget});
 
     // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
     const auto centralWidget = new QWidget(controlWidget);
@@ -155,13 +154,12 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             return page;
         };
 
-        auto 推荐_页 = new RecommendWidget(_mainStackedWidget);
-        QWidget* 电台_页 = createPage("电台页面", _mainStackedWidget);
+        const auto 推荐_页 = new RecommendWidget(_mainStackedWidget);
+        QWidget* 电台_页 = createPage("电台", _mainStackedWidget);
         QWidget* 漫游_页 = createPage("漫游页面", _mainStackedWidget);
-        QWidget* 我喜欢的_页 = createPage("我喜欢的页面", _mainStackedWidget);
+        const auto 我喜欢的_页 = new CommonPageWidget("我喜欢的", ":/images/Sympsel.png", _mainStackedWidget);
         QWidget* 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         QWidget* 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
-
 
         Sync::widgetToStackedWidget(_mainStackedWidget, {
                                         推荐_页, 电台_页, 漫游_页, 我喜欢的_页, 本地下载_页, 最近播放_页
@@ -177,7 +175,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
     QWidget* controlWidget = createControlWidget(mainWidget);
 
     Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, slider, controlWidget});
-    bodyRightLayout->setContentsMargins(0, 0, 0, 0);
+    Sync::clearLayoutMargins(bodyRightLayout);
     bodyRightLayout->setSpacing(0);
     return mainWidget;
 }
@@ -186,11 +184,10 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     const auto bodyWidget = new QWidget(parent);
 
     bodyWidget->setMinimumHeight(100);
-    QWidget* leftWidget = createBodyLeftWidget(bodyWidget);
 
-    QFrame* line = Create::line(QFrame::VLine);
-
-    QWidget* rightWidget = createMainStackedWidget(bodyWidget);
+    const auto leftWidget = createBodyLeftWidget(bodyWidget);
+    const auto line = Create::line(QFrame::VLine);
+    const auto rightWidget = createMainStackedWidget(bodyWidget);
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
@@ -268,20 +265,20 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
 
 void MainWindow::setBorder(const bool enabled = false) const {
     const Color& color = ColorTheme::getInstance().getColor();
-    QWidget* currentWidget = this->centralWidget();
+    const auto currWidget = this->centralWidget();
     if (enabled) {
-        if (currentWidget) {
+        if (currWidget) {
             LOG_DEBUG() << "启用调试边框";
-            currentWidget->setStyleSheet(QString(
+            currWidget->setStyleSheet(QString(
                 "background-color: rgb(%1);"
                 "border: 2px solid rgb(%2);"
             ).arg(color.background, color.border));
         }
     } else {
         LOG_DEBUG() << "启用常规边框";
-        if (currentWidget) {
-            currentWidget->setObjectName("MainCentralWidget");
-            currentWidget->setStyleSheet(QString(
+        if (currWidget) {
+            currWidget->setObjectName("MainCentralWidget");
+            currWidget->setStyleSheet(QString(
                 "#MainCentralWidget {"
                 "   background-color: rgb(%1);"
                 "   border: 2px solid rgb(%2);"

@@ -32,7 +32,7 @@ ListWidget::ListWidget(QWidget* parent, const QString& path, const QString& grou
 
     // ===== 按钮列表 =====
     const auto layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
+    Sync::clearLayoutMargins(layout);
     layout->setSpacing(2);
     layout->addWidget(_groupHead);
 

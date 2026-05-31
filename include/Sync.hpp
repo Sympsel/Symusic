@@ -93,4 +93,12 @@ public:
             layout->setContentsMargins(margins.left(), 0, margins.right(), 0);
         }
     }
+
+    static void clearLayoutMargins(QLayout* layout) {
+        layout->setContentsMargins(0, 0, 0, 0);
+    }
+
+    static void clearWidgetMargins(QWidget* widget) {
+        widget->setContentsMargins(0, 0, 0, 0);
+    }
 };

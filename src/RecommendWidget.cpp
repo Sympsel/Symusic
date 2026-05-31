@@ -102,7 +102,7 @@ RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
         updateRowSize();
     });
     const auto mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
+    Sync::clearLayoutMargins(mainLayout);
 
     const auto scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
@@ -180,7 +180,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     const auto items = displayList(name);
     const auto vWidget = new QWidget();
     const auto vWidgetLayout = new QVBoxLayout(vWidget);
-    vWidgetLayout->setContentsMargins(0, 0, 0, 0);
+    Sync::clearLayoutMargins(vWidgetLayout);
     vWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     auto label = new QLabel(name);
@@ -204,7 +204,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
     syncButtonStyle({leftButton, rightButton}, 30, 120);
     auto widgetH = new QWidget();
-    widgetH->setContentsMargins(0, 0, 0, 0);
+    Sync::clearWidgetMargins(widgetH);
 
     const auto hWidgetLayout = new QHBoxLayout(widgetH);
     Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
