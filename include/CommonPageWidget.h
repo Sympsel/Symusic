@@ -74,7 +74,6 @@ public:
         Sync::widgetToLayout(mainLayout, {
                                  headWidget, middleLabel, _playlist
                              });
-        // _playlist->addItem(new QListWidgetItem())
     }
 
 private:
