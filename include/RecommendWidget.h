@@ -33,12 +33,14 @@ private:
 
     void updateWidgetLayout(const QString& name);
 
-    // resize 事件处理
-    void resizeEvent(QResizeEvent* event) override;
 
     void updateRowSize();
 
     void updateButtonVisibility(const QString& name);
+
+protected:
+    // resize 事件处理
+    void resizeEvent(QResizeEvent* event) override;
 
 public:
     explicit RecommendWidget(QWidget* parent);
@@ -49,15 +51,7 @@ public:
 
     ~RecommendWidget() override;;
 
-    [[nodiscard]] int getRowSize() const {
-        for (const auto& [key, value] : _contain) {
-            // 取其中一个界面用于计算宽度
-            return value.widget->width();
-        }
-        return 0;
-    }
-
-private:
+ private:
     std::unordered_map<QString, Alist> _contain;
     int _rowSize = 4;
     // 防抖定时器

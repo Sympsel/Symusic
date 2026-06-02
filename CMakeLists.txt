@@ -37,6 +37,9 @@ add_executable(SymMusic_2
         include/ListItem.h
         src/Song.cpp
         include/Song.h
+        src/SongManager.cpp
+        include/SongManager.h
+        include/PathMaganger.hpp
 )
 
 target_link_libraries(SymMusic_2

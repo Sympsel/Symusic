@@ -3,19 +3,19 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
+#include "Song.h"
 #include "NavigationButton.h"
 
 class PlaylistItem : public QWidget {
     Q_OBJECT
 
 public:
-    explicit PlaylistItem(QString coverPath, QString description, QWidget* parent = nullptr);
+    explicit PlaylistItem(Song song, QString description, QWidget* parent = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
+    Song _song;
     QPushButton* _button;
-    QString _coverPath;
     QString _description;
-    QVBoxLayout* _layout;
 };

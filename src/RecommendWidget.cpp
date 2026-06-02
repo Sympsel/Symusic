@@ -6,6 +6,7 @@
 #include <random>
 
 #include "Sync.hpp"
+#include "SongManager.h"
 
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
                                       const int width,
@@ -41,6 +42,7 @@ void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>&
 }
 
 void RecommendWidget::initPlaylist() {
+    const SongManager& songManager = SongManager::getInstance();
     // 初始化推荐页面展示图片
     constexpr int maxIdx = 35;
     std::vector<int> idxs;
@@ -54,35 +56,47 @@ void RecommendWidget::initPlaylist() {
     // 洗牌算法
     std::shuffle(idxs.begin(), idxs.end(), g);
 
-    for (size_t i{}; i < idxs.size() / 2; ++i) {
-        auto id = QString(std::to_string(idxs[i]).c_str());
+    int id = 0;
+    for (const auto& song : songManager.getRecommendList()) {
         _contain["今日推荐"].list.emplace_back(
             new PlaylistItem(
-                ":/images/items/" + id + ".png",
-                QString("推荐-%1").arg(i + 1, 3, 10, '0'),
-                // 这里先不挂载到对象树上，等待布局管理器自己处理
+                song,
+                QString("推荐-%1").arg(id),
                 nullptr
             )
         );
+        ++id;
     }
-    for (size_t i{idxs.size() / 2}; i < idxs.size(); ++i) {
-        auto id = QString(std::to_string(idxs[i]).c_str());
+    for (const auto& song : songManager.getRecommendList()) {
         _contain["猜你喜欢"].list.emplace_back(
             new PlaylistItem(
-                ":/images/items/" + id + ".png",
-                QString("推荐-%1").arg(i + 1, 3, 10, '0'),
+                song,
+                QString("推荐-%1").arg(id),
                 nullptr
             )
         );
+        ++id;
     }
 }
 
 RecommendWidget::Items RecommendWidget::displayList(const QString& name) const {
-    const auto& alist = _contain.at(name);
+    const auto it = _contain.find(name);
+    if (it == _contain.end()) {
+        LOG_ERROR() << "找不到对应的播放列表:" << name.toUtf8().constData();
+        return Items{};
+    }
+
+    const auto& alist = it->second;
+    if (alist.list.empty()) {
+        LOG_WARN() << "播放列表为空:" << name.toUtf8().constData();
+        return Items{};
+    }
+
     if (alist.begin >= static_cast<int>(alist.list.size())) {
         LOG_ERROR() << "越界访问";
-        throw std::runtime_error("越界访问");
+        return Items{};
     }
+
     Items playlist_items{
         alist.list.begin() + alist.begin,
         std::min(
@@ -97,10 +111,15 @@ RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
     // 初始化防抖定时器
     _resizeTimer = new QTimer(this);
     _resizeTimer->setSingleShot(true);
+
+    _contain["今日推荐"] = Alist{};
+    _contain["猜你喜欢"] = Alist{};
+
     connect(_resizeTimer, &QTimer::timeout, this, [this]() {
         // 定时器触发时，窗口已经稳定
         updateRowSize();
     });
+
     const auto mainLayout = new QVBoxLayout(this);
     Sync::clearLayoutMargins(mainLayout);
 

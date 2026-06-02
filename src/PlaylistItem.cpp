@@ -3,22 +3,24 @@
 #include <qcoreevent.h>
 #include <QVBoxLayout>
 #include <QLabel>
+#include <utility>
 
 #include "Log.hpp"
 
-PlaylistItem::PlaylistItem(QString coverPath, QString description, QWidget* parent) : QWidget(parent),
-    _coverPath(std::move(coverPath)),
-    _description(std::move(description)) {
+PlaylistItem::PlaylistItem(Song song, QString description, QWidget* parent)
+    : QWidget(parent)
+      , _song(std::move(song))
+      , _description(std::move(description)) {
     constexpr int coverLength = 120, coverHeight = 150;
     this->setFixedSize(coverLength, coverHeight);
 
-    _layout = new QVBoxLayout(this);
-    _layout->setContentsMargins(8, 8, 8, 4);
-    _layout->setSpacing(4);
+    const auto layout = new QVBoxLayout(this);
+    layout->setContentsMargins(8, 8, 8, 4);
+    layout->setSpacing(4);
 
     _button = new QPushButton(this);
     _button->setFixedSize(coverLength - 16, coverLength - 16);
-    _button->setIcon(QIcon(_coverPath));
+    _button->setIcon(_song.getCover());
     _button->setIconSize(QSize(coverLength - 16, coverLength - 16));
     _button->setStyleSheet(
         "QPushButton {"
@@ -36,8 +38,8 @@ PlaylistItem::PlaylistItem(QString coverPath, QString description, QWidget* pare
     descriptionLabel->setFixedSize(coverLength - 16, coverHeight - coverLength - 4);
     descriptionLabel->setAlignment(Qt::AlignCenter);
 
-    _layout->addWidget(_button, 0, Qt::AlignHCenter);
-    _layout->addWidget(descriptionLabel, 0, Qt::AlignHCenter);
+    layout->addWidget(_button, 0, Qt::AlignHCenter);
+    layout->addWidget(descriptionLabel, 0, Qt::AlignHCenter);
 }
 
 bool PlaylistItem::eventFilter(QObject* watched, QEvent* event) {

@@ -157,7 +157,11 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         const auto 推荐_页 = new RecommendWidget(_mainStackedWidget);
         QWidget* 电台_页 = createPage("电台", _mainStackedWidget);
         QWidget* 漫游_页 = createPage("漫游页面", _mainStackedWidget);
-        const auto 我喜欢的_页 = new CommonPageWidget("我喜欢的", ":/images/Sympsel.png", _mainStackedWidget);
+        const auto 我喜欢的_页 = new CommonPageWidget(
+            "我喜欢的",
+            ":/images/Sympsel.png",
+            "sergrdthr",
+            _mainStackedWidget);
         QWidget* 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         QWidget* 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 

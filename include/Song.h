@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPixmap>
+#include <PathMaganger.hpp>
 
 class Song {
 public:
@@ -15,15 +16,15 @@ public:
     explicit Song(QString name,
                   QString artist,
                   QString album,
-                  QString filePath,
-                  QPixmap cover = QPixmap(),
+                  const QString& filePath,
+                  const QString& coverPath,
                   const int duration = 0,
                   const int tagsFlag = 0)
         : _name(std::move(name))
           , _artist(std::move(artist))
           , _album(std::move(album))
-          , _filePath(std::move(filePath))
-          , _cover(std::move(cover))
+          , _filePath(prefix::songsFile + filePath)
+          , _cover(QPixmap(prefix::itemImages + coverPath))
           , _duration(duration)
           , _tagsFlag(tagsFlag) {
     }
@@ -38,9 +39,11 @@ public:
     [[nodiscard]] int getDuration() const { return _duration; }
     [[nodiscard]] bool isLiked() const { return _isLiked; }
     [[nodiscard]] int getPlayCount() const { return _playCount; }
+
     [[nodiscard]] int getTagsFlag() const {
         return _tagsFlag;
     }
+
     void setLiked(const bool liked) { _isLiked = liked; }
     void incrementPlayCount() { _playCount++; }
     void setCover(const QPixmap& cover) { _cover = cover; }
@@ -57,6 +60,14 @@ public:
         return getTags(_tagsFlag);
     }
 
+    bool operator==(const Song& other) const {
+        // todo 补全歌曲属性
+        return _name == other._name && _artist == other._artist;
+    }
+
+    bool operator!=(const Song& other) const {
+        return !(*this == other);
+    }
 
 private:
     QString _name;
@@ -69,4 +80,6 @@ private:
     int _playCount = 0;
     // 用于标识歌曲vip,音质啥的
     int _tagsFlag;
+
+    // todo 未来打算添加的字段 发行时间
 };

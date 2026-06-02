@@ -66,6 +66,18 @@ public:
         }
     }
 
+    static void widgetToLayout(QHBoxLayout* layout, const std::initializer_list<std::pair<QWidget*, int>>& widgets) {
+        for (const auto& [widget, stretch] : widgets) {
+            layout->addWidget(widget, stretch);
+        }
+    }
+
+    static void widgetToLayout(QVBoxLayout* layout, const std::initializer_list<std::pair<QWidget*, int>>& widgets) {
+        for (const auto& [widget, stretch] : widgets) {
+            layout->addWidget(widget, stretch);
+        }
+    }
+
     static void widgetToStackedWidget(QStackedWidget* stackedWidget, const std::initializer_list<QWidget*>& widgets) {
         for (const auto widget : widgets) {
             stackedWidget->addWidget(widget);
@@ -100,5 +112,38 @@ public:
 
     static void clearWidgetMargins(QWidget* widget) {
         widget->setContentsMargins(0, 0, 0, 0);
+    }
+
+    static void enabledWidgetStyledBackground(
+        const std::initializer_list<QWidget*>& widgets, const bool isOn) {
+        for (const auto widget : widgets) {
+            widget->setAttribute(Qt::WA_StyledBackground, isOn);
+        }
+    }
+
+    static void widgetTransparentBackground(const std::initializer_list<QWidget*>& widgets) {
+        widgetAppendStyleSheet(widgets, "background-color: transparent;");
+    }
+
+    static void appendStyleSheet(QWidget* widget, const QString& stylesheet) {
+        widgetAppendStyleSheet({widget}, stylesheet);
+    }
+
+    static void widgetAppendStyleSheet(const std::initializer_list<QWidget*>& widgets, const QString& stylesheet) {
+        const QString trimmedStyle = stylesheet.trimmed();
+        for (const auto widget : widgets) {
+            QString existingStyle = widget->styleSheet().trimmed();
+
+            if (existingStyle.contains(trimmedStyle)) {
+                continue;
+            }
+
+            widget->setStyleSheet(
+                existingStyle.isEmpty()
+                    ? stylesheet
+                    : existingStyle + stylesheet
+            );
+            // qDebug() << existingStyle + stylesheet;
+        }
     }
 };
