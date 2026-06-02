@@ -7,10 +7,10 @@
 
 #include "NavigationButton.h"
 
-class ListWidget final :public QWidget {
+class NavigationWidget final :public QWidget {
     Q_OBJECT
 public:
-    explicit ListWidget(
+    explicit NavigationWidget(
         QWidget *parent,
         const QString& path,
         const QString& groupName,

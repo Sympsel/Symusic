@@ -1,11 +1,11 @@
-#include "../include/ListWidget.h"
+#include "NavigationWidget.h"
 
 #include <QVBoxLayout>
 
 #include "../include/NavigationButton.h"
 #include "../include/Sync.hpp"
 
-ListWidget::ListWidget(QWidget* parent, const QString& path, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
+NavigationWidget::NavigationWidget(QWidget* parent, const QString& path, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
     this->setParent(parent);
     if (parent == nullptr) {
         this->setWindowFlag(Qt::FramelessWindowHint);

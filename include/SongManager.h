@@ -6,6 +6,9 @@
 #include "Song.h"
 
 class SongManager {
+public:
+    using SongList = std::vector<Song>;
+
 private:
     SongManager() {
         // 初始化数据
@@ -29,29 +32,38 @@ private:
         for (size_t i{}; i < indexs.size() / 2; ++i) {
             auto id = QString(std::to_string(indexs[i]).c_str());
             _recommendList.emplace_back(
-                Song("歌曲" + id, "作曲家" + id, "专辑" + id,
-                     "暂无",
-                     id + ".png",
-                     198,
-                     Song::tag::VIP | Song::tag::SQ)
+                "歌曲" + id, "作曲家" + id, "专辑" + id,
+                "暂无",
+                id + ".png",
+                198,
+                Song::tag::VIP | Song::tag::SQ
             );
         }
 
         for (size_t i{indexs.size() / 2}; i < indexs.size(); ++i) {
             auto id = QString(std::to_string(indexs[i]).c_str());
-            _recommendList.emplace_back(
-                Song("歌曲" + id, "作曲家" + id, "专辑" + id,
-                     "暂无",
-                     id + ".png",
-                     198,
-                     Song::tag::VIP | Song::tag::SQ)
+            _youMayLikeList.emplace_back(
+                "歌曲" + id, "作曲家" + id, "专辑" + id,
+                "暂无",
+                id + ".png",
+                198,
+                Song::tag::VIP | Song::tag::SQ
+            );
+        }
+
+        for (size_t i{}; i < indexs.size() / 2; ++i) {
+            auto id = QString(std::to_string(indexs[i]).c_str());
+            _likedList.emplace_back(
+                "歌曲" + id, "作曲家" + id, "专辑" + id,
+                "暂无",
+                id + ".png",
+                198,
+                Song::tag::VIP | Song::tag::SQ
             );
         }
     }
 
 public:
-    using SongList = std::vector<Song>;
-
     static SongManager& getInstance() {
         static SongManager instance;
         return instance;

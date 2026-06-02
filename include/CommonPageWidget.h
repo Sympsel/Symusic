@@ -16,6 +16,8 @@ private:
 
     QWidget* createMiddleWidget();
 
+    void initData() const;
+
 public:
     explicit CommonPageWidget(QString pageName, const QString& coverPath, const QString& description = "", QWidget* parent = nullptr);
 

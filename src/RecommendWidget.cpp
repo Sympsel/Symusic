@@ -67,7 +67,7 @@ void RecommendWidget::initPlaylist() {
         );
         ++id;
     }
-    for (const auto& song : songManager.getRecommendList()) {
+    for (const auto& song : songManager.getYouMayLikeList()) {
         _contain["猜你喜欢"].list.emplace_back(
             new PlaylistItem(
                 song,

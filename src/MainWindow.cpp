@@ -1,11 +1,10 @@
 #include "../include/MainWindow.h"
 
-#include <QMouseEvent>
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
 
 #include "CommonPageWidget.h"
-#include "ListWidget.h"
+#include "NavigationWidget.h"
 #include "Log.hpp"
 #include "Sync.hpp"
 #include "Create.hpp"
@@ -52,13 +51,13 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     auto 推荐 = new NavigationButton(":/images/推荐.png", "     推荐");
     auto 电台 = new NavigationButton(":/images/电台.png", "     电台");
     auto 漫游 = new NavigationButton(":/images/漫游.png", "     漫游");
-    const auto onlineMusic = new ListWidget(bodyWidget, ":/images/在线.png", "在线音乐", {
+    const auto onlineMusic = new NavigationWidget(bodyWidget, ":/images/在线.png", "在线音乐", {
                                                 推荐, 电台, 漫游
                                             });
     auto 我喜欢的 = new NavigationButton(":/images/喜欢.png", "     我喜欢的");
     auto 本地下载 = new NavigationButton(":/images/下载.png", "     本地下载");
     auto 最近播放 = new NavigationButton(":/images/最近播放.png", "     最近播放");
-    const auto myMusic = new ListWidget(bodyWidget, ":/images/我的.png", "我的音乐", {
+    const auto myMusic = new NavigationWidget(bodyWidget, ":/images/我的.png", "我的音乐", {
                                             我喜欢的, 本地下载, 最近播放
                                         });
     Sync::widgetToLayout(leftLayout, {
@@ -160,7 +159,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         const auto 我喜欢的_页 = new CommonPageWidget(
             "我喜欢的",
             ":/images/Sympsel.png",
-            "sergrdthr",
+            "这里是你爱听的",
             _mainStackedWidget);
         QWidget* 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         QWidget* 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);

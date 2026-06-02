@@ -21,8 +21,8 @@ add_executable(SymMusic_2
         resources.qrc
         src/MainWindow.cpp
         include/MainWindow.h
-        src/ListWidget.cpp
-        include/ListWidget.h
+        src/NavigationWidget.cpp
+        include/NavigationWidget.h
         src/HeadWidget.cpp
         include/HeadWidget.h
         src/NavigationButton.cpp

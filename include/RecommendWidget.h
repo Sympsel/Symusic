@@ -3,7 +3,7 @@
 #include <QResizeEvent>
 #include <QTimer>
 
-#include "ListWidget.h"
+#include "NavigationWidget.h"
 #include "Log.hpp"
 #include "PlaylistItem.h"
 

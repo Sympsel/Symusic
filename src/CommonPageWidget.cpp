@@ -1,4 +1,5 @@
 #include "CommonPageWidget.h"
+#include "SongManager.h"
 
 QWidget* CommonPageWidget::createHeadWidget(const QString& coverPath, const QString& description) const {
     const auto headWidget = new QWidget();
@@ -65,6 +66,14 @@ QWidget* CommonPageWidget::createMiddleWidget() {
     return middleWidget;
 }
 
+void CommonPageWidget::initData() const {
+    for (const auto song : SongManager::getInstance().getLikedList()) {
+        const auto item = new QListWidgetItem(_playlist);
+        item->setSizeHint(QSize(0, 40));
+        _playlist->setItemWidget(item, new ListItem(song, true));
+    }
+}
+
 CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, const QString& description,
                                    QWidget* parent) : QWidget(parent)
                                                       , _pageName(std::move(pageName))
@@ -95,12 +104,5 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, c
     Sync::widgetToLayout(mainLayout, {
                              headWidget, middleLabel, _playlist
                          });
-
-    const auto item = new QListWidgetItem(_playlist);
-    item->setSizeHint(QSize(0, 40));
-    _playlist->setItemWidget(item, new ListItem(
-                                 Song(
-                                     "AAA", "BBB", "CCC",
-                                     "DDD", "Sympsel.png",
-                                     194, Song::VIP | Song::SQ), true));
+    initData();
 }
