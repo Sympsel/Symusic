@@ -2,6 +2,7 @@
 
 #include <QPixmap>
 #include <PathMaganger.hpp>
+#include <iostream>
 
 class Song {
 public:
@@ -12,6 +13,20 @@ public:
         VIP = 1,
         SQ = 2
     };
+
+    friend std::ostream& operator<<(std::ostream& os, const Song& song) {
+        os << "{";
+        os << "name=" << song._name.toStdString();
+        // os << "name=" << song._name.toStdString() << ",";
+        // os << "artist=" << song._artist.toStdString() << ",";
+        // os << "album=" << song._album.toStdString() << ",";
+        // os << "filePath=" << song._filePath.toStdString() << ",";
+        // os << "duration=" << song._duration << ",";
+        // os << "playCount=" << song._playCount << ",";
+        // os << "tagsFlag=" << song._tagsFlag;
+        os << "}";
+        return os;
+    }
 
     explicit Song(QString name,
                   QString artist,

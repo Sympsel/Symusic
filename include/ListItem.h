@@ -2,7 +2,7 @@
 
 #include <QLabel>
 #include <QHBoxLayout>
-#include <utility>
+#include <iostream>
 
 #include "QWidget"
 #include "Song.h"
@@ -15,9 +15,21 @@ private:
     void setupUI();
 
 public:
+
+    friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
+        os << "{";
+        os << "isLiked=" << listItem._isLiked << ",";
+        os << "song=" << listItem._song << ",";
+        os << "}";
+        return os;
+    }
+
     explicit ListItem(Song song, bool isLiked = false);
 
-    void updateStatus() const;
+    void updateIconStatus() const;
+
+signals:
+    void likeStatusUpdated();
 
 private:
     bool _isLiked;

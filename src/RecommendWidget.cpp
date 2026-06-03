@@ -42,7 +42,7 @@ void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>&
 }
 
 void RecommendWidget::initPlaylist() {
-    const SongManager& songManager = SongManager::getInstance();
+    SongManager& songManager = SongManager::getInstance();
     // 初始化推荐页面展示图片
     constexpr int maxIdx = 35;
     std::vector<int> idxs;

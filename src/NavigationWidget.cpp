@@ -2,10 +2,11 @@
 
 #include <QVBoxLayout>
 
-#include "../include/NavigationButton.h"
-#include "../include/Sync.hpp"
+#include "PathMaganger.hpp"
+#include "NavigationButton.h"
+#include "Sync.hpp"
 
-NavigationWidget::NavigationWidget(QWidget* parent, const QString& path, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
+NavigationWidget::NavigationWidget(QWidget* parent, const QString& iconPath, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
     this->setParent(parent);
     if (parent == nullptr) {
         this->setWindowFlag(Qt::FramelessWindowHint);
@@ -19,7 +20,7 @@ NavigationWidget::NavigationWidget(QWidget* parent, const QString& path, const Q
     labelLayout->setContentsMargins(2, 4, 2, 4);
     labelLayout->setSpacing(8);
 
-    const QIcon icon(path);
+    const QIcon icon(prefix::normalImages + iconPath);
     const auto iconLabel = new QLabel(_groupHead);
     iconLabel->setPixmap(icon.pixmap(QSize(16, 16)));
     iconLabel->setFixedSize(16, 16);

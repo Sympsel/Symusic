@@ -32,8 +32,9 @@ private:
 
     static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
 
-    static void syncButtonContain(std::vector<NavigationButton*>& navigationButtonList,
-                                  const std::initializer_list<NavigationButton*>& buttons);
+    void syncButtonToContain(const std::initializer_list<NavigationButton*>& buttons);
+
+    void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
 
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
 
@@ -45,5 +46,6 @@ protected:
 private:
     QPoint _dragPos;
     QStackedWidget* _mainStackedWidget;
-    std::vector<NavigationButton*> _navigationButtons;
+    std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
+    int _pageCount = 6;
 };

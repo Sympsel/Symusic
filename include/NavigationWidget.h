@@ -12,7 +12,7 @@ class NavigationWidget final :public QWidget {
 public:
     explicit NavigationWidget(
         QWidget *parent,
-        const QString& path,
+        const QString& iconPath,
         const QString& groupName,
         const std::initializer_list<NavigationButton*>& buttons);
 private:

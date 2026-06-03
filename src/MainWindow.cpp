@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
         statusBar->setVisible(statusBarVisible);
     }
 
+    _mapOfNavigationButtonsToWidget.resize(_pageCount);
+
     const auto centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
 
@@ -48,24 +50,24 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     const auto leftLayout = new QVBoxLayout(leftWidget);
 
     // 这里文本缩进写死是因为按钮宽度固定
-    auto 推荐 = new NavigationButton(":/images/推荐.png", "     推荐");
-    auto 电台 = new NavigationButton(":/images/电台.png", "     电台");
-    auto 漫游 = new NavigationButton(":/images/漫游.png", "     漫游");
-    const auto onlineMusic = new NavigationWidget(bodyWidget, ":/images/在线.png", "在线音乐", {
-                                                推荐, 电台, 漫游
-                                            });
-    auto 我喜欢的 = new NavigationButton(":/images/喜欢.png", "     我喜欢的");
-    auto 本地下载 = new NavigationButton(":/images/下载.png", "     本地下载");
-    auto 最近播放 = new NavigationButton(":/images/最近播放.png", "     最近播放");
-    const auto myMusic = new NavigationWidget(bodyWidget, ":/images/我的.png", "我的音乐", {
-                                            我喜欢的, 本地下载, 最近播放
-                                        });
+    auto 推荐 = new NavigationButton("推荐.png", "     推荐");
+    auto 电台 = new NavigationButton("电台.png", "     电台");
+    auto 漫游 = new NavigationButton("漫游.png", "     漫游");
+    const auto onlineMusic = new NavigationWidget(bodyWidget, "在线.png", "在线音乐", {
+                                                      推荐, 电台, 漫游
+                                                  });
+    auto 我喜欢的 = new NavigationButton("喜欢.png", "     我喜欢的");
+    auto 本地下载 = new NavigationButton("下载.png", "     本地下载");
+    auto 最近播放 = new NavigationButton("最近播放.png", "     最近播放");
+    const auto myMusic = new NavigationWidget(bodyWidget, "我的.png", "我的音乐", {
+                                                  我喜欢的, 本地下载, 最近播放
+                                              });
     Sync::widgetToLayout(leftLayout, {
                              onlineMusic, myMusic
                          });
-    syncButtonContain(_navigationButtons, {
-                          推荐, 电台, 漫游, 我喜欢的, 本地下载, 最近播放
-                      });
+    syncButtonToContain({
+        推荐, 电台, 漫游, 我喜欢的, 本地下载, 最近播放
+    });
 
     leftLayout->addStretch(1);
     return leftWidget;
@@ -154,19 +156,22 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         };
 
         const auto 推荐_页 = new RecommendWidget(_mainStackedWidget);
-        QWidget* 电台_页 = createPage("电台", _mainStackedWidget);
-        QWidget* 漫游_页 = createPage("漫游页面", _mainStackedWidget);
+        const auto 电台_页 = createPage("电台", _mainStackedWidget);
+        const auto 漫游_页 = createPage("漫游页面", _mainStackedWidget);
         const auto 我喜欢的_页 = new CommonPageWidget(
             "我喜欢的",
             ":/images/Sympsel.png",
             "这里是你爱听的",
             _mainStackedWidget);
-        QWidget* 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
-        QWidget* 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
+        我喜欢的_页->initData(SongManager::getInstance().getLikedList());
+        const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
+        const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
-        Sync::widgetToStackedWidget(_mainStackedWidget, {
-                                        推荐_页, 电台_页, 漫游_页, 我喜欢的_页, 本地下载_页, 最近播放_页
-                                    });
+        const std::initializer_list<QWidget*>& pages = {
+            推荐_页, 电台_页, 漫游_页, 我喜欢的_页, 本地下载_页, 最近播放_页
+        };
+        Sync::widgetToStackedWidget(_mainStackedWidget, pages);
+        syncWidgetToContain(pages);
     }
 
     const auto slider = new QSlider(Qt::Horizontal, mainWidget);
@@ -196,21 +201,21 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
     // 将按钮与页面连接
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
-    if (size != _navigationButtons.size()) {
+    if (size != _mapOfNavigationButtonsToWidget.size()) {
         LOG_FATAL() << "页面数(" << _mainStackedWidget->count()
-            << ")与按钮数(" << _navigationButtons.size() << ")不匹配";
+            << ")与按钮数(" << _mapOfNavigationButtonsToWidget.size() << ")不匹配";
         exit(EXIT_FAILURE);
     }
 
     // 保存每个按钮的原始样式表
     std::vector<QString> originalStyleSheets;
-    for (const auto& _navigationButton : _navigationButtons) {
+    for (const auto& [_navigationButton, _] : _mapOfNavigationButtonsToWidget) {
         originalStyleSheets.emplace_back(_navigationButton->styleSheet());
     }
 
     // 点击按钮切换页面
     for (size_t i = 0; i < size; ++i) {
-        connect(_navigationButtons[i], &QPushButton::clicked, this, [this, i]() {
+        connect(_mapOfNavigationButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
             _mainStackedWidget->setCurrentIndex(static_cast<int>(i));
         });
     }
@@ -219,16 +224,26 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     // 监听页面切换信号，自动更新按钮高亮
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
             [this, originalStyleSheets, color](const int index) {
-                for (size_t i = 0; i < _navigationButtons.size(); ++i) {
+                for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
                     const bool selected = (static_cast<int>(i) == index);
-                    _navigationButtons[i]->setSelected(selected, originalStyleSheets[i], color);
+                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i], color);
                 }
                 LOG_DEBUG() << "已切换到第 " << index << " 页";
+                // auto it = std::find(_mapOfNavigationButtonsToWidget.begin(), _mapOfNavigationButtonsToWidget.end(), nullptr);
+                // if (it != _mapOfNavigationButtonsToWidget.end() && it)
+                // todo 不依赖索引的查找
+                if (index == 3) {
+                    if (const auto likedPage = qobject_cast<CommonPageWidget*>(
+                        _mapOfNavigationButtonsToWidget[3].second)) {
+                        likedPage->reloadData(SongManager::getInstance().getLikedList());
+                        LOG_DEBUG() << "已重新加载 likedList";
+                    }
+                }
             });
 
     // 默认选中第一个页面
-    if (!_navigationButtons.empty()) {
-        _navigationButtons[0]->setSelected(true, originalStyleSheets[0], color);
+    if (!_mapOfNavigationButtonsToWidget.empty()) {
+        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0], color);
     }
 
     return bodyWidget;
@@ -239,10 +254,23 @@ void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>&
     Sync::buttonBackground(buttons, color.background, color.hoverOn, color.pressed);
 }
 
-void MainWindow::syncButtonContain(std::vector<NavigationButton*>& navigationButtonList,
-                                   const std::initializer_list<NavigationButton*>& buttons) {
-    for (const auto& button : buttons) {
-        navigationButtonList.emplace_back(button);
+void MainWindow::syncButtonToContain(
+    const std::initializer_list<NavigationButton*>& buttons) {
+    if (static_cast<int>(buttons.size()) == _pageCount) {
+        int i = 0;
+        for (const auto& button : buttons) {
+            _mapOfNavigationButtonsToWidget[i++].first = button;
+        }
+    }
+}
+
+void MainWindow::syncWidgetToContain(
+    const std::initializer_list<QWidget*>& widgets) {
+    if (static_cast<int>(widgets.size()) == _pageCount) {
+        int i = 0;
+        for (const auto& widget : widgets) {
+            _mapOfNavigationButtonsToWidget[i++].second = widget;
+        }
     }
 }
 

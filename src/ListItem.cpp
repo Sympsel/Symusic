@@ -1,5 +1,8 @@
 #include "ListItem.h"
 
+#include "Log.hpp"
+#include "SongManager.h"
+
 void ListItem::setupUI() {
     this->setFixedHeight(40);
 
@@ -70,9 +73,9 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(Song song, const bool isLiked): _isLiked(isLiked)
-                                                   , _likeButton(new QPushButton)
-                                                   , _song(std::move(song)) {
+ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
+                                                    , _likeButton(new QPushButton)
+                                                    , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
     if (_isLiked) {
         _likeButton->setIcon(QPixmap(":/images/赞_选中.png"));
@@ -93,16 +96,25 @@ ListItem::ListItem(Song song, const bool isLiked): _isLiked(isLiked)
     setupUI();
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
+        _isLiked = !_isLiked;
+        updateIconStatus();
+        auto& likedList = SongManager::getInstance().getLikedList();
         if (_isLiked) {
-            _isLiked = false;
+            SongManager::append(likedList, _song);
+                LOG_DEBUG() << "添加到喜欢列表: " << _song;
         } else {
-            _isLiked = true;
+            if (const auto it = std::find(likedList.begin(), likedList.end(), _song);
+                it != likedList.end()) {
+                likedList.erase(it);
+                LOG_DEBUG() << "从喜欢列表删除了: " << _song;
+            }
         }
-        updateStatus();
+        // 发射信号更新界面
+        emit likeStatusUpdated();
     });
 }
 
-void ListItem::updateStatus() const {
+void ListItem::updateIconStatus() const {
     if (_isLiked) {
         _likeButton->setIcon(QPixmap(":/images/赞_选中.png"));
     } else {

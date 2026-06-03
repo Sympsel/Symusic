@@ -6,6 +6,7 @@
 #include <Color.hpp>
 
 #include "Log.hpp"
+#include "SongManager.h"
 #include "Sync.hpp"
 
 class CommonPageWidget : public QWidget {
@@ -16,10 +17,13 @@ private:
 
     QWidget* createMiddleWidget();
 
-    void initData() const;
-
 public:
-    explicit CommonPageWidget(QString pageName, const QString& coverPath, const QString& description = "", QWidget* parent = nullptr);
+    explicit CommonPageWidget(QString pageName, const QString& coverPath, const QString& description = "",
+                              QWidget* parent = nullptr);
+
+    void initData(const SongManager::SongList& songList) const;
+
+    void reloadData(const SongManager::SongList& songList) const;
 
 private:
     QString _pageName;

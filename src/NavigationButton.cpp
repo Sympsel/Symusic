@@ -1,8 +1,10 @@
-#include "../include/NavigationButton.h"
+#include "NavigationButton.h"
+
+#include "PathMaganger.hpp"
 
 NavigationButton::NavigationButton(const QString& iconPath, const QString& text, QWidget* parent)
     : QToolButton(parent) {
-    this->setIcon(QIcon(iconPath));
+    this->setIcon(QIcon(prefix::normalImages + iconPath));
     this->setText(text);
     this->setIconSize(QSize(18, 18));
     this->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);

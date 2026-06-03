@@ -66,13 +66,23 @@ QWidget* CommonPageWidget::createMiddleWidget() {
     return middleWidget;
 }
 
-void CommonPageWidget::initData() const {
-    for (const auto song : SongManager::getInstance().getLikedList()) {
+void CommonPageWidget::initData(const SongManager::SongList& songList) const {
+    reloadData(songList);
+}
+
+void CommonPageWidget::reloadData(const SongManager::SongList& songList) const {
+    _playlist->clear();
+    for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);
         item->setSizeHint(QSize(0, 40));
-        _playlist->setItemWidget(item, new ListItem(song, true));
+        const auto listItem = new ListItem(song, true);
+        _playlist->setItemWidget(item, listItem);
+        // connect(listItem, &ListItem::likeStatusUpdated, this, [this]() {
+            // this->reloadData(SongManager::getInstance().getLikedList());
+        // });
     }
 }
+
 
 CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, const QString& description,
                                    QWidget* parent) : QWidget(parent)
@@ -104,5 +114,4 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, c
     Sync::widgetToLayout(mainLayout, {
                              headWidget, middleLabel, _playlist
                          });
-    initData();
 }

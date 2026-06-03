@@ -69,15 +69,15 @@ public:
         return instance;
     }
 
-    [[nodiscard]] const SongList& getRecommendList() const {
+    [[nodiscard]] SongList& getRecommendList() {
         return _recommendList;
     }
 
-    [[nodiscard]] const SongList& getYouMayLikeList() const {
+    [[nodiscard]] SongList& getYouMayLikeList() {
         return _youMayLikeList;
     }
 
-    [[nodiscard]] const SongList& getLikedList() const {
+    [[nodiscard]] SongList& getLikedList() {
         return _likedList;
     }
 
