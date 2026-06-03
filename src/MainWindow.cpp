@@ -228,17 +228,17 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
                     const bool selected = (static_cast<int>(i) == index);
                     _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i], color);
                 }
-                LOG_DEBUG() << "已切换到第 " << index << " 页";
-                // auto it = std::find(_mapOfNavigationButtonsToWidget.begin(), _mapOfNavigationButtonsToWidget.end(), nullptr);
-                // if (it != _mapOfNavigationButtonsToWidget.end() && it)
-                // todo 不依赖索引的查找
-                if (index == 3) {
-                    if (const auto likedPage = qobject_cast<CommonPageWidget*>(
-                        _mapOfNavigationButtonsToWidget[3].second)) {
-                        likedPage->reloadData(SongManager::getInstance().getLikedList());
-                        LOG_DEBUG() << "已重新加载 likedList";
+
+                if (const auto currentPage = _mainStackedWidget->widget(index)) {
+                    if (const auto likedPage = qobject_cast<CommonPageWidget*>(currentPage)) {
+                        if (likedPage->getPageName() == "我喜欢的") {
+                            likedPage->reloadData(SongManager::getInstance().getLikedList());
+                            LOG_DEBUG() << "已重新加载 likedList";
+                        }
                     }
                 }
+
+                LOG_DEBUG() << "已切换到第 " << index << " 页";
             });
 
     // 默认选中第一个页面

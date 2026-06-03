@@ -25,6 +25,10 @@ public:
 
     void reloadData(const SongManager::SongList& songList) const;
 
+    [[nodiscard]] const QString& getPageName() const {
+        return _pageName;
+    }
+
 private:
     QString _pageName;
     QPushButton* _playAllButton;
