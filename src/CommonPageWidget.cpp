@@ -1,6 +1,8 @@
 #include "CommonPageWidget.h"
 #include "SongManager.h"
 
+#include <QKeyEvent>
+
 QWidget* CommonPageWidget::createHeadWidget(const QString& coverPath, const QString& description) const {
     const auto headWidget = new QWidget();
     headWidget->setFixedHeight(120);
@@ -66,21 +68,36 @@ QWidget* CommonPageWidget::createMiddleWidget() {
     return middleWidget;
 }
 
-void CommonPageWidget::initData(const SongManager::SongList& songList) const {
+void CommonPageWidget::initData(const SongManager::SongList& songList) {
     reloadData(songList);
 }
 
-void CommonPageWidget::reloadData(const SongManager::SongList& songList) const {
+void CommonPageWidget::reloadData(const SongManager::SongList& songList) {
     _playlist->clear();
     for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);
         item->setSizeHint(QSize(0, 40));
         const auto listItem = new ListItem(song, true);
         _playlist->setItemWidget(item, listItem);
-        // connect(listItem, &ListItem::likeStatusUpdated, this, [this]() {
-            // this->reloadData(SongManager::getInstance().getLikedList());
-        // });
+        connect(listItem, &ListItem::doubleClicked, this, [this, song]() {
+            emit songItemDoubleClicked(song);
+        });
     }
+}
+
+void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Space) {
+        if (const auto currItem = _playlist->currentItem()) {
+            if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
+                const auto song = listItemWidget->getSong();
+                emit songItemDoubleClicked(song);
+                LOG_DEBUG() << "空格键触发，显示歌曲详情: " << song;
+            }
+        }
+        event->accept();
+        return;
+    }
+    QWidget::keyPressEvent(event);
 }
 
 

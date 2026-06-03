@@ -1,5 +1,7 @@
 #include "ListItem.h"
 
+#include <QMouseEvent>
+
 #include "Log.hpp"
 #include "SongManager.h"
 
@@ -78,9 +80,9 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
                                                     , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
     if (_isLiked) {
-        _likeButton->setIcon(QPixmap(":/images/赞_选中.png"));
+        _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
-        _likeButton->setIcon(QPixmap(":/images/赞.png"));
+        _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
     }
     _likeButton->setStyleSheet(
         "QPushButton {"
@@ -101,7 +103,7 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
         auto& likedList = SongManager::getInstance().getLikedList();
         if (_isLiked) {
             SongManager::append(likedList, _song);
-                LOG_DEBUG() << "添加到喜欢列表: " << _song;
+            LOG_DEBUG() << "添加到喜欢列表: " << _song;
         } else {
             if (const auto it = std::find(likedList.begin(), likedList.end(), _song);
                 it != likedList.end()) {
@@ -116,8 +118,15 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
 
 void ListItem::updateIconStatus() const {
     if (_isLiked) {
-        _likeButton->setIcon(QPixmap(":/images/赞_选中.png"));
+        _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
-        _likeButton->setIcon(QPixmap(":/images/赞.png"));
+        _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
     }
+}
+
+void ListItem::mouseDoubleClickEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        emit doubleClicked(_song);
+    }
+    QWidget::mouseDoubleClickEvent(event);
 }

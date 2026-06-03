@@ -21,13 +21,18 @@ public:
     explicit CommonPageWidget(QString pageName, const QString& coverPath, const QString& description = "",
                               QWidget* parent = nullptr);
 
-    void initData(const SongManager::SongList& songList) const;
+    void initData(const SongManager::SongList& songList);
 
-    void reloadData(const SongManager::SongList& songList) const;
+    void reloadData(const SongManager::SongList& songList);
 
     [[nodiscard]] const QString& getPageName() const {
         return _pageName;
     }
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+
+signals:
+    void songItemDoubleClicked(const Song& song);
 
 private:
     QString _pageName;

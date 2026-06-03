@@ -1,8 +1,9 @@
-#include "../include/MainWindow.h"
+#include "MainWindow.h"
 
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
 
+#include "SongInfoPage.h"
 #include "CommonPageWidget.h"
 #include "NavigationWidget.h"
 #include "Log.hpp"
@@ -164,6 +165,12 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
+        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [this](const Song& song) {
+           auto* infoPage = new SongInfoPage(song);
+           infoPage->setAttribute(Qt::WA_DeleteOnClose);
+           infoPage->show();
+           LOG_DEBUG() << "打开歌曲详情页面: " << song;
+       });
         const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
