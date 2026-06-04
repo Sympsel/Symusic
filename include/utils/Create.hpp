@@ -1,7 +1,5 @@
 #pragma once
 
-// #include <qpixmap.h>
-
 #include <QLabel>
 #include <QPainter>
 #include <QPainterPath>
@@ -33,9 +31,9 @@ public:
         return target;
     }
 
-    static QLabel* squarePixmap(QWidget* parent, const QString& picture, const int size) {
+    static QLabel* squarePixmap(QWidget* parent, const QString& pictureFileNoPath, const int size) {
         const auto pictureLabel = new QLabel(parent);
-        QPixmap source(picture);
+        QPixmap source(prefix::normalImages + pictureFileNoPath);
         source = source.scaled(size, size);
         pictureLabel->setPixmap(source);
         return pictureLabel;

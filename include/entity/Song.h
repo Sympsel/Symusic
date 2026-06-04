@@ -34,6 +34,7 @@ public:
                   QString album,
                   const QString& filePath,
                   const QString& coverPath,
+                  const bool isLiked = false,
                   const int duration = 0,
                   const int tagsFlag = 0)
         : _name(std::move(name))
@@ -41,6 +42,7 @@ public:
           , _album(std::move(album))
           , _filePath(prefix::songsFile + filePath)
           , _cover(QPixmap(prefix::itemImages + coverPath))
+          , _isLiked(isLiked)
           , _duration(duration)
           , _tagsFlag(tagsFlag) {
     }

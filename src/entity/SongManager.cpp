@@ -21,6 +21,7 @@ void SongManager::initData() {
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
+            false,
             198,
             Song::tag::VIP | Song::tag::SQ
         );
@@ -32,6 +33,7 @@ void SongManager::initData() {
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
+            false,
             198,
             Song::tag::VIP | Song::tag::SQ
         );
@@ -43,6 +45,7 @@ void SongManager::initData() {
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
+            true,
             198,
             Song::tag::VIP | Song::tag::SQ
         );

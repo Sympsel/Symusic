@@ -36,7 +36,7 @@ public:
     }
 
     static bool append(SongList& which, const Song& song) {
-        if (std::find(which.begin(), which.end(), song) != which.end()) {
+        if (std::ranges::find(which, song) != which.end()) {
             which.emplace_back(song);
             return true;
         }

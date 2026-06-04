@@ -83,7 +83,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     Sync::clearWidgetMargins(controlWidget);
 
     // [图片 歌名/歌手]
-    QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
+    QLabel* songCover = Create::squarePixmap(controlWidget, "Sympsel.png", 50);
     const auto leftWidget = new QWidget(controlWidget);
     const auto songInfoWidget = new QWidget(leftWidget);
     const auto leftLayout = new QHBoxLayout(leftWidget);
@@ -98,14 +98,14 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
     const auto centralWidget = new QWidget(controlWidget);
     const auto centralLayout = new QHBoxLayout(centralWidget);
-    const auto playModeButton = new QPushButton(QIcon(":/images/随机播放.png"), "", centralWidget);
+    const auto playModeButton = Create::buttonOnlyIcon("随机播放.png", centralWidget);
     playModeButton->setToolTip("点击切换到xxx模式");
     playModeButton->setToolTipDuration(3000);
-    const auto prevButton = new QPushButton(QIcon(":/images/上一首.png"), "", centralWidget);
-    const auto playButton = new QPushButton(QIcon(":/images/播放.png"), "", centralWidget);
-    const auto nextButton = new QPushButton(QIcon(":/images/下一首.png"), "", centralWidget);
-    const auto volumeButton = new QPushButton(QIcon(":/images/音量.png"), "", centralWidget);
-    const auto addToButton = new QPushButton(QIcon(":/images/添加.png"), "", centralWidget);
+    const auto prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
+    const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
+    const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
+    const auto volumeButton = Create::buttonOnlyIcon("音量.png", centralWidget);
+    const auto addToButton = Create::buttonOnlyIcon("添加.png", centralWidget);
     addToButton->setToolTip("添加到");
     addToButton->setToolTipDuration(3000);
 
@@ -168,19 +168,26 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
-        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [this](const Song& song) {
-            if (_songInfoPage != nullptr) {
-                _songInfoPage->close();
-                _songInfoPage = nullptr;
-            }
-            _songInfoPage = new SongInfoPage(song);
-            connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
-                _songInfoPage = nullptr;
-            });
-            _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
-            _songInfoPage->show();
-            // LOG_DEBUG() << "打开歌曲详情页面: " << song;
-        });
+        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this,
+                [this, 我喜欢的_页](const Song& song) {
+                    if (_songInfoPage != nullptr) {
+                        _songInfoPage->close();
+                        _songInfoPage = nullptr;
+                    }
+                    _songInfoPage = new SongInfoPage(song);
+
+                    // 监听喜欢状态变化，刷新列表
+                    connect(_songInfoPage, &SongInfoPage::likeStatusChanged, this, [我喜欢的_页]() {
+                        我喜欢的_页->reloadData(SongManager::getInstance().getLikedList());
+                        LOG_DEBUG() << "喜欢状态改变，已刷新喜欢列表";
+                    });
+
+                    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
+                        _songInfoPage = nullptr;
+                    });
+                    _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
+                    _songInfoPage->show();
+                });
         const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
@@ -250,7 +257,6 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
                     if (const auto likedPage = qobject_cast<CommonPageWidget*>(currentPage)) {
                         if (likedPage->getPageName() == "我喜欢的") {
                             likedPage->reloadData(SongManager::getInstance().getLikedList());
-                            LOG_DEBUG() << "已重新加载 likedList";
                         }
                     }
                 }
@@ -292,10 +298,10 @@ void MainWindow::syncWidgetToContain(
 void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
     connect(headWidget, &HeadWidget::maximizeRequested, this, [this]() {
         if (this->isMaximized()) {
-        LOG_INFO() << "窗口恢复正常大小";
+            LOG_INFO() << "窗口恢复正常大小";
             this->showNormal();
         } else {
-        LOG_INFO() << "窗口最大化";
+            LOG_INFO() << "窗口最大化";
             this->showMaximized();
         }
     });

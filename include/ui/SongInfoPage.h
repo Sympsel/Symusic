@@ -19,6 +19,9 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
 
+signals:
+    void likeStatusChanged();
+
 private:
     void setupUI();
     void setBorder(bool enabled = false);

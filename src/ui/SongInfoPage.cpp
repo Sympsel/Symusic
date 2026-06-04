@@ -3,8 +3,10 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QMouseEvent>
+#include <ranges>
 
 #include "entity/PathManager.hpp"
+#include "entity/SongManager.h"
 #include "utils/FrameStyleSheet.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
@@ -108,7 +110,14 @@ void SongInfoPage::setupUI() {
 
     _likeButton->setFixedSize(40, 40);
     _likeButton->setIconSize(QSize(24, 24));
-    _likeButton->setToolTip("添加到喜欢");
+
+    if (_song.isLiked()) {
+        _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
+        _likeButton->setToolTip("取消喜欢");
+    } else {
+        _likeButton->setIcon(QIcon(prefix::normalImages + "赞.png"));
+        _likeButton->setToolTip("添加喜欢");
+    }
 
     _playButton->setFixedHeight(40);
     _playButton->setMinimumWidth(120);
@@ -132,9 +141,9 @@ void SongInfoPage::setupUI() {
 
 void SongInfoPage::setBorder(const bool enabled) {
     // if (enabled) {
-        // LOG_DEBUG() << "歌曲信息页：启用调试边框";
+    // LOG_DEBUG() << "歌曲信息页：启用调试边框";
     // } else {
-        // LOG_DEBUG() << "歌曲信息页：启用常规边框";
+    // LOG_DEBUG() << "歌曲信息页：启用常规边框";
     // }
     FrameStyleSheet::setBorder(this, enabled);
 }
@@ -189,9 +198,29 @@ void SongInfoPage::applyStyles() {
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
         _song.setLiked(!_song.isLiked());
-        _likeButton->setIcon(_song.isLiked()
-                                 ? QIcon(prefix::normalImages + "赞_选中.png")
-                                 : QIcon(":/images/赞.png"));
+
+        // 同步更新 SongManager 中的喜欢列表
+        auto& likedList = SongManager::getInstance().getLikedList();
+        if (_song.isLiked()) {
+            // 添加到喜欢列表
+            SongManager::append(likedList, _song);
+            LOG_DEBUG() << "添加到喜欢列表: " << _song;
+
+            _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
+            _likeButton->setToolTip("取消喜欢");
+        } else {
+            // 从喜欢列表中移除
+            if (const auto it = std::ranges::find(likedList, _song);
+                it != likedList.end()) {
+                likedList.erase(it);
+                LOG_DEBUG() << "从喜欢列表删除了: " << _song;
+            }
+
+            _likeButton->setIcon(QIcon(prefix::normalImages + "赞.png"));
+            _likeButton->setToolTip("添加喜欢");
+        }
+        // 发射信号通知上层外部喜欢状态已改变
+        emit likeStatusChanged();
     });
     this->setBorder(false);
 }
