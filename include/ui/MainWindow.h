@@ -18,6 +18,7 @@ class MainWindow final : public QMainWindow {
 
 public:
     explicit MainWindow(QWidget* parent = nullptr, bool statusBarVisible = true, bool debugBorder = false);
+
     ~MainWindow() override;
 
 private:

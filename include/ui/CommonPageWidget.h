@@ -16,7 +16,7 @@ class CommonPageWidget : public QWidget {
 private:
     [[nodiscard]] QWidget* createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const;
 
-    QWidget* createMiddleWidget();
+    static QWidget* createMiddleWidget();
 
 public:
     explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
@@ -29,6 +29,9 @@ public:
     [[nodiscard]] const QString& getPageName() const {
         return _pageName;
     }
+
+    bool eventFilter(QObject* watched, QEvent* event) override;
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
 

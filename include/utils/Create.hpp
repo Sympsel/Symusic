@@ -9,7 +9,7 @@
 class QFrame;
 class QLabel;
 
-class CreatePixmap {
+class Create {
 public:
     static QPixmap circularPixmap(const QString& picture, const int size) {
         const QPixmap source(picture);
@@ -48,5 +48,9 @@ public:
         line->setFrameShadow(QFrame::Sunken); // 凹陷阴影效果
         line->setLineWidth(1);
         return line;
+    }
+
+    static QPushButton* buttonOnlyIcon(const QString& iconFileNameWithoutPath, QWidget* parent = nullptr) {
+        return new QPushButton(QIcon(prefix::normalImages + iconFileNameWithoutPath), "", parent);
     }
 };

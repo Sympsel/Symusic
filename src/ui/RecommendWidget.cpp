@@ -4,9 +4,11 @@
 #include <QVBoxLayout>
 #include <string>
 #include <random>
+#include <ranges>
 
 #include "utils/Sync.hpp"
 #include "entity/SongManager.h"
+#include "utils/Create.hpp"
 
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
                                       const int width,
@@ -163,7 +165,7 @@ void RecommendWidget::updateRowSize() {
         _rowSize = newRowSize;
 
         // 调整列表的begin，确保不会越界，防止窗口放大不会往前扩容
-        for (auto& [key, alist] : _contain) {
+        for (auto& alist : _contain | std::views::values) {
             if (const int totalSize = static_cast<int>(alist.list.size());
                 alist.begin + _rowSize > totalSize) {
                 alist.begin = std::max(0, totalSize - _rowSize);
@@ -181,14 +183,14 @@ void RecommendWidget::updateButtonVisibility(const QString& name) {
 
         if (const bool couldGoLeft = alist.begin != 0) {
             alist.leftButton->setEnabled(couldGoLeft);
-            alist.leftButton->setIcon(QIcon(":/images/向左.png"));
+            alist.leftButton->setIcon(QIcon(prefix::normalImages + "向左.png"));
         } else {
             alist.leftButton->setIcon(QIcon());
         }
 
         if (const bool couldGoRight = alist.begin + _rowSize < alist.list.size()) {
             alist.rightButton->setEnabled(couldGoRight);
-            alist.rightButton->setIcon(QIcon(":/images/向右.png"));
+            alist.rightButton->setIcon(QIcon(prefix::normalImages + "向右.png"));
         } else {
             alist.rightButton->setIcon(QIcon());
         }
@@ -207,7 +209,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     label->setStyleSheet("font-size: 25px;");
 
     auto& leftButton = _contain.at(name).leftButton;
-    leftButton = new QPushButton(QIcon(":/images/向左.png"), "");
+    leftButton = Create::buttonOnlyIcon("向左.png");
     auto centralWidget = new QWidget();
     const auto centralHLayout = new QHBoxLayout(centralWidget);
     Sync::clearLayoutVMargins({centralHLayout});
@@ -220,7 +222,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     centralHLayout->addStretch(1);
 
     auto& rightButton = _contain.at(name).rightButton;
-    rightButton = new QPushButton(QIcon(":/images/向右.png"), "");
+    rightButton = Create::buttonOnlyIcon("向右.png");
     syncButtonStyle({leftButton, rightButton}, 30, 120);
     auto widgetH = new QWidget();
     Sync::clearWidgetMargins(widgetH);
@@ -230,7 +232,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
 
     Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
 
-    if (_contain.find(name) != _contain.end()) {
+    if (_contain.contains(name)) {
         auto& alist = _contain.at(name);
         alist.widget = centralWidget;
 
@@ -238,7 +240,6 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
         connect(leftButton, &QPushButton::clicked, this, [this, name, &alist]() {
             if (int& begin = alist.begin; begin > 0) {
                 --begin;
-                LOG_DEBUG() << std::string(name.toUtf8()) << " begin: " << begin;
                 updateWidgetLayout(name);
             }
         });
@@ -246,7 +247,6 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
             if (int& begin = alist.begin;
                 begin + _rowSize < static_cast<int>(alist.list.size())) {
                 ++begin;
-                LOG_DEBUG() << std::string(name.toUtf8()) << " begin: " << begin;
                 updateWidgetLayout(name);
             }
         });

@@ -1,9 +1,10 @@
 #include "ui/HeadWidget.h"
 
 #include <QLineEdit>
+#include <QTimer>
 
 #include "entity/PathManager.hpp"
-#include "utils/CreatePixmap.hpp"
+#include "utils/Create.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
@@ -22,7 +23,7 @@ HeadWidget::HeadWidget(QWidget* parent) {
     }
 )");
     avatarLabel->setScaledContents(true);
-    avatarLabel->setPixmap(CreatePixmap::circularPixmap(prefix::normalImages + "Sympsel.png", 50));
+    avatarLabel->setPixmap(Create::circularPixmap(prefix::normalImages + "Sympsel.png", 50));
 
     const auto searchLineEdit = new QLineEdit(parent);
     searchLineEdit->setPlaceholderText("搜索");
@@ -39,24 +40,34 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
 
     const auto layout = new QHBoxLayout(functionWidget);
 
-    const auto settingsButton = createControlButton("设置.png", functionWidget);
-    const auto minimizeButton = createControlButton("最小化.png", functionWidget);
-    connect(minimizeButton, &QPushButton::clicked, this, [this]() {
+    const auto settingsButton = Create::buttonOnlyIcon("设置.png", functionWidget);
+    const auto minimizeButton = Create::buttonOnlyIcon("最小化.png", functionWidget);
+    connect(minimizeButton, &QPushButton::clicked, this, [this, minimizeButton]() {
         if (this->parent()) {
             emit minimizeRequested();
         } else {
+            minimizeButton->setIcon(QPixmap(""));
             LOG_INFO() << "HeadWidget控件 最大化";
         }
     });
-    const auto maximizeButton = createControlButton("最大化.png", functionWidget);
-    connect(maximizeButton, &QPushButton::clicked, this, [this]() {
+    const auto maximizeButton = Create::buttonOnlyIcon("最大化_1.png", functionWidget);
+    connect(maximizeButton, &QPushButton::clicked, this, [this, maximizeButton]() {
         if (this->parent()) {
             emit maximizeRequested();
-        } else {
-            LOG_INFO() << "HeadWidget控件 最小化";
+            QTimer::singleShot(50, this, [this, maximizeButton]() {
+                // this->window() 返回顶层窗口的指针，即 MainWidget
+                if (this->window()->isMaximized()) {
+                    maximizeButton->setIcon(QIcon(prefix::normalImages + "最大化_1.png"));
+                    maximizeButton->setToolTip("还原");
+                } else {
+                    maximizeButton->setIcon(QIcon(prefix::normalImages + "最大化_2.png"));
+                    maximizeButton->setToolTip("最大化");
+                }
+            });
         }
     });
-    const auto closeButton = createControlButton("关闭.png", functionWidget);
+
+    const auto closeButton = Create::buttonOnlyIcon("关闭.png", functionWidget);
     connect(closeButton, &QPushButton::clicked, this, [this]() {
         if (this->parent()) {
             emit closeRequested();

@@ -9,7 +9,7 @@
 #include "ui/NavigationWidget.h"
 #include "ui/RecommendWidget.h"
 #include "ui/SongInfoPage.h"
-#include "utils/CreatePixmap.hpp"
+#include "utils/Create.hpp"
 #include "utils/FrameStyleSheet.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     handleRequestFromHeadButton(headWidget);
 
     QWidget* bodyWidget = createBodyWidget();
-    QFrame* line = CreatePixmap::line(QFrame::HLine);
+    QFrame* line = Create::line(QFrame::HLine);
 
     // 4. 添加到布局
     Sync::widgetToLayout(headBodyLayout, {
@@ -83,7 +83,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     Sync::clearWidgetMargins(controlWidget);
 
     // [图片 歌名/歌手]
-    QLabel* songCover = CreatePixmap::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
+    QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
     const auto leftWidget = new QWidget(controlWidget);
     const auto songInfoWidget = new QWidget(leftWidget);
     const auto leftLayout = new QHBoxLayout(leftWidget);
@@ -179,7 +179,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             });
             _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
             _songInfoPage->show();
-            LOG_DEBUG() << "打开歌曲详情页面: " << song;
+            // LOG_DEBUG() << "打开歌曲详情页面: " << song;
         });
         const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
@@ -211,7 +211,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     bodyWidget->setMinimumHeight(100);
 
     const auto leftWidget = createBodyLeftWidget(bodyWidget);
-    const auto line = CreatePixmap::line(QFrame::VLine);
+    const auto line = Create::line(QFrame::VLine);
     const auto rightWidget = createMainStackedWidget(bodyWidget);
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);
@@ -254,8 +254,6 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
                         }
                     }
                 }
-
-                LOG_DEBUG() << "已切换到第 " << index << " 页";
             });
 
     // 默认选中第一个页面
@@ -297,6 +295,7 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
         // todo 切换一下按钮图标
         if (this->isMaximized()) {
             this->showNormal();
+            // findChild<QPushButton*>()
         } else {
             this->showMaximized();
         }

@@ -8,10 +8,7 @@
 
 class HeadWidget final : public QWidget {
     Q_OBJECT
-private:
-    static QPushButton* createControlButton(const QString& iconFileNameWithoutPath, QWidget* parent = nullptr) {
-    return new QPushButton(QIcon(prefix::normalImages + iconFileNameWithoutPath), "", parent);
-    }
+
 public:
     explicit HeadWidget(QWidget* parent = nullptr);
     QWidget* createFunctionWidget(QWidget* parent);

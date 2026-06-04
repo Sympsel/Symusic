@@ -21,9 +21,9 @@ SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
       , _likeButton(new QPushButton())
       , _playButton(new QPushButton("  播放"))
       , _closeButton(new QPushButton()) {
-    setFixedSize(600, 450);
-    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
-    setAttribute(Qt::WA_DeleteOnClose);
+    this->setFixedSize(600, 450);
+    this->setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    this->setAttribute(Qt::WA_DeleteOnClose);
 
     setupUI();
     applyStyles();
@@ -38,7 +38,7 @@ void SongInfoPage::updateSong(const Song& song) {
     ); !coverPixmap.isNull()) {
         _coverLabel->setPixmap(coverPixmap);
     } else {
-        LOG_DEBUG() << "警告：歌曲封面图片为空";
+        LOG_WARN() << "歌曲封面图片为空";
     }
 
     _nameLabel->setText(song.getName());
@@ -131,11 +131,11 @@ void SongInfoPage::setupUI() {
 }
 
 void SongInfoPage::setBorder(const bool enabled) {
-    if (enabled) {
-        LOG_DEBUG() << "歌曲信息页：启用调试边框";
-    } else {
-        LOG_DEBUG() << "歌曲信息页：启用常规边框";
-    }
+    // if (enabled) {
+        // LOG_DEBUG() << "歌曲信息页：启用调试边框";
+    // } else {
+        // LOG_DEBUG() << "歌曲信息页：启用常规边框";
+    // }
     FrameStyleSheet::setBorder(this, enabled);
 }
 
@@ -171,17 +171,17 @@ void SongInfoPage::applyStyles() {
 
     _closeButton->setStyleSheet(QString(
         "QPushButton {"
-        "   background-color: transparent;"
+        "   background-color: rgb(%1);"
         "   border: none;"
-        "   border-radius: 20px;"
+        "   border-radius: 4px;"
         "}"
         "QPushButton:hover {"
-        "   background-color: rgba(255, 100, 100, 80);"
+        "   background-color: rgb(%2);"
         "}"
         "QPushButton:pressed {"
-        "   background-color: rgba(255, 100, 100, 120);"
+        "   background-color: rgb(%3);"
         "}"
-    ));
+    ).arg(color.background, color.hoverOn, color.pressed));
 
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
         this->close();
@@ -189,9 +189,11 @@ void SongInfoPage::applyStyles() {
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
         _song.setLiked(!_song.isLiked());
-        _likeButton->setIcon(_song.isLiked() ? QIcon(prefix::normalImages + "赞_选中.png") : QIcon(":/images/赞.png"));
+        _likeButton->setIcon(_song.isLiked()
+                                 ? QIcon(prefix::normalImages + "赞_选中.png")
+                                 : QIcon(":/images/赞.png"));
     });
-    this->setBorder(true);
+    this->setBorder(false);
 }
 
 void SongInfoPage::keyPressEvent(QKeyEvent* event) {

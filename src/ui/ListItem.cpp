@@ -79,6 +79,7 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
                                                     , _likeButton(new QPushButton)
                                                     , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
+    _likeButton->setFocusPolicy(Qt::NoFocus);
     if (_isLiked) {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
