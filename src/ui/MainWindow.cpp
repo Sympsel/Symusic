@@ -2,6 +2,7 @@
 
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
+#include <ranges>
 
 #include "ui/CommonPageWidget.h"
 #include "ui/HeadWidget.h"
@@ -25,6 +26,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     }
 
     _mapOfNavigationButtonsToWidget.resize(_pageCount);
+    _songInfoPage = nullptr;
 
     const auto centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
@@ -166,10 +168,17 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
-        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [](const Song& song) {
-            const auto infoPage = new SongInfoPage(song);
-            infoPage->setAttribute(Qt::WA_DeleteOnClose);
-            infoPage->show();
+        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [this](const Song& song) {
+            if (_songInfoPage != nullptr) {
+                _songInfoPage->close();
+                _songInfoPage = nullptr;
+            }
+            _songInfoPage = new SongInfoPage(song);
+            connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
+                _songInfoPage = nullptr;
+            });
+            _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
+            _songInfoPage->show();
             LOG_DEBUG() << "打开歌曲详情页面: " << song;
         });
         const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
@@ -217,7 +226,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
     // 保存每个按钮的原始样式表
     std::vector<QString> originalStyleSheets;
-    for (const auto& [_navigationButton, _] : _mapOfNavigationButtonsToWidget) {
+    for (const auto& _navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
         originalStyleSheets.emplace_back(_navigationButton->styleSheet());
     }
 
@@ -333,5 +342,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
 }
 
 MainWindow::~MainWindow() {
-    LOG_INFO() << "程序退出，退出时宽高为 [" << this->width() << ", " << this->height() << "]";
+    if (_songInfoPage) {
+        _songInfoPage->close();
+        _songInfoPage = nullptr;
+    }
+    LOG_DEBUG() << "程序退出，退出时宽高为 [" << this->width() << ", " << this->height() << "]";
 }

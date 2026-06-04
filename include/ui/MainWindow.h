@@ -8,6 +8,7 @@
 #include <QPainterPath>
 
 #include "HeadWidget.h"
+#include "SongInfoPage.h"
 #include "ui/NavigationButton.h"
 #include "utils/Sync.hpp"
 
@@ -47,5 +48,6 @@ private:
     QPoint _dragPos;
     QStackedWidget* _mainStackedWidget;
     std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
+    SongInfoPage* _songInfoPage;
     int _pageCount = 6;
 };
