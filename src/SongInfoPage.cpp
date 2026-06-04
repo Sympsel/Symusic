@@ -2,22 +2,23 @@
 
 #include <qevent.h>
 
+#include "FrameStyleSheet.hpp"
+#include "Log.hpp"
 #include "PathMaganger.hpp"
 #include "Sync.hpp"
 
 SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
     : QWidget(parent)
-    , _song(song)
-    , _coverLabel(new QLabel())
-    , _nameLabel(new QLabel())
-    , _artistLabel(new QLabel())
-    , _albumLabel(new QLabel())
-    , _durationLabel(new QLabel())
-    , _tagsLabel(new QLabel())
-    , _likeButton(new QPushButton())
-    , _playButton(new QPushButton("  播放"))
-    , _closeButton(new QPushButton()) {
-
+      , _song(song)
+      , _coverLabel(new QLabel())
+      , _nameLabel(new QLabel())
+      , _artistLabel(new QLabel())
+      , _albumLabel(new QLabel())
+      , _durationLabel(new QLabel())
+      , _tagsLabel(new QLabel())
+      , _likeButton(new QPushButton())
+      , _playButton(new QPushButton("  播放"))
+      , _closeButton(new QPushButton()) {
     setFixedSize(600, 450);
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_DeleteOnClose);
@@ -49,7 +50,7 @@ void SongInfoPage::updateSong(const Song& song) {
 void SongInfoPage::setupUI() {
     const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(0);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setContentsMargins(10, 0, 5, 0);
 
     const auto headerWidget = new QWidget();
     headerWidget->setFixedHeight(50);
@@ -58,7 +59,8 @@ void SongInfoPage::setupUI() {
     Sync::clearLayoutMargins(headerLayout);
 
     const auto titleLabel = new QLabel("歌曲详情");
-    titleLabel->setFont(QFont("Microsoft YaHei", 12, QFont::Bold));
+    // 字体族留空使用默认字体
+    titleLabel->setFont(QFont("", 12, QFont::Bold));
 
     _closeButton->setFixedSize(40, 40);
     _closeButton->setIcon(QIcon(prefix::normalImages + "关闭.png"));
@@ -87,16 +89,10 @@ void SongInfoPage::setupUI() {
     infoLayout->setSpacing(15);
 
     _nameLabel->setObjectName("songName");
-    // _nameLabel->setFont(QFont("Microsoft YaHei", 18, QFont::Bold));
-
-    // _artistLabel->setFont(QFont("Microsoft YaHei", 12));
-    // _albumLabel->setFont(QFont("Microsoft YaHei", 12));
-    // _durationLabel->setFont(QFont("Microsoft YaHei", 11));
-    // _tagsLabel->setFont(QFont("Microsoft YaHei", 10));
 
     Sync::widgetToLayout(infoLayout, {
-        _nameLabel, _artistLabel, _albumLabel, _durationLabel, _tagsLabel
-    });
+                             _nameLabel, _artistLabel, _albumLabel, _durationLabel, _tagsLabel
+                         });
     infoLayout->addStretch(1);
 
     const auto buttonLayout = new QHBoxLayout();
@@ -126,34 +122,33 @@ void SongInfoPage::setupUI() {
     Sync::widgetToLayout(mainLayout, {headerWidget, contentWidget});
 }
 
+void SongInfoPage::setBorder(const bool enabled) {
+    if (enabled) {
+        LOG_DEBUG() << "歌曲信息页：启用调试边框";
+    } else {
+        LOG_DEBUG() << "歌曲信息页：启用常规边框";
+    }
+    FrameStyleSheet::setBorder(this, enabled);
+}
+
 void SongInfoPage::applyStyles() {
     const Color& color = ColorTheme::getInstance().getColor();
 
     setStyleSheet(QString(
-        "QWidget {"
+        "#SongInfoPageWidget {"
         "   background-color: rgb(%1);"
+        "   border: 2px solid rgb(%2);"
         "}"
         "#songName {"
         "   color: white;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
         "}"
         "QLabel {"
         "   color: rgb(200, 200, 200);"
         "   background-color: transparent;"
         "}"
-        "QPushButton {"
-        "   background-color: rgb(%2);"
-        "   color: white;"
-        "   border: none;"
-        "   border-radius: 4px;"
-        "   padding: 8px 16px;"
-        "}"
-        "QPushButton:hover {"
-        "   background-color: rgb(%3);"
-        "}"
-        "QPushButton:pressed {"
-        "   background-color: rgb(%4);"
-        "}"
-    ).arg(color.background, color.hoverOn, color.pressed, color.border));
+    ).arg(color.background, color.border));
 
     _likeButton->setStyleSheet(QString(
         "QPushButton {"
@@ -188,6 +183,7 @@ void SongInfoPage::applyStyles() {
         _song.setLiked(!_song.isLiked());
         _likeButton->setIcon(_song.isLiked() ? QIcon(prefix::normalImages + "赞_选中.png") : QIcon(":/images/赞.png"));
     });
+    this->setBorder(true);
 }
 
 void SongInfoPage::keyPressEvent(QKeyEvent* event) {
@@ -198,4 +194,22 @@ void SongInfoPage::keyPressEvent(QKeyEvent* event) {
         return;
     }
     QWidget::keyPressEvent(event);
+}
+
+void SongInfoPage::mouseMoveEvent(QMouseEvent* event) {
+    if (event->buttons() & Qt::LeftButton) {
+        move(event->globalPosition().toPoint() - _dragPos);
+        event->accept();
+        return;
+    }
+    QWidget::mouseMoveEvent(event);
+}
+
+void SongInfoPage::mousePressEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        _dragPos = event->globalPosition().toPoint() - geometry().topLeft();
+        event->accept();
+        return;
+    }
+    QWidget::mousePressEvent(event);
 }

@@ -9,6 +9,7 @@
 #include "Log.hpp"
 #include "Sync.hpp"
 #include "Create.hpp"
+#include "FrameStyleSheet.hpp"
 #include "HeadWidget.h"
 #include "RecommendWidget.h"
 
@@ -165,8 +166,8 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
-        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [this](const Song& song) {
-           auto* infoPage = new SongInfoPage(song);
+        connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [](const Song& song) {
+           const auto infoPage = new SongInfoPage(song);
            infoPage->setAttribute(Qt::WA_DeleteOnClose);
            infoPage->show();
            LOG_DEBUG() << "打开歌曲详情页面: " << song;
@@ -301,29 +302,13 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
     });
 }
 
-void MainWindow::setBorder(const bool enabled = false) const {
-    const Color& color = ColorTheme::getInstance().getColor();
-    const auto currWidget = this->centralWidget();
+void MainWindow::setBorder(const bool enabled) const {
     if (enabled) {
-        if (currWidget) {
-            LOG_DEBUG() << "启用调试边框";
-            currWidget->setStyleSheet(QString(
-                "background-color: rgb(%1);"
-                "border: 2px solid rgb(%2);"
-            ).arg(color.background, color.border));
-        }
+        LOG_DEBUG() << "启用调试边框";
     } else {
         LOG_DEBUG() << "启用常规边框";
-        if (currWidget) {
-            currWidget->setObjectName("MainCentralWidget");
-            currWidget->setStyleSheet(QString(
-                "#MainCentralWidget {"
-                "   background-color: rgb(%1);"
-                "   border: 2px solid rgb(%2);"
-                "}"
-            ).arg(color.background, color.border));
-        }
     }
+    FrameStyleSheet::setBorder(this->centralWidget(), enabled);
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent* event) {
@@ -331,6 +316,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event) {
         // 检测当前修饰键状态中，Alt 键对应的位是否为 1，下同
         (event->modifiers() & Qt::AltModifier)) {
         move(event->globalPosition().toPoint() - _dragPos);
+        event->accept();
         return;
     }
     QWidget::mouseMoveEvent(event);
@@ -340,11 +326,12 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
     if ((event->button() == Qt::LeftButton) &&
         (event->modifiers() & Qt::AltModifier)) {
         _dragPos = event->globalPosition().toPoint() - geometry().topLeft();
+        event->accept();
         return;
     }
     QWidget::mousePressEvent(event);
 }
 
 MainWindow::~MainWindow() {
-    qDebug() << this->width() << " " << this->height();
+    LOG_INFO() << "程序退出，退出时宽高为 [" << this->width() << ", " << this->height() << "]";
 }

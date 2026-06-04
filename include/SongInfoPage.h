@@ -17,10 +17,15 @@ public:
 
     void updateSong(const Song& song);
 
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+
 private:
     void setupUI();
+    void setBorder(bool enabled = false);
     void applyStyles();
-    void keyPressEvent(QKeyEvent* event) override;
 
     Song _song;
 
@@ -33,5 +38,6 @@ private:
     QPushButton* _likeButton;
     QPushButton* _playButton;
     QPushButton* _closeButton;
+    QPoint _dragPos;
 };
 ;

@@ -26,7 +26,7 @@ private:
 
     QWidget* createBodyLeftWidget(QWidget* bodyWidget);
     // 显示调试边框，可以显示子控件的边界
-    void setBorder(bool enabled) const;
+    void setBorder(bool enabled = false) const;
 
     static QWidget* createControlWidget(QWidget* parent = nullptr);
 

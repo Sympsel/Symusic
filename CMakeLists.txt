@@ -42,6 +42,7 @@ add_executable(SymMusic_2
         include/PathMaganger.hpp
         include/SongInfoPage.h
         src/SongInfoPage.cpp
+        include/FrameStyleSheet.hpp
 )
 
 target_link_libraries(SymMusic_2
