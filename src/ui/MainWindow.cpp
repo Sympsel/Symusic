@@ -291,19 +291,20 @@ void MainWindow::syncWidgetToContain(
 
 void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
     connect(headWidget, &HeadWidget::maximizeRequested, this, [this]() {
-        LOG_INFO() << "程序最大化";
-        // todo 切换一下按钮图标
         if (this->isMaximized()) {
+        LOG_INFO() << "窗口恢复正常大小";
             this->showNormal();
-            // findChild<QPushButton*>()
         } else {
+        LOG_INFO() << "窗口最大化";
             this->showMaximized();
         }
     });
+
     connect(headWidget, &HeadWidget::minimizeRequested, this, [this]() {
-        LOG_INFO() << "程序最小化";
+        LOG_INFO() << "窗口最小化";
         this->showMinimized();
     });
+
     connect(headWidget, &HeadWidget::closeRequested, this, [this]() {
         LOG_INFO() << "程序正常退出";
         this->close();
