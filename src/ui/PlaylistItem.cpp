@@ -1,11 +1,11 @@
-#include "PlaylistItem.h"
+#include "ui/PlaylistItem.h"
 
 #include <qcoreevent.h>
 #include <QVBoxLayout>
 #include <QLabel>
 #include <utility>
 
-#include "Log.hpp"
+#include "utils/Log.hpp"
 
 PlaylistItem::PlaylistItem(Song song, QString description, QWidget* parent)
     : QWidget(parent)

@@ -1,17 +1,17 @@
-#include "MainWindow.h"
+#include "ui/MainWindow.h"
 
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
 
-#include "SongInfoPage.h"
-#include "CommonPageWidget.h"
-#include "NavigationWidget.h"
-#include "Log.hpp"
-#include "Sync.hpp"
-#include "Create.hpp"
-#include "FrameStyleSheet.hpp"
-#include "HeadWidget.h"
-#include "RecommendWidget.h"
+#include "ui/CommonPageWidget.h"
+#include "ui/HeadWidget.h"
+#include "ui/NavigationWidget.h"
+#include "ui/RecommendWidget.h"
+#include "ui/SongInfoPage.h"
+#include "utils/CreatePixmap.hpp"
+#include "utils/FrameStyleSheet.hpp"
+#include "utils/Log.hpp"
+#include "utils/Sync.hpp"
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent) {
@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     handleRequestFromHeadButton(headWidget);
 
     QWidget* bodyWidget = createBodyWidget();
-    QFrame* line = Create::line(QFrame::HLine);
+    QFrame* line = CreatePixmap::line(QFrame::HLine);
 
     // 4. 添加到布局
     Sync::widgetToLayout(headBodyLayout, {
@@ -81,7 +81,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     Sync::clearWidgetMargins(controlWidget);
 
     // [图片 歌名/歌手]
-    QLabel* songCover = Create::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
+    QLabel* songCover = CreatePixmap::squarePixmap(controlWidget, ":/images/Sympsel.png", 50);
     const auto leftWidget = new QWidget(controlWidget);
     const auto songInfoWidget = new QWidget(leftWidget);
     const auto leftLayout = new QHBoxLayout(leftWidget);
@@ -162,16 +162,16 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         const auto 漫游_页 = createPage("漫游页面", _mainStackedWidget);
         const auto 我喜欢的_页 = new CommonPageWidget(
             "我喜欢的",
-            ":/images/Sympsel.png",
+            "Sympsel.png",
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
         connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this, [](const Song& song) {
-           const auto infoPage = new SongInfoPage(song);
-           infoPage->setAttribute(Qt::WA_DeleteOnClose);
-           infoPage->show();
-           LOG_DEBUG() << "打开歌曲详情页面: " << song;
-       });
+            const auto infoPage = new SongInfoPage(song);
+            infoPage->setAttribute(Qt::WA_DeleteOnClose);
+            infoPage->show();
+            LOG_DEBUG() << "打开歌曲详情页面: " << song;
+        });
         const auto 本地下载_页 = createPage("本地下载页面", _mainStackedWidget);
         const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
@@ -202,7 +202,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     bodyWidget->setMinimumHeight(100);
 
     const auto leftWidget = createBodyLeftWidget(bodyWidget);
-    const auto line = Create::line(QFrame::VLine);
+    const auto line = CreatePixmap::line(QFrame::VLine);
     const auto rightWidget = createMainStackedWidget(bodyWidget);
 
     const auto bodyLayout = new QHBoxLayout(bodyWidget);

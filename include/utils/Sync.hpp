@@ -143,7 +143,6 @@ public:
                     ? stylesheet
                     : existingStyle + stylesheet
             );
-            // qDebug() << existingStyle + stylesheet;
         }
     }
 };

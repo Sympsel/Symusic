@@ -1,10 +1,10 @@
-#include "NavigationWidget.h"
+#include "ui/NavigationWidget.h"
 
 #include <QVBoxLayout>
 
-#include "PathMaganger.hpp"
-#include "NavigationButton.h"
-#include "Sync.hpp"
+#include "entity/PathManager.hpp"
+#include "ui/NavigationButton.h"
+#include "utils/Sync.hpp"
 
 NavigationWidget::NavigationWidget(QWidget* parent, const QString& iconPath, const QString& groupName, const std::initializer_list<NavigationButton*>& buttons) {
     this->setParent(parent);

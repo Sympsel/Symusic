@@ -1,6 +1,6 @@
-#include "NavigationButton.h"
+#include "ui/NavigationButton.h"
 
-#include "PathMaganger.hpp"
+#include "entity/PathManager.hpp"
 
 NavigationButton::NavigationButton(const QString& iconPath, const QString& text, QWidget* parent)
     : QToolButton(parent) {

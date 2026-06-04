@@ -1,13 +1,10 @@
 #pragma once
 
-#include <QWidget>
 #include <QLabel>
 #include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 
-#include "Song.h"
-#include "Color.hpp"
+#include "entity/Song.h"
+#include "entity/Color.hpp"
 
 class SongInfoPage : public QWidget {
     Q_OBJECT

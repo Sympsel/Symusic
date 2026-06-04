@@ -3,8 +3,8 @@
 #include <QResizeEvent>
 #include <QTimer>
 
+#include "utils/Log.hpp"
 #include "NavigationWidget.h"
-#include "Log.hpp"
 #include "PlaylistItem.h"
 
 class RecommendWidget : public QWidget {

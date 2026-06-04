@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-#include "Color.hpp"
+#include "entity/Color.hpp"
 #include "Log.hpp"
 
 class FrameStyleSheet {

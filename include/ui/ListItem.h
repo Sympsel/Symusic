@@ -3,10 +3,10 @@
 #include <QLabel>
 #include <QHBoxLayout>
 #include <iostream>
+#include <QWidget>
 
-#include "QWidget"
-#include "Song.h"
-#include "Sync.hpp"
+#include "entity/Song.h"
+#include "utils/Sync.hpp"
 
 class ListItem : public QWidget {
     Q_OBJECT

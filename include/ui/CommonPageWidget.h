@@ -1,24 +1,25 @@
 #pragma once
 
 #include "ListItem.h"
+
 #include <QListWidget>
 #include <QWidget>
-#include <Color.hpp>
 
-#include "Log.hpp"
-#include "SongManager.h"
-#include "Sync.hpp"
+#include "entity/Color.hpp"
+#include "entity/SongManager.h"
+#include "utils/Log.hpp"
+#include "utils/Sync.hpp"
 
 class CommonPageWidget : public QWidget {
     Q_OBJECT
 
 private:
-    [[nodiscard]] QWidget* createHeadWidget(const QString& coverPath, const QString& description) const;
+    [[nodiscard]] QWidget* createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const;
 
     QWidget* createMiddleWidget();
 
 public:
-    explicit CommonPageWidget(QString pageName, const QString& coverPath, const QString& description = "",
+    explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
                               QWidget* parent = nullptr);
 
     void initData(const SongManager::SongList& songList);

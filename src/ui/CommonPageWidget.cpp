@@ -1,14 +1,14 @@
-#include "CommonPageWidget.h"
-#include "SongManager.h"
+#include "ui/CommonPageWidget.h"
+#include "entity/SongManager.h"
 
 #include <QKeyEvent>
 
-QWidget* CommonPageWidget::createHeadWidget(const QString& coverPath, const QString& description) const {
+QWidget* CommonPageWidget::createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const {
     const auto headWidget = new QWidget();
     headWidget->setFixedHeight(120);
     const auto coverLabel = new QLabel();
     coverLabel->setScaledContents(true);
-    coverLabel->setPixmap(QPixmap(coverPath));
+    coverLabel->setPixmap(QPixmap(prefix::normalImages + coverFileWithoutPath));
     coverLabel->setFixedSize(QSize(120, 120));
 
     const auto hLayout = new QHBoxLayout(headWidget);
@@ -101,7 +101,7 @@ void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
 }
 
 
-CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, const QString& description,
+CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description,
                                    QWidget* parent) : QWidget(parent)
                                                       , _pageName(std::move(pageName))
                                                       , _playAllButton(new QPushButton("播放全部"))
@@ -125,7 +125,7 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverPath, c
 
     const auto mainLayout = new QVBoxLayout(this);
 
-    const auto headWidget = createHeadWidget(coverPath, description);
+    const auto headWidget = createHeadWidget(coverFileWithoutPath, description);
     const auto middleLabel = createMiddleWidget();
 
     Sync::widgetToLayout(mainLayout, {

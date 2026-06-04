@@ -9,7 +9,7 @@
 class QFrame;
 class QLabel;
 
-class Create {
+class CreatePixmap {
 public:
     static QPixmap circularPixmap(const QString& picture, const int size) {
         const QPixmap source(picture);

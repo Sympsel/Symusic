@@ -1,9 +1,9 @@
-#include "ListItem.h"
+#include "ui/ListItem.h"
 
 #include <QMouseEvent>
 
-#include "Log.hpp"
-#include "SongManager.h"
+#include "utils/Log.hpp"
+#include "entity/SongManager.h"
 
 void ListItem::setupUI() {
     this->setFixedHeight(40);
@@ -105,7 +105,7 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
             SongManager::append(likedList, _song);
             LOG_DEBUG() << "添加到喜欢列表: " << _song;
         } else {
-            if (const auto it = std::find(likedList.begin(), likedList.end(), _song);
+            if (const auto it = std::ranges::find(likedList, _song);
                 it != likedList.end()) {
                 likedList.erase(it);
                 LOG_DEBUG() << "从喜欢列表删除了: " << _song;

@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.20)  # 建议用 3.20，不需要 3.31
+cmake_minimum_required(VERSION 3.20)
 project(SymMusic_2)
 
-set(CMAKE_CXX_STANDARD 17)  # Qt6 建议用 C++17
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -19,30 +19,30 @@ include_directories(include)
 add_executable(SymMusic_2
         Main.cpp
         resources.qrc
-        src/MainWindow.cpp
-        include/MainWindow.h
-        src/NavigationWidget.cpp
-        include/NavigationWidget.h
-        src/HeadWidget.cpp
-        include/HeadWidget.h
-        src/NavigationButton.cpp
-        include/NavigationButton.h
-        src/RecommendWidget.cpp
-        include/RecommendWidget.h
-        src/PlaylistItem.cpp
-        include/PlaylistItem.h
-        src/CommonPageWidget.cpp
-        include/CommonPageWidget.h
-        src/ListItem.cpp
-        include/ListItem.h
-        src/Song.cpp
-        include/Song.h
-        src/SongManager.cpp
-        include/SongManager.h
-        include/PathMaganger.hpp
-        include/SongInfoPage.h
-        src/SongInfoPage.cpp
-        include/FrameStyleSheet.hpp
+        src/ui/MainWindow.cpp
+        include/ui/MainWindow.h
+        src/ui/NavigationWidget.cpp
+        include/ui/NavigationWidget.h
+        src/ui/HeadWidget.cpp
+        include/ui/HeadWidget.h
+        src/ui/NavigationButton.cpp
+        include/ui/NavigationButton.h
+        src/ui/RecommendWidget.cpp
+        include/ui/RecommendWidget.h
+        src/ui/PlaylistItem.cpp
+        include/ui/PlaylistItem.h
+        src/ui/CommonPageWidget.cpp
+        include/ui/CommonPageWidget.h
+        src/ui/ListItem.cpp
+        include/ui/ListItem.h
+        src/entity/Song.cpp
+        include/entity/Song.h
+        src/entity/SongManager.cpp
+        include/entity/SongManager.h
+        include/entity/PathManager.hpp
+        include/ui/SongInfoPage.h
+        src/ui/SongInfoPage.cpp
+        include/utils/FrameStyleSheet.hpp
 )
 
 target_link_libraries(SymMusic_2

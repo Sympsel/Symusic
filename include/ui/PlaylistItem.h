@@ -3,7 +3,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-#include "Song.h"
+#include "entity/Song.h"
 #include "NavigationButton.h"
 
 class PlaylistItem : public QWidget {

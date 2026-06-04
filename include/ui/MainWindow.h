@@ -8,8 +8,8 @@
 #include <QPainterPath>
 
 #include "HeadWidget.h"
-#include "NavigationButton.h"
-#include "Sync.hpp"
+#include "ui/NavigationButton.h"
+#include "utils/Sync.hpp"
 
 
 class MainWindow final : public QMainWindow {

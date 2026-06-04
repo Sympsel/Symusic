@@ -1,8 +1,9 @@
 #pragma once
 
 #include <QPixmap>
-#include <PathMaganger.hpp>
 #include <iostream>
+
+#include <entity/PathManager.hpp>
 
 class Song {
 public:

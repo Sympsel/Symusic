@@ -1,11 +1,13 @@
-#include "SongInfoPage.h"
+#include "ui/SongInfoPage.h"
 
-#include <qevent.h>
+#include <QHBoxLayout>
+#include <QWidget>
+#include <QMouseEvent>
 
-#include "FrameStyleSheet.hpp"
-#include "Log.hpp"
-#include "PathMaganger.hpp"
-#include "Sync.hpp"
+#include "entity/PathManager.hpp"
+#include "utils/FrameStyleSheet.hpp"
+#include "utils/Log.hpp"
+#include "utils/Sync.hpp"
 
 SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
     : QWidget(parent)
@@ -31,7 +33,14 @@ SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
 void SongInfoPage::updateSong(const Song& song) {
     _song = song;
 
-    _coverLabel->setPixmap(song.getCover().scaled(200, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    if (const QPixmap coverPixmap = song.getCover().scaled(
+        200, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation
+    ); !coverPixmap.isNull()) {
+        _coverLabel->setPixmap(coverPixmap);
+    } else {
+        LOG_DEBUG() << "警告：歌曲封面图片为空";
+    }
+
     _nameLabel->setText(song.getName());
     _artistLabel->setText(QString("歌手：%1").arg(song.getArtist()));
     _albumLabel->setText(QString("专辑：%1").arg(song.getAlbum()));
@@ -43,8 +52,6 @@ void SongInfoPage::updateSong(const Song& song) {
         tagsStr += "[" + tag + "] ";
     }
     _tagsLabel->setText(tagsStr.isEmpty() ? "标签：无" : "标签：" + tagsStr);
-
-    _likeButton->setIcon(song.isLiked() ? QIcon(prefix::normalImages + "赞_选中.png") : QIcon(":/images/赞.png"));
 }
 
 void SongInfoPage::setupUI() {
@@ -59,8 +66,9 @@ void SongInfoPage::setupUI() {
     Sync::clearLayoutMargins(headerLayout);
 
     const auto titleLabel = new QLabel("歌曲详情");
-    // 字体族留空使用默认字体
-    titleLabel->setFont(QFont("", 12, QFont::Bold));
+    auto font = titleLabel->font();
+    font.setBold(true);
+    titleLabel->setFont(font);
 
     _closeButton->setFixedSize(40, 40);
     _closeButton->setIcon(QIcon(prefix::normalImages + "关闭.png"));

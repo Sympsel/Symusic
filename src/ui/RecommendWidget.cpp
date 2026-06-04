@@ -1,12 +1,12 @@
-#include "RecommendWidget.h"
+#include "ui/RecommendWidget.h"
 
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <string>
 #include <random>
 
-#include "Sync.hpp"
-#include "SongManager.h"
+#include "utils/Sync.hpp"
+#include "entity/SongManager.h"
 
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
                                       const int width,

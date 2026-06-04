@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QToolButton>
-#include "Color.hpp"
+
+#include "entity/Color.hpp"
 
 class NavigationButton final : public QToolButton {
 public:
