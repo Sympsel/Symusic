@@ -36,7 +36,7 @@ private:
 
     void updateRowSize();
 
-    void updateButtonVisibility(const QString& name);
+    void updateButtonVisibility(const QString& name) const;
 
 protected:
     // resize 事件处理

@@ -56,7 +56,7 @@ void RecommendWidget::initPlaylist() {
     // 创建一个随机数发生器
     std::mt19937 g(rd());
     // 洗牌算法
-    std::shuffle(idxs.begin(), idxs.end(), g);
+    std::ranges::shuffle(idxs, g);
 
     int id = 0;
     for (const auto& song : songManager.getRecommendList()) {
@@ -177,8 +177,8 @@ void RecommendWidget::updateRowSize() {
     }
 }
 
-void RecommendWidget::updateButtonVisibility(const QString& name) {
-    if (_contain.find(name) != _contain.end()) {
+void RecommendWidget::updateButtonVisibility(const QString& name) const {
+    if (_contain.contains(name)) {
         const auto& alist = _contain.at(name);
 
         if (const bool couldGoLeft = alist.begin != 0) {
@@ -309,7 +309,7 @@ void RecommendWidget::updateWidgetLayout(const QString& name) {
 }
 
 RecommendWidget::~RecommendWidget() {
-    for (auto& [_, alist] : _contain) {
+    for (auto& alist : _contain | std::views::values) {
         for (const auto& item : alist.list) {
             delete item;
         }

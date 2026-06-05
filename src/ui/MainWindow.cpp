@@ -177,12 +177,9 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
                     _songInfoPage = new SongInfoPage(song);
 
                     // 监听喜欢状态变化，刷新列表
-                    connect(_songInfoPage, &SongInfoPage::likeStatusChanged, this, [我喜欢的_页]() {
+                    connect(_songInfoPage, &QWidget::destroyed, this, [this, 我喜欢的_页]() {
                         我喜欢的_页->reloadData(SongManager::getInstance().getLikedList());
                         LOG_DEBUG() << "喜欢状态改变，已刷新喜欢列表";
-                    });
-
-                    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
                         _songInfoPage = nullptr;
                     });
                     _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
