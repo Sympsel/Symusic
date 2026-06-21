@@ -82,6 +82,8 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto controlWidget = new QWidget(parent);
     const auto controlLayout = new QHBoxLayout(controlWidget);
     Sync::clearWidgetMargins(controlWidget);
+    _volumeSlider = VolumeSlider::getInstance(this);
+    _volumeSlider->setVisible(false);
 
     // [图片 歌名/歌手]
     QLabel* songCover = Create::squarePixmap(controlWidget, "Sympsel.png", 50);
@@ -106,17 +108,23 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
     const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
     const auto volumeButton = Create::buttonOnlyIcon("音量.png", centralWidget);
+    connect(volumeButton, &QPushButton::clicked, this, [this, volumeButton]() {
+        const QPoint buttonGlobalPos = volumeButton->mapToGlobal(QPoint(0, 0));
+        const QSize sliderSize = _volumeSlider->sizeHint();
+
+        const int x = buttonGlobalPos.x() + (volumeButton->width() - sliderSize.width()) / 2;
+        const int y = buttonGlobalPos.y() - sliderSize.height() - 10;
+
+        _volumeSlider->showAtPosition(QPoint(x, y));
+    });
     const auto addToButton = Create::buttonOnlyIcon("添加.png", centralWidget);
     addToButton->setToolTip("添加到");
     addToButton->setToolTipDuration(3000);
 
-    // QSlider* volumeSlider = new QSlider(Qt::Horizontal);
-    // volumeSlider->setRange(0, 100);
-    // volumeSlider->setValue(50);
-    // volumeSlider->setFixedWidth(100);
     const auto buttons = {
         playModeButton, prevButton, playButton, nextButton, volumeButton, addToButton
     };
+
     constexpr QSize buttonsSize(30, 30);
     Sync::buttonFixedSize(buttonsSize, buttons);
     Sync::buttonToHLayout(centralLayout, buttons);
@@ -223,7 +231,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
     if (size != _mapOfNavigationButtonsToWidget.size()) {
         LOG_FATAL() << std::format("程序出错：页面数 {} 和 导航按钮数 {} 不匹配",
-            _mainStackedWidget->count(), _mapOfNavigationButtonsToWidget.size());
+                                   _mainStackedWidget->count(), _mapOfNavigationButtonsToWidget.size());
         exit(EXIT_FAILURE);
     }
 

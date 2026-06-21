@@ -45,6 +45,8 @@ add_executable(SymMusic_2
         include/utils/FrameStyleSheet.hpp
         src/ui/PlaySlider.cpp
         include/ui/PlaySlider.h
+        src/ui/VolumeSlider.cpp
+        include/ui/VolumeSlider.h
 )
 
 target_link_libraries(SymMusic_2

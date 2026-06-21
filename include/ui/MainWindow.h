@@ -11,6 +11,7 @@
 #include "SongInfoPage.h"
 #include "ui/NavigationButton.h"
 #include "utils/Sync.hpp"
+#include "VolumeSlider.h"
 
 
 class MainWindow final : public QMainWindow {
@@ -31,7 +32,7 @@ private:
     // 显示调试边框，可以显示子控件的边界
     void setBorder(bool enabled = false) const;
 
-    static QWidget* createControlWidget(QWidget* parent = nullptr);
+    QWidget* createControlWidget(QWidget* parent = nullptr);
 
     static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
 
@@ -40,7 +41,6 @@ private:
     void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
 
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
-
 
 protected:
     void mouseMoveEvent(QMouseEvent* event) override;
@@ -53,4 +53,5 @@ private:
     std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
     SongInfoPage* _songInfoPage;
     int _pageCount = 6;
+    VolumeSlider* _volumeSlider;
 };

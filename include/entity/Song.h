@@ -99,8 +99,8 @@ struct std::formatter<Song> : std::formatter<std::string> {
     auto format(const Song& song, auto& ctx) const {
         std::stringstream ss;
 
-        ss << "{id='" << song.getId().toStdString()
-            << "'name='" << song.getName().toStdString()
+        ss << "{id=" << song.getId().toStdString()
+            << ",name='" << song.getName().toStdString()
             << "',artist='" << song.getArtist().toStdString()
             << "',album='" << song.getAlbum().toStdString()
             << "',filepath='" << song.getFilePath().toStdString()
