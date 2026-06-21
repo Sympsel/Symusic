@@ -40,6 +40,7 @@ private:
 
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
 
+
 protected:
     void mouseMoveEvent(QMouseEvent* event) override;
 
@@ -47,7 +48,7 @@ protected:
 
 private:
     QPoint _dragPos;
-    QStackedWidget* _mainStackedWidget;
+    QStackedWidget* _mainStackedWidget{};
     std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
     SongInfoPage* _songInfoPage;
     int _pageCount = 6;

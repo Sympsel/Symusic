@@ -7,6 +7,7 @@
 #include "ui/CommonPageWidget.h"
 #include "ui/HeadWidget.h"
 #include "ui/NavigationWidget.h"
+#include "ui/PlaySlider.h"
 #include "ui/RecommendWidget.h"
 #include "ui/SongInfoPage.h"
 #include "utils/Create.hpp"
@@ -195,15 +196,13 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         syncWidgetToContain(pages);
     }
 
-    const auto slider = new QSlider(Qt::Horizontal, mainWidget);
-    slider->setRange(0, 100);
-    // 刻度显示在下方
-    slider->setTickPosition(QSlider::TicksBelow);
+    // 进度条
+    const auto sliderWidget = PlaySlider::getInstance(mainWidget);
 
     // 控制按钮区
     QWidget* controlWidget = createControlWidget(mainWidget);
 
-    Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, slider, controlWidget});
+    Sync::widgetToLayout(bodyRightLayout, {_mainStackedWidget, sliderWidget, controlWidget});
     Sync::clearLayoutMargins(bodyRightLayout);
     bodyRightLayout->setSpacing(0);
     return mainWidget;
@@ -223,8 +222,8 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     // 将按钮与页面连接
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
     if (size != _mapOfNavigationButtonsToWidget.size()) {
-        LOG_FATAL() << "页面数(" << _mainStackedWidget->count()
-            << ")与按钮数(" << _mapOfNavigationButtonsToWidget.size() << ")不匹配";
+        LOG_FATAL() << std::format("程序出错：页面数 {} 和 导航按钮数 {} 不匹配",
+            _mainStackedWidget->count(), _mapOfNavigationButtonsToWidget.size());
         exit(EXIT_FAILURE);
     }
 
@@ -242,7 +241,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     }
 
     const Color& color = ColorTheme::getInstance().getColor();
-    // 监听页面切换信号，自动更新按钮高亮
+    // 监听页面切换信号
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
             [this, originalStyleSheets, color](const int index) {
                 for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
@@ -315,11 +314,7 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
 }
 
 void MainWindow::setBorder(const bool enabled) const {
-    if (enabled) {
-        LOG_DEBUG() << "启用调试边框";
-    } else {
-        LOG_DEBUG() << "启用常规边框";
-    }
+    LOG_DEBUG() << std::format("启用{}边框", enabled ? "调试" : "常规");
     FrameStyleSheet::setBorder(this->centralWidget(), enabled);
 }
 
@@ -349,5 +344,5 @@ MainWindow::~MainWindow() {
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
-    LOG_DEBUG() << "程序退出，退出时宽高为 [" << this->width() << ", " << this->height() << "]";
+    LOG_DEBUG() << std::format("程序退出，退出时宽高为 [{}, {}]", this->width(), this->height());
 }

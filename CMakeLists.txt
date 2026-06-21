@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(SymMusic_2)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -43,6 +43,8 @@ add_executable(SymMusic_2
         include/ui/SongInfoPage.h
         src/ui/SongInfoPage.cpp
         include/utils/FrameStyleSheet.hpp
+        src/ui/PlaySlider.cpp
+        include/ui/PlaySlider.h
 )
 
 target_link_libraries(SymMusic_2

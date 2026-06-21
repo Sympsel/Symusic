@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QPixmap>
-#include <iostream>
+#include <sstream>
+#include <format>
 
 #include <entity/PathManager.hpp>
 
@@ -15,19 +16,7 @@ public:
         SQ = 2
     };
 
-    friend std::ostream& operator<<(std::ostream& os, const Song& song) {
-        os << "{";
-        os << "name=" << song._name.toStdString();
-        // os << "name=" << song._name.toStdString() << ",";
-        // os << "artist=" << song._artist.toStdString() << ",";
-        // os << "album=" << song._album.toStdString() << ",";
-        // os << "filePath=" << song._filePath.toStdString() << ",";
-        // os << "duration=" << song._duration << ",";
-        // os << "playCount=" << song._playCount << ",";
-        // os << "tagsFlag=" << song._tagsFlag;
-        os << "}";
-        return os;
-    }
+    friend std::ostream& operator<<(std::ostream& os, const Song& song);
 
     explicit Song(QString name,
                   QString artist,
@@ -42,8 +31,8 @@ public:
           , _album(std::move(album))
           , _filePath(prefix::songsFile + filePath)
           , _cover(QPixmap(prefix::itemImages + coverPath))
-          , _isLiked(isLiked)
           , _duration(duration)
+          , _isLiked(isLiked)
           , _tagsFlag(tagsFlag) {
     }
 
@@ -101,3 +90,38 @@ private:
 
     // todo 未来打算添加的字段 发行时间
 };
+
+template<>
+struct std::formatter<Song> : std::formatter<std::string> {
+    auto format(const Song& song, auto& ctx) const {
+        std::stringstream ss;
+
+        ss << "{name='" << song.getName().toStdString()
+           << "',artist='" << song.getArtist().toStdString()
+           << "',album='" << song.getAlbum().toStdString()
+           << "',filepath='" << song.getFilePath().toStdString()
+           << "',duration=" << song.getDuration() << 's'
+           << ",playCount=" << song.getPlayCount()
+           << ",tags=[";
+
+        const int tagFlag = song.getTagsFlag();
+        bool hasTag = false;
+        if (tagFlag & Song::SQ) {
+            ss << "SQ";
+            hasTag = true;
+        }
+        if (tagFlag & Song::VIP) {
+            if (hasTag) {
+                ss << ",";
+            }
+            ss << "VIP";
+        }
+        ss << "]}";
+        return std::formatter<std::string>::format(ss.str(), ctx);
+    }
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Song& song) {
+    os << std::format("{}", song);
+    return os;
+}

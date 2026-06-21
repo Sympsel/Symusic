@@ -51,7 +51,10 @@ void SongInfoPage::updateSong(const Song& song) {
     const auto tags = song.getTags();
     QString tagsStr;
     for (const auto& tag : tags) {
-        tagsStr += "[" + tag + "] ";
+        tagsStr.append(tag + " ");
+    }
+    if (tagsStr.back() == ' ') {
+        tagsStr.removeLast();
     }
     _tagsLabel->setText(tagsStr.isEmpty() ? "标签：无" : "标签：" + tagsStr);
 }
@@ -140,11 +143,7 @@ void SongInfoPage::setupUI() {
 }
 
 void SongInfoPage::setBorder(const bool enabled) {
-    // if (enabled) {
-    // LOG_DEBUG() << "歌曲信息页：启用调试边框";
-    // } else {
-    // LOG_DEBUG() << "歌曲信息页：启用常规边框";
-    // }
+    // LOG_DEBUG() << std::format("歌曲信息页：启用{}边框", enabled ? "调试" : "常规");
     FrameStyleSheet::setBorder(this, enabled);
 }
 
@@ -193,34 +192,35 @@ void SongInfoPage::applyStyles() {
     ).arg(color.background, color.hoverOn, color.pressed));
 
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
-        this->close();
-    });
-
-    connect(_likeButton, &QPushButton::clicked, this, [this]() {
-        _song.setLiked(!_song.isLiked());
-
         // 同步更新 SongManager 中的喜欢列表
         auto& likedList = SongManager::getInstance().getLikedList();
         if (_song.isLiked()) {
             // 添加到喜欢列表
             SongManager::append(likedList, _song);
-            LOG_DEBUG() << "添加到喜欢列表: " << _song;
-
-            _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
-            _likeButton->setToolTip("取消喜欢");
+            LOG_DEBUG() << std::format("添加到喜欢列表: {}", _song);
         } else {
             // 从喜欢列表中移除
             if (const auto it = std::ranges::find(likedList, _song);
                 it != likedList.end()) {
                 likedList.erase(it);
-                LOG_DEBUG() << "从喜欢列表删除了: " << _song;
+                LOG_DEBUG() << std::format("从喜欢列表删除了: {}", _song);
             }
-
-            _likeButton->setIcon(QIcon(prefix::normalImages + "赞.png"));
-            _likeButton->setToolTip("添加喜欢");
         }
         // 发射信号通知上层外部喜欢状态已改变
         emit likeStatusChanged();
+        this->close();
+    });
+
+    connect(_likeButton, &QPushButton::clicked, this, [this]() {
+        _song.setLiked(!_song.isLiked());
+        if (_song.isLiked()) {
+            _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
+            _likeButton->setToolTip("取消喜欢");
+        } else {
+            _likeButton->setIcon(QIcon(prefix::normalImages + "赞.png"));
+            _likeButton->setToolTip("添加喜欢");
+        }
+        // 这里将添加或移除到喜欢列表推迟到当前界面关闭
     });
     this->setBorder(false);
 }
