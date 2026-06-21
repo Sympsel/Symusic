@@ -27,10 +27,10 @@ void ListItem::setupUI() {
     leftLayout->setSpacing(4);
 
     leftLayout->addWidget(_likeButton);
-    const auto nameLabel = new QLabel(_song.getName());
+    const auto nameLabel = new QLabel(_song->getName());
     Sync::appendStyleSheet(nameLabel, "color: white;");
     leftLayout->addWidget(nameLabel);
-    const auto tags = _song.getTags();
+    const auto tags = _song->getTags();
     QString tagsStr = "[";
     for (const auto& tag : tags) {
         tagsStr.append(tag + ", ");
@@ -48,7 +48,7 @@ void ListItem::setupUI() {
     const auto centralLayout = new QHBoxLayout(centralWidget);
     Sync::clearWidgetMargins(centralWidget);
     Sync::clearLayoutMargins(centralLayout);
-    const auto artistLabel = new QLabel(_song.getArtist());
+    const auto artistLabel = new QLabel(_song->getArtist());
     Sync::appendStyleSheet(artistLabel, "color: white;");
     centralLayout->addWidget(artistLabel);
     centralLayout->addStretch(1);
@@ -58,7 +58,7 @@ void ListItem::setupUI() {
     Sync::clearWidgetMargins(rightWidget);
     Sync::clearLayoutMargins(rightLayout);
 
-    auto* albumLabel = new QLabel(_song.getAlbum());
+    auto* albumLabel = new QLabel(_song->getAlbum());
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
 
@@ -75,7 +75,7 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
+ListItem::ListItem(const SongPtr& song, const bool isLiked) : _isLiked(isLiked)
                                                     , _likeButton(new QPushButton)
                                                     , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
@@ -106,8 +106,10 @@ ListItem::ListItem(Song song, const bool isLiked) : _isLiked(isLiked)
             SongManager::append(likedList, _song);
             LOG_DEBUG() << "添加到喜欢列表: " << _song;
         } else {
-            if (const auto it = std::ranges::find(likedList, _song);
-                it != likedList.end()) {
+            if (const auto it = std::ranges::find_if(likedList,
+                                                     [this](const SongManager::SongPtr& targetSong) {
+                                                         return targetSong->getId() == _song->getId();
+                                                     }); it != likedList.end()) {
                 likedList.erase(it);
                 LOG_DEBUG() << "从喜欢列表删除了: " << _song;
             }

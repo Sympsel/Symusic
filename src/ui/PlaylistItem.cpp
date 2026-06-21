@@ -7,9 +7,9 @@
 
 #include "utils/Log.hpp"
 
-PlaylistItem::PlaylistItem(Song song, QString description, QWidget* parent)
+PlaylistItem::PlaylistItem(const SongPtr& song, QString description, QWidget* parent)
     : QWidget(parent)
-      , _song(std::move(song))
+      , _song(song)
       , _description(std::move(description)) {
     constexpr int coverLength = 120, coverHeight = 150;
     this->setFixedSize(coverLength, coverHeight);
@@ -20,7 +20,7 @@ PlaylistItem::PlaylistItem(Song song, QString description, QWidget* parent)
 
     _button = new QPushButton(this);
     _button->setFixedSize(coverLength - 16, coverLength - 16);
-    _button->setIcon(_song.getCover());
+    _button->setIcon(_song->getCover());
     _button->setIconSize(QSize(coverLength - 16, coverLength - 16));
     _button->setStyleSheet(
         "QPushButton {"

@@ -5,14 +5,16 @@
 
 #include "entity/Song.h"
 #include "entity/Color.hpp"
+#include "entity/SongManager.h"
 
 class SongInfoPage : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SongInfoPage(const Song& song, QWidget* parent = nullptr);
+    using SongPtr = SongManager::SongPtr;
+    explicit SongInfoPage(const SongPtr& song, QWidget* parent = nullptr);
 
-    void updateSong(const Song& song);
+    void updateSong(const SongPtr& song);
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -27,7 +29,7 @@ private:
     void setBorder(bool enabled = false);
     void applyStyles();
 
-    Song _song;
+    SongPtr _song;
 
     QLabel* _coverLabel;
     QLabel* _nameLabel;

@@ -19,6 +19,7 @@ private:
     static QWidget* createMiddleWidget();
 
 public:
+    using SongPtr = SongManager::SongPtr;
     explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
                               QWidget* parent = nullptr);
 
@@ -36,7 +37,7 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 
 signals:
-    void songItemDoubleClicked(const Song& song);
+    void songItemDoubleClicked(const SongPtr& song);
 
 private:
     QString _pageName;

@@ -5,7 +5,7 @@
 #include <iostream>
 #include <QWidget>
 
-#include "entity/Song.h"
+#include "entity/SongManager.h"
 #include "utils/Sync.hpp"
 
 class ListItem : public QWidget {
@@ -15,6 +15,7 @@ private:
     void setupUI();
 
 public:
+    using SongPtr = SongManager::SongPtr;
     friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
         os << "{";
         os << "isLiked=" << listItem._isLiked << ",";
@@ -23,9 +24,9 @@ public:
         return os;
     }
 
-    explicit ListItem(Song song, bool isLiked = false);
+    explicit ListItem(const SongPtr& song, bool isLiked = false);
 
-    [[nodiscard]] const Song& getSong() const {
+    [[nodiscard]] const SongPtr& getSong() const {
         return _song;
     }
 
@@ -36,10 +37,10 @@ protected:
 signals:
     void likeStatusUpdated();
 
-    void doubleClicked(const Song& song);
+    void doubleClicked(const SongPtr& song);
 
 private:
     bool _isLiked;
     QPushButton* _likeButton;
-    Song _song;
+    SongPtr _song;
 };

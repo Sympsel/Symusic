@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QUuid>
 #include <QPixmap>
 #include <sstream>
 #include <format>
@@ -26,7 +27,8 @@ public:
                   const bool isLiked = false,
                   const int duration = 0,
                   const int tagsFlag = 0)
-        : _name(std::move(name))
+        : _id(QUuid::createUuid().toString())
+          , _name(std::move(name))
           , _artist(std::move(artist))
           , _album(std::move(album))
           , _filePath(prefix::songsFile + filePath)
@@ -46,6 +48,7 @@ public:
     [[nodiscard]] int getDuration() const { return _duration; }
     [[nodiscard]] bool isLiked() const { return _isLiked; }
     [[nodiscard]] int getPlayCount() const { return _playCount; }
+    [[nodiscard]] QString getId() const { return _id; }
 
     [[nodiscard]] int getTagsFlag() const {
         return _tagsFlag;
@@ -68,8 +71,7 @@ public:
     }
 
     bool operator==(const Song& other) const {
-        // todo 补全歌曲属性
-        return _name == other._name && _artist == other._artist;
+        return _id == other._id;
     }
 
     bool operator!=(const Song& other) const {
@@ -77,6 +79,7 @@ public:
     }
 
 private:
+    QString _id;
     QString _name;
     QString _artist;
     QString _album;
@@ -91,18 +94,19 @@ private:
     // todo 未来打算添加的字段 发行时间
 };
 
-template<>
+template <>
 struct std::formatter<Song> : std::formatter<std::string> {
     auto format(const Song& song, auto& ctx) const {
         std::stringstream ss;
 
-        ss << "{name='" << song.getName().toStdString()
-           << "',artist='" << song.getArtist().toStdString()
-           << "',album='" << song.getAlbum().toStdString()
-           << "',filepath='" << song.getFilePath().toStdString()
-           << "',duration=" << song.getDuration() << 's'
-           << ",playCount=" << song.getPlayCount()
-           << ",tags=[";
+        ss << "{id='" << song.getId().toStdString()
+            << "'name='" << song.getName().toStdString()
+            << "',artist='" << song.getArtist().toStdString()
+            << "',album='" << song.getAlbum().toStdString()
+            << "',filepath='" << song.getFilePath().toStdString()
+            << "',duration=" << song.getDuration() << 's'
+            << ",playCount=" << song.getPlayCount()
+            << ",tags=[";
 
         const int tagFlag = song.getTagsFlag();
         bool hasTag = false;

@@ -170,7 +170,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             _mainStackedWidget);
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
         connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this,
-                [this, 我喜欢的_页](const Song& song) {
+                [this, 我喜欢的_页](const SongPtr& song) {
                     if (_songInfoPage != nullptr) {
                         _songInfoPage->close();
                         _songInfoPage = nullptr;

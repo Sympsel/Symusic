@@ -17,37 +17,37 @@ void SongManager::initData() {
     std::ranges::shuffle(indexs, g);
     for (size_t i{}; i < indexs.size() / 2; ++i) {
         auto id = QString(std::to_string(indexs[i]).c_str());
-        _recommendList.emplace_back(
+        _recommendList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
             false,
             198,
             Song::tag::VIP | Song::tag::SQ
-        );
+        ));
     }
 
     for (size_t i{indexs.size() / 2}; i < indexs.size(); ++i) {
         auto id = QString(std::to_string(indexs[i]).c_str());
-        _youMayLikeList.emplace_back(
+        _youMayLikeList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
             false,
             198,
             Song::tag::VIP | Song::tag::SQ
-        );
+        ));
     }
 
     for (size_t i{}; i < indexs.size() / 2; ++i) {
         auto id = QString(std::to_string(indexs[i]).c_str());
-        _likedList.emplace_back(
+        _likedList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
             "暂无",
             id + ".png",
             true,
             198,
             Song::tag::VIP | Song::tag::SQ
-        );
+        ));
     }
 }

@@ -3,7 +3,6 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QMouseEvent>
-#include <ranges>
 
 #include "entity/PathManager.hpp"
 #include "entity/SongManager.h"
@@ -11,7 +10,7 @@
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
-SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
+SongInfoPage::SongInfoPage(const SongPtr& song, QWidget* parent)
     : QWidget(parent)
       , _song(song)
       , _coverLabel(new QLabel())
@@ -32,10 +31,10 @@ SongInfoPage::SongInfoPage(const Song& song, QWidget* parent)
     updateSong(song);
 }
 
-void SongInfoPage::updateSong(const Song& song) {
+void SongInfoPage::updateSong(const SongPtr& song) {
     _song = song;
 
-    if (const QPixmap coverPixmap = song.getCover().scaled(
+    if (const QPixmap coverPixmap = song->getCover().scaled(
         200, 200, Qt::KeepAspectRatio, Qt::SmoothTransformation
     ); !coverPixmap.isNull()) {
         _coverLabel->setPixmap(coverPixmap);
@@ -43,12 +42,12 @@ void SongInfoPage::updateSong(const Song& song) {
         LOG_WARN() << "歌曲封面图片为空";
     }
 
-    _nameLabel->setText(song.getName());
-    _artistLabel->setText(QString("歌手：%1").arg(song.getArtist()));
-    _albumLabel->setText(QString("专辑：%1").arg(song.getAlbum()));
-    _durationLabel->setText(QString("时长：%1").arg(song.getFormattedDuration()));
+    _nameLabel->setText(song->getName());
+    _artistLabel->setText(QString("歌手：%1").arg(song->getArtist()));
+    _albumLabel->setText(QString("专辑：%1").arg(song->getAlbum()));
+    _durationLabel->setText(QString("时长：%1").arg(song->getFormattedDuration()));
 
-    const auto tags = song.getTags();
+    const auto tags = song->getTags();
     QString tagsStr;
     for (const auto& tag : tags) {
         tagsStr.append(tag + " ");
@@ -114,7 +113,7 @@ void SongInfoPage::setupUI() {
     _likeButton->setFixedSize(40, 40);
     _likeButton->setIconSize(QSize(24, 24));
 
-    if (_song.isLiked()) {
+    if (_song->isLiked()) {
         _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
         _likeButton->setToolTip("取消喜欢");
     } else {
@@ -194,16 +193,14 @@ void SongInfoPage::applyStyles() {
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
         // 同步更新 SongManager 中的喜欢列表
         auto& likedList = SongManager::getInstance().getLikedList();
-        if (_song.isLiked()) {
+        if (_song->isLiked()) {
             // 添加到喜欢列表
             SongManager::append(likedList, _song);
-            LOG_DEBUG() << std::format("添加到喜欢列表: {}", _song);
+            LOG_DEBUG() << std::format("添加到喜欢列表: {}", *_song);
         } else {
             // 从喜欢列表中移除
-            if (const auto it = std::ranges::find(likedList, _song);
-                it != likedList.end()) {
-                likedList.erase(it);
-                LOG_DEBUG() << std::format("从喜欢列表删除了: {}", _song);
+            if (SongManager::removeById(likedList, _song->getId())) {
+                LOG_DEBUG() << std::format("从喜欢列表删除了: {}", *_song);
             }
         }
         // 发射信号通知上层外部喜欢状态已改变
@@ -212,8 +209,8 @@ void SongInfoPage::applyStyles() {
     });
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
-        _song.setLiked(!_song.isLiked());
-        if (_song.isLiked()) {
+        _song->setLiked(!_song->isLiked());
+        if (_song->isLiked()) {
             _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
             _likeButton->setToolTip("取消喜欢");
         } else {

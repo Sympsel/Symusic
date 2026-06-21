@@ -1,16 +1,22 @@
 #pragma once
 
-#include <Qslider>
+#include <QSlider>
 #include <QWidget>
 
-#include "entity/Song.h"
+#include "entity/SongManager.h"
+#include "utils/Log.hpp"
 
 class PlaySlider : public QSlider {
     Q_OBJECT
+
+public:
+    using SongPtr = SongManager::SongPtr;
+
 private:
     explicit PlaySlider(QWidget* parent = nullptr)
-       : QSlider(Qt::Horizontal, parent)
-         , _song(nullptr) {
+        : QSlider(Qt::Horizontal, parent)
+          , _totalDuration()
+          , _currDuration() {
         this->setRange(0, 100);
     }
 
@@ -25,10 +31,20 @@ public:
         return slider;
     }
 
-    void setSongToPlay(Song* song) {
-        _song = song;
+    void setSongToPlay(const SongPtr& song) {
+        _totalDuration = song->getDuration();
+        if (_totalDuration <= 0) {
+            LOG_ERROR() << std::format("错误的歌曲总时长：{}", _totalDuration);
+        }
     }
 
+
+    void setValueByTime(int second);
+
+    void setProcessByPercent(int percent);
+
 private:
-    Song* _song;
+    QString _songId{};
+    int _totalDuration;
+    int _currDuration;
 };
