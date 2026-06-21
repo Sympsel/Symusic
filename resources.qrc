@@ -27,7 +27,10 @@
         <file>resource/images/随机播放.png</file>
         <file>resource/images/列表播放.png</file>
         <file>resource/images/单曲循环.png</file>
-        <file>resource/images/音量.png</file>
+        <file>resource/images/关闭音量.png</file>
+        <file>resource/images/最小音量.png</file>
+        <file>resource/images/中等音量.png</file>
+        <file>resource/images/最大音量.png</file>
         <file>resource/images/添加.png</file>
         <file>resource/images/最近播放.png</file>
         <file>resource/images/喜欢.png</file>

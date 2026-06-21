@@ -32,6 +32,10 @@ public:
         return _slider->value();
     }
 
+    void setRelationButton(QPushButton* button) {
+        _relateButton = button;
+    }
+
 signals:
     void volumeChanged(int volume);
 
@@ -40,4 +44,5 @@ private:
     QSlider* _slider;
     // to show percent of the volume
     QLabel* _label;
+    QPushButton* _relateButton;
 };

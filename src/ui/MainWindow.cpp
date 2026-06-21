@@ -107,7 +107,8 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
     const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
     const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
-    const auto volumeButton = Create::buttonOnlyIcon("音量.png", centralWidget);
+    const auto volumeButton = Create::buttonOnlyIcon("中等音量.png", centralWidget);
+    _volumeSlider->setRelationButton(volumeButton);
     connect(volumeButton, &QPushButton::clicked, this, [this, volumeButton]() {
         const QPoint buttonGlobalPos = volumeButton->mapToGlobal(QPoint(0, 0));
         const QSize sliderSize = _volumeSlider->sizeHint();
