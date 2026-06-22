@@ -11,7 +11,6 @@ class SongInfoPage : public QWidget {
     Q_OBJECT
 
 public:
-    using SongPtr = SongManager::SongPtr;
     explicit SongInfoPage(const SongPtr& song, QWidget* parent = nullptr);
 
     void updateSong(const SongPtr& song);

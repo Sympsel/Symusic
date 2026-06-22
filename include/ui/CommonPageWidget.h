@@ -19,7 +19,6 @@ private:
     static QWidget* createMiddleWidget();
 
 public:
-    using SongPtr = SongManager::SongPtr;
     explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
                               QWidget* parent = nullptr);
 

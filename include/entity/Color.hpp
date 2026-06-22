@@ -21,6 +21,9 @@ struct Color {
     QString arrowButtonHover = "80, 80, 80";
     QString arrowButtonPressed = "0, 122, 204";
     Color() = default;
+
+    // 置顶按钮颜色
+    QString fixedActivate = "60, 60, 60";
 };
 
 class ColorTheme {

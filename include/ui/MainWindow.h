@@ -18,7 +18,6 @@ class MainWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    using SongPtr = SongManager::SongPtr;
     explicit MainWindow(QWidget* parent = nullptr, bool statusBarVisible = true, bool debugBorder = false);
 
     ~MainWindow() override;

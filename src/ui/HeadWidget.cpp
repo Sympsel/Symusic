@@ -56,7 +56,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
                 "QPushButton:pressed {"
                 "   background-color: rgb(%1);"
                 "}"
-            ).arg(color.hoverOn));
+            ).arg(color.fixedActivate));
 
             if (this->window()) {
                 this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, true);

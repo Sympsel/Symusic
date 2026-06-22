@@ -9,9 +9,6 @@
 class PlaySlider : public QSlider {
     Q_OBJECT
 
-public:
-    using SongPtr = SongManager::SongPtr;
-
 private:
     explicit PlaySlider(QWidget* parent = nullptr)
         : QSlider(Qt::Horizontal, parent)

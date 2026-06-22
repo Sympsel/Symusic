@@ -11,7 +11,6 @@ class PlaylistItem : public QWidget {
     Q_OBJECT
 
 public:
-    using SongPtr = SongManager::SongPtr;
     explicit PlaylistItem(const SongPtr& song, QString description, QWidget* parent = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;

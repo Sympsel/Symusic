@@ -15,8 +15,6 @@ private:
     void setupUI();
 
 public:
-    using SongPtr = SongManager::SongPtr;
-
     friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
         os << "{";
         os << "isLiked=" << listItem._isLiked << ",";

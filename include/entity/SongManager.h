@@ -5,9 +5,10 @@
 
 #include "Song.h"
 
+using SongPtr = std::shared_ptr<Song>;
+
 class SongManager {
 public:
-    using SongPtr = std::shared_ptr<Song>;
     using SongList = std::vector<SongPtr>;
 
 private:

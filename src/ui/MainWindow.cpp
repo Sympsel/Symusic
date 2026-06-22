@@ -2,6 +2,7 @@
 
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
+#include <QFileDialog>
 #include <ranges>
 
 #include "ui/CommonPageWidget.h"
@@ -121,7 +122,27 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         _volumeSlider->showAtPosition(QPoint(x, y));
     });
     const auto addToButton = Create::buttonOnlyIcon("添加.png", centralWidget);
-    addToButton->setToolTip("添加到");
+    addToButton->setToolTip("从本地添加");
+    connect(addToButton, &QPushButton::clicked, this, [this]() {
+        QFileDialog fileDialog(this);
+        fileDialog.setWindowTitle("添加本地音乐");
+
+        // todo 替换为稳定的路径
+        QDir dir{QDir::currentPath()};
+        dir.cdUp();
+        qDebug() << dir;
+        fileDialog.setDirectory(dir);
+        // 设置一次性可以打开多个
+        fileDialog.setFileMode(QFileDialog::ExistingFiles);
+        fileDialog.setNameFilter("代码文件(*.h *.cpp *.hpp)");
+        if (QDialog::Accepted == fileDialog.exec()) {
+            LOG_DEBUG() << "打开";
+            auto urls = fileDialog.selectedUrls();
+
+        } else {
+            LOG_DEBUG() << "取消";
+        }
+    });
     addToButton->setToolTipDuration(3000);
 
     const auto buttons = {
