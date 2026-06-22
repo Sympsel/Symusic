@@ -1,8 +1,9 @@
 #include "ui/NavigationWidget.h"
 
 #include <QVBoxLayout>
+#include <QLabel>
 
-#include "entity/PathManager.hpp"
+#include "entity/Common.hpp"
 #include "ui/NavigationButton.h"
 #include "utils/Sync.hpp"
 

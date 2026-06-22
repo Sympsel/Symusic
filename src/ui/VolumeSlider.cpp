@@ -1,6 +1,9 @@
 #include "ui/VolumeSlider.h"
 
-#include "entity/PathManager.hpp"
+#include <QVBoxLayout>
+
+#include "utils/Sync.hpp"
+#include "entity/Common.hpp"
 #include "utils/Log.hpp"
 
 VolumeSlider::VolumeSlider(QWidget* parent) : QWidget(parent, Qt::Popup | Qt::FramelessWindowHint)

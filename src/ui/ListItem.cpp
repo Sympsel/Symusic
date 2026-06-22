@@ -75,12 +75,13 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(const SongPtr& song, const bool isLiked) : _isLiked(isLiked)
-                                                              , _likeButton(new QPushButton)
-                                                              , _song(std::move(song)) {
+ListItem::ListItem(const SongPtr& song)
+    : _likeButton(new QPushButton)
+      , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
-    if (_isLiked) {
+
+    if (_song->isLiked()) {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
@@ -99,15 +100,15 @@ ListItem::ListItem(const SongPtr& song, const bool isLiked) : _isLiked(isLiked)
     setupUI();
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
-        _isLiked = !_isLiked;
+        _song->setLiked(!_song->isLiked());
         updateIconStatus();
         auto& likedList = SongManager::getInstance().getLikedList();
-        if (_isLiked) {
-            SongManager::append(likedList, _song);
+        if (_song->isLiked()) {
+            SongManager::getInstance().append(likedList, _song);
             LOG_DEBUG() << "添加到喜欢列表: " << _song;
         } else {
             if (const auto it = std::ranges::find_if(likedList,
-                                                     [this](const SongManager::SongPtr& targetSong) {
+                                                     [this](const SongPtr& targetSong) {
                                                          return targetSong->getId() == _song->getId();
                                                      }); it != likedList.end()) {
                 likedList.erase(it);
@@ -120,7 +121,7 @@ ListItem::ListItem(const SongPtr& song, const bool isLiked) : _isLiked(isLiked)
 }
 
 void ListItem::updateIconStatus() const {
-    if (_isLiked) {
+    if (_song->isLiked()) {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));

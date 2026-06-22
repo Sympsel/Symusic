@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QMouseEvent>
 
-#include "entity/PathManager.hpp"
+#include "entity/Common.hpp"
 #include "entity/SongManager.h"
 #include "utils/FrameStyleSheet.hpp"
 #include "utils/Log.hpp"
@@ -192,14 +192,15 @@ void SongInfoPage::applyStyles() {
 
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
         // 同步更新 SongManager 中的喜欢列表
-        auto& likedList = SongManager::getInstance().getLikedList();
+        auto& songManager = SongManager::getInstance();
+        auto& likedList = songManager.getLikedList();
         if (_song->isLiked()) {
             // 添加到喜欢列表
-            SongManager::append(likedList, _song);
+            songManager.append(likedList, _song);
             LOG_DEBUG() << std::format("添加到喜欢列表: {}", *_song);
         } else {
             // 从喜欢列表中移除
-            if (SongManager::removeById(likedList, _song->getId())) {
+            if (songManager.remove(likedList, _song->getId())) {
                 LOG_DEBUG() << std::format("从喜欢列表删除了: {}", *_song);
             }
         }

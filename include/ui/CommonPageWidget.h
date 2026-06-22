@@ -5,7 +5,6 @@
 #include <QListWidget>
 #include <QWidget>
 
-#include "entity/Color.hpp"
 #include "entity/SongManager.h"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"

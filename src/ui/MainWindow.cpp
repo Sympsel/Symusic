@@ -1,8 +1,8 @@
 #include "ui/MainWindow.h"
 
+#include <QFileDialog>
 #include <QGraphicsDropShadowEffect>
 #include <QStatusBar>
-#include <QFileDialog>
 #include <ranges>
 
 #include "ui/CommonPageWidget.h"
@@ -137,8 +137,8 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         fileDialog.setNameFilter("代码文件(*.h *.cpp *.hpp)");
         if (QDialog::Accepted == fileDialog.exec()) {
             LOG_DEBUG() << "打开";
-            auto urls = fileDialog.selectedUrls();
-
+            const auto urls = fileDialog.selectedUrls();
+            SongManager::getInstance().append(SongManager::getInstance().getDownloadList(), urls);
         } else {
             LOG_DEBUG() << "取消";
         }

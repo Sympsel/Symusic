@@ -2,9 +2,7 @@
 
 #include <QSlider>
 #include <QLabel>
-
-#include <entity/Color.hpp>
-#include "utils/Sync.hpp"
+#include <QPushButton>
 
 class VolumeSlider : public QWidget {
     Q_OBJECT

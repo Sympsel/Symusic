@@ -39,7 +39,6 @@ add_executable(SymMusic_2
         include/entity/Song.h
         src/entity/SongManager.cpp
         include/entity/SongManager.h
-        include/entity/PathManager.hpp
         include/ui/SongInfoPage.h
         src/ui/SongInfoPage.cpp
         include/utils/FrameStyleSheet.hpp
@@ -47,6 +46,7 @@ add_executable(SymMusic_2
         include/ui/PlaySlider.h
         src/ui/VolumeSlider.cpp
         include/ui/VolumeSlider.h
+        include/entity/Common.hpp
 )
 
 target_link_libraries(SymMusic_2

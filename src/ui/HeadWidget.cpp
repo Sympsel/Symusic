@@ -3,7 +3,7 @@
 #include <QLineEdit>
 #include <QTimer>
 
-#include "entity/PathManager.hpp"
+#include "entity/Common.hpp"
 #include "utils/Create.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"

@@ -3,8 +3,7 @@
 #include <QPushButton>
 #include <QWidget>
 
-#include "entity/PathManager.hpp"
-#include "entity/Color.hpp"
+#include "entity/Common.hpp"
 
 class HeadWidget final : public QWidget {
     Q_OBJECT

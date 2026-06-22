@@ -2,8 +2,7 @@
 
 #include <QWidget>
 
-#include "entity/Color.hpp"
-#include "Log.hpp"
+#include "entity/Common.hpp"
 
 class FrameStyleSheet {
 public:

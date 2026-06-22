@@ -2,7 +2,7 @@
 
 #include <QToolButton>
 
-#include "entity/Color.hpp"
+#include "entity/Common.hpp"
 
 class NavigationButton final : public QToolButton {
 public:

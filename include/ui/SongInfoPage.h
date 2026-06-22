@@ -4,7 +4,6 @@
 #include <QPushButton>
 
 #include "entity/Song.h"
-#include "entity/Color.hpp"
 #include "entity/SongManager.h"
 
 class SongInfoPage : public QWidget {

@@ -5,7 +5,6 @@
 
 #include "ui/MainWindow.h"
 #include "utils/Log.hpp"
-#include "entity/PathManager.hpp"
 
 QString loadQss(const QString& path) {
     QFile file{path};

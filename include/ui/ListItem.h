@@ -17,13 +17,12 @@ private:
 public:
     friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
         os << "{";
-        os << "isLiked=" << listItem._isLiked << ",";
-        os << "song=" << listItem._song << ",";
+        os << "song=" << listItem._song;
         os << "}";
         return os;
     }
 
-    explicit ListItem(const SongPtr& song, bool isLiked = false);
+    explicit ListItem(const SongPtr& song);
 
     [[nodiscard]] const SongPtr& getSong() const {
         return _song;
@@ -40,7 +39,6 @@ signals:
     void doubleClicked(const SongPtr& song);
 
 private:
-    bool _isLiked;
     QPushButton* _likeButton;
     SongPtr _song;
 };

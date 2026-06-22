@@ -77,7 +77,7 @@ void CommonPageWidget::reloadData(const SongManager::SongList& songList) {
     for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);
         item->setSizeHint(QSize(0, 40));
-        const auto listItem = new ListItem(song, true);
+        const auto listItem = new ListItem(song);
         _playlist->setItemWidget(item, listItem);
         connect(listItem, &ListItem::doubleClicked, this, [this, song]() {
             emit songItemDoubleClicked(song);

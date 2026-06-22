@@ -1,15 +1,23 @@
 #pragma once
 
 #include <QUuid>
+#include <QUrl>
 #include <QPixmap>
 #include <sstream>
 #include <format>
 
-#include <entity/PathManager.hpp>
+#include "entity/Common.hpp"
 
 class Song {
 public:
     using TagList = std::vector<QString>;
+
+    enum class ExistIn {
+        RECOMMEND_LIST = 0,
+        YOU_MAY_LIKE_LIST = 1,
+        LIKED_LIST = 2,
+        DOWNLOAD_LIST = 4
+    };
 
     enum tag {
         NORMAL = 0,
@@ -34,8 +42,17 @@ public:
           , _filePath(prefix::songsFile + filePath)
           , _cover(QPixmap(prefix::itemImages + coverPath))
           , _duration(duration)
-          , _isLiked(isLiked)
-          , _tagsFlag(tagsFlag) {
+          , _tagsFlag(tagsFlag)
+          , _belongingList(isLiked ? static_cast<int>(ExistIn::LIKED_LIST) : 0) {
+    }
+
+    explicit Song(const QUrl& url)
+        : _id(QUuid::createUuid().toString())
+          , _filePath(url.toLocalFile())
+          , _duration(0)
+          , _tagsFlag(0)
+          , _belongingList(0) {
+        // todo
     }
 
     [[nodiscard]] static TagList getTags(int flag);
@@ -46,15 +63,35 @@ public:
     [[nodiscard]] QString getFilePath() const { return _filePath; }
     [[nodiscard]] QPixmap getCover() const { return _cover; }
     [[nodiscard]] int getDuration() const { return _duration; }
-    [[nodiscard]] bool isLiked() const { return _isLiked; }
+    [[nodiscard]] bool isLiked() const { return isInList(ExistIn::LIKED_LIST); }
+
     [[nodiscard]] int getPlayCount() const { return _playCount; }
     [[nodiscard]] QString getId() const { return _id; }
+    [[nodiscard]] int getTagsFlag() const { return _tagsFlag; }
+    [[nodiscard]] int getBelongStatus() const { return _belongingList; }
 
-    [[nodiscard]] int getTagsFlag() const {
-        return _tagsFlag;
+    void setLiked(const bool liked) {
+        if (liked) {
+            _belongingList |= static_cast<int>(ExistIn::LIKED_LIST);
+        } else {
+            _belongingList &= ~static_cast<int>(ExistIn::LIKED_LIST);
+        }
     }
 
-    void setLiked(const bool liked) { _isLiked = liked; }
+    /**
+     * @brief 设置歌曲所属的列表状态
+     * @param belongingList 歌曲所属的列表
+     */
+    void setBelongStatus(const ExistIn belongingList) {
+        _belongingList = static_cast<int>(belongingList);
+    }
+
+    void setBelongStatus(const std::initializer_list<ExistIn>& belongingLists) {
+        for (const auto& belongingList : belongingLists) {
+            _belongingList |= static_cast<int>(belongingList);
+        }
+    }
+
     void incrementPlayCount() { _playCount++; }
     void setCover(const QPixmap& cover) { _cover = cover; }
 
@@ -68,6 +105,10 @@ public:
 
     [[nodiscard]] TagList getTags() const {
         return getTags(_tagsFlag);
+    }
+
+    [[nodiscard]] bool isInList(ExistIn list) const {
+        return (_belongingList & static_cast<int>(list)) != 0;
     }
 
     bool operator==(const Song& other) const {
@@ -86,10 +127,11 @@ private:
     QString _filePath;
     QPixmap _cover;
     int _duration;
-    bool _isLiked = false;
     int _playCount = 0;
     // 用于标识歌曲vip,音质啥的
     int _tagsFlag;
+    // 所属列表
+    int _belongingList;
 
     // todo 未来打算添加的字段 发行时间
 };

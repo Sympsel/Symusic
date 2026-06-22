@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QLabel>
 #include <QTreeWidget>
 #include <vector>
 
