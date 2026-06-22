@@ -68,11 +68,11 @@ QWidget* CommonPageWidget::createMiddleWidget() {
     return middleWidget;
 }
 
-void CommonPageWidget::initData(const SongManager::SongList& songList) {
+void CommonPageWidget::initData(const SongList& songList) {
     reloadData(songList);
 }
 
-void CommonPageWidget::reloadData(const SongManager::SongList& songList) {
+void CommonPageWidget::reloadData(const SongList& songList) {
     _playlist->clear();
     for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);

@@ -6,12 +6,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.9.3/mingw_64")
-
 find_package(Qt6 REQUIRED COMPONENTS
         Core
         Gui
         Widgets
+        Multimedia
 )
 
 include_directories(include)
@@ -53,38 +52,24 @@ target_link_libraries(SymMusic_2
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        Qt6::Multimedia
 )
 
-# Windows 下自动复制 DLL 文件
-if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-    set(DEBUG_SUFFIX)
-    if (MSVC AND CMAKE_BUILD_TYPE MATCHES "Debug")
-        set(DEBUG_SUFFIX "d")
-    endif ()
+set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.9.3/mingw_64")
+set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
 
-    set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
-    if (NOT EXISTS "${QT_INSTALL_PATH}/bin")
-        set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..")
-        if (NOT EXISTS "${QT_INSTALL_PATH}/bin")
-            set(QT_INSTALL_PATH "${QT_INSTALL_PATH}/..")
-        endif ()
-    endif ()
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt
+        HINTS "${QT_INSTALL_PATH}/bin")
 
-    # 复制 platforms 插件
-    if (EXISTS "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${QT_INSTALL_PATH}/plugins/platforms/qwindows${DEBUG_SUFFIX}.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>/plugins/platforms/")
-    endif ()
-
-    foreach (QT_LIB Core Gui Widgets)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy
-                "${QT_INSTALL_PATH}/bin/Qt6${QT_LIB}${DEBUG_SUFFIX}.dll"
-                "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
-    endforeach ()
-endif ()
+if(WINDEPLOYQT_EXECUTABLE)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}"
+            --dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            --no-translations
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.exe"
+            COMMENT "Deploying Qt dependencies with windeployqt..."
+    )
+    message(STATUS "Using windeployqt: ${WINDEPLOYQT_EXECUTABLE}")
+else()
+    message(FATAL_ERROR "windeployqt not found!")
+endif()

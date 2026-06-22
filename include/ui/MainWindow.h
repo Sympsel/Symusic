@@ -46,6 +46,8 @@ protected:
 
     void mousePressEvent(QMouseEvent* event) override;
 
+    void closeEvent(QCloseEvent* event) override;
+
 private:
     QPoint _dragPos;
     QStackedWidget* _mainStackedWidget{};

@@ -19,6 +19,7 @@ SongInfoPage::SongInfoPage(const SongPtr& song, QWidget* parent)
       , _albumLabel(new QLabel())
       , _durationLabel(new QLabel())
       , _tagsLabel(new QLabel())
+      , _listsLabel(new QLabel())
       , _likeButton(new QPushButton())
       , _playButton(new QPushButton("  播放"))
       , _closeButton(new QPushButton()) {
@@ -56,6 +57,19 @@ void SongInfoPage::updateSong(const SongPtr& song) {
         tagsStr.removeLast();
     }
     _tagsLabel->setText(tagsStr.isEmpty() ? "标签：无" : "标签：" + tagsStr);
+
+    // 所在列表信息展示
+    const auto belongStatus = song->getBelongStatus();
+    QStringList listNames;
+    for (const auto& allLists = ListMappingManager::getInstance().getAllLists();
+         const auto& listInfo : allLists) {
+        if (belongStatus & static_cast<int>(listInfo.existIn)) {
+            listNames.append(listInfo.name);
+            LOG_DEBUG() << "执行到";
+        }
+    }
+    const QString listsStr = listNames.isEmpty() ? "所在列表：无" : "所在列表：" + listNames.join("、");
+    _listsLabel->setText(listsStr);
 }
 
 void SongInfoPage::setupUI() {
@@ -102,9 +116,11 @@ void SongInfoPage::setupUI() {
 
     _nameLabel->setObjectName("songName");
 
-    Sync::widgetToLayout(infoLayout, {
-                             _nameLabel, _artistLabel, _albumLabel, _durationLabel, _tagsLabel
-                         });
+    Sync::widgetToLayout(
+        infoLayout, {
+            _nameLabel, _artistLabel, _albumLabel,
+            _durationLabel, _tagsLabel, _listsLabel
+        });
     infoLayout->addStretch(1);
 
     const auto buttonLayout = new QHBoxLayout();
@@ -139,11 +155,6 @@ void SongInfoPage::setupUI() {
     contentLayout->addStretch(1);
 
     Sync::widgetToLayout(mainLayout, {headerWidget, contentWidget});
-}
-
-void SongInfoPage::setBorder(const bool enabled) {
-    // LOG_DEBUG() << std::format("歌曲信息页：启用{}边框", enabled ? "调试" : "常规");
-    FrameStyleSheet::setBorder(this, enabled);
 }
 
 void SongInfoPage::applyStyles() {
@@ -220,7 +231,6 @@ void SongInfoPage::applyStyles() {
         }
         // 这里将添加或移除到喜欢列表推迟到当前界面关闭
     });
-    this->setBorder(false);
 }
 
 void SongInfoPage::keyPressEvent(QKeyEvent* event) {

@@ -21,9 +21,9 @@ public:
     explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
                               QWidget* parent = nullptr);
 
-    void initData(const SongManager::SongList& songList);
+    void initData(const SongList& songList);
 
-    void reloadData(const SongManager::SongList& songList);
+    void reloadData(const SongList& songList);
 
     [[nodiscard]] const QString& getPageName() const {
         return _pageName;

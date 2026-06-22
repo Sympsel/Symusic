@@ -372,10 +372,17 @@ void MainWindow::mousePressEvent(QMouseEvent* event) {
     QWidget::mousePressEvent(event);
 }
 
-MainWindow::~MainWindow() {
+void MainWindow::closeEvent(QCloseEvent* event) {
+    // 先关闭歌曲信息页
     if (_songInfoPage) {
+        _songInfoPage->blockSignals(true);
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
+
+    QMainWindow::closeEvent(event);
+}
+
+MainWindow::~MainWindow() {
     LOG_DEBUG() << std::format("程序退出，退出时宽高为 [{}, {}]", this->width(), this->height());
 }

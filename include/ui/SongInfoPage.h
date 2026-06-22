@@ -24,7 +24,6 @@ signals:
 
 private:
     void setupUI();
-    void setBorder(bool enabled = false);
     void applyStyles();
 
     SongPtr _song;
@@ -35,6 +34,7 @@ private:
     QLabel* _albumLabel;
     QLabel* _durationLabel;
     QLabel* _tagsLabel;
+    QLabel* _listsLabel;
     QPushButton* _likeButton;
     QPushButton* _playButton;
     QPushButton* _closeButton;

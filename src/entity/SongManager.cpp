@@ -19,10 +19,9 @@ void SongManager::initData() {
         auto id = QString(std::to_string(indexs[i]).c_str());
         _recommendList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
-            "暂无",
             id + ".png",
             false,
-            198,
+            198000,
             Song::tag::VIP | Song::tag::SQ
         ));
     }
@@ -31,10 +30,9 @@ void SongManager::initData() {
         auto id = QString(std::to_string(indexs[i]).c_str());
         _youMayLikeList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
-            "暂无",
             id + ".png",
             false,
-            198,
+            198000,
             Song::tag::VIP | Song::tag::SQ
         ));
     }
@@ -43,10 +41,9 @@ void SongManager::initData() {
         auto id = QString(std::to_string(indexs[i]).c_str());
         _likedList.emplace_back(std::make_shared<Song>(
             "歌曲" + id, "作曲家" + id, "专辑" + id,
-            "暂无",
             id + ".png",
             true,
-            198,
+            198000,
             Song::tag::VIP | Song::tag::SQ
         ));
     }

@@ -8,6 +8,8 @@
 
 #include "entity/Common.hpp"
 
+using LL = long long;
+
 class Song {
 public:
     using TagList = std::vector<QString>;
@@ -16,7 +18,8 @@ public:
         RECOMMEND_LIST = 0,
         YOU_MAY_LIKE_LIST = 1,
         LIKED_LIST = 2,
-        DOWNLOAD_LIST = 4
+        DOWNLOAD_LIST = 4,
+        HISTORY_LIST = 8
     };
 
     enum tag {
@@ -27,40 +30,35 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Song& song);
 
+private:
+    void parseMusicMeta();
+
+public:
     explicit Song(QString name,
                   QString artist,
                   QString album,
-                  const QString& filePath,
                   const QString& coverPath,
                   const bool isLiked = false,
-                  const int duration = 0,
+                  const LL duration = 0,
                   const int tagsFlag = 0)
         : _id(QUuid::createUuid().toString())
           , _name(std::move(name))
           , _artist(std::move(artist))
           , _album(std::move(album))
-          , _filePath(prefix::songsFile + filePath)
           , _cover(QPixmap(prefix::itemImages + coverPath))
           , _duration(duration)
           , _tagsFlag(tagsFlag)
           , _belongingList(isLiked ? static_cast<int>(ExistIn::LIKED_LIST) : 0) {
     }
 
-    explicit Song(const QUrl& url)
-        : _id(QUuid::createUuid().toString())
-          , _filePath(url.toLocalFile())
-          , _duration(0)
-          , _tagsFlag(0)
-          , _belongingList(0) {
-        // todo
-    }
+    explicit Song(const QUrl& url, bool isLiked = false);
 
     [[nodiscard]] static TagList getTags(int flag);
 
     [[nodiscard]] QString getName() const { return _name; }
     [[nodiscard]] QString getArtist() const { return _artist; }
     [[nodiscard]] QString getAlbum() const { return _album; }
-    [[nodiscard]] QString getFilePath() const { return _filePath; }
+    [[nodiscard]] QString getFilePath() const { return _url.toLocalFile(); }
     [[nodiscard]] QPixmap getCover() const { return _cover; }
     [[nodiscard]] int getDuration() const { return _duration; }
     [[nodiscard]] bool isLiked() const { return isInList(ExistIn::LIKED_LIST); }
@@ -69,6 +67,7 @@ public:
     [[nodiscard]] QString getId() const { return _id; }
     [[nodiscard]] int getTagsFlag() const { return _tagsFlag; }
     [[nodiscard]] int getBelongStatus() const { return _belongingList; }
+    [[nodiscard]] QUrl getUrl() const { return _url; }
 
     void setLiked(const bool liked) {
         if (liked) {
@@ -96,8 +95,9 @@ public:
     void setCover(const QPixmap& cover) { _cover = cover; }
 
     [[nodiscard]] QString getFormattedDuration() const {
-        const int minutes = _duration / 60;
-        const int seconds = _duration % 60;
+        const LL duration_s = _duration / 1000;
+        const int minutes = duration_s / 60;
+        const int seconds = duration_s % 60;
         return QString("%1:%2").
                arg(minutes, 2, 10, '0').
                arg(seconds, 2, 10, '0');
@@ -124,16 +124,15 @@ private:
     QString _name;
     QString _artist;
     QString _album;
-    QString _filePath;
     QPixmap _cover;
-    int _duration;
+    // 单位：毫秒
+    LL _duration;
     int _playCount = 0;
     // 用于标识歌曲vip,音质啥的
     int _tagsFlag;
     // 所属列表
     int _belongingList;
-
-    // todo 未来打算添加的字段 发行时间
+    QUrl _url;
 };
 
 template <>
