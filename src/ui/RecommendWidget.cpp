@@ -210,6 +210,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
 
     auto& leftButton = _contain.at(name).leftButton;
     leftButton = Create::buttonOnlyIcon("向左.png");
+
     auto centralWidget = new QWidget();
     const auto centralHLayout = new QHBoxLayout(centralWidget);
     Sync::clearLayoutVMargins({centralHLayout});
@@ -231,6 +232,7 @@ QWidget* RecommendWidget::createPlateWidget(const QString& name) {
     Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
 
     Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
+    Sync::buttonNoFocus({leftButton, rightButton});
 
     if (_contain.contains(name)) {
         auto& alist = _contain.at(name);

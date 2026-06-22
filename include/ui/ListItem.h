@@ -16,6 +16,7 @@ private:
 
 public:
     using SongPtr = SongManager::SongPtr;
+
     friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
         os << "{";
         os << "isLiked=" << listItem._isLiked << ",";
@@ -31,6 +32,7 @@ public:
     }
 
     void updateIconStatus() const;
+
 protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 

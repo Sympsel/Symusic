@@ -76,8 +76,8 @@ void ListItem::setupUI() {
 }
 
 ListItem::ListItem(const SongPtr& song, const bool isLiked) : _isLiked(isLiked)
-                                                    , _likeButton(new QPushButton)
-                                                    , _song(std::move(song)) {
+                                                              , _likeButton(new QPushButton)
+                                                              , _song(std::move(song)) {
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
     if (_isLiked) {

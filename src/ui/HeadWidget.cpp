@@ -37,11 +37,59 @@ HeadWidget::HeadWidget(QWidget* parent) {
 
 QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
     const auto functionWidget = new QWidget(parent);
-
     const auto layout = new QHBoxLayout(functionWidget);
 
+    const auto fixedButton = Create::buttonOnlyIcon("固定.png", functionWidget);
+    fixedButton->setCheckable(true);
+    fixedButton->setToolTip("置顶窗口");
+    connect(fixedButton, &QPushButton::toggled, this, [this, fixedButton](const bool checked) {
+        const auto& color = ColorTheme::getInstance().getColor();
+        if (checked) {
+            fixedButton->setStyleSheet(QString(
+                "QPushButton {"
+                "   background-color: rgb(%1);"
+                "   border: none;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: rgb(%1);"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: rgb(%1);"
+                "}"
+            ).arg(color.hoverOn));
+
+            if (this->window()) {
+                this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, true);
+                this->window()->show();
+            }
+            LOG_DEBUG() << "窗口已置顶";
+            fixedButton->setToolTip("取消置顶");
+        } else {
+            fixedButton->setStyleSheet(QString(
+                "QPushButton {"
+                "   background-color: rgb(%1);"
+                "   border: none;"
+                "}"
+                "QPushButton:hover {"
+                "   background-color: rgb(%1);"
+                "}"
+                "QPushButton:pressed {"
+                "   background-color: rgb(%1);"
+                "}"
+            ).arg(color.background));
+
+            if (this->window()) {
+                this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, false);
+                this->window()->show();
+            }
+            LOG_DEBUG() << "取消窗口置顶";
+            fixedButton->setToolTip("置顶窗口");
+        }
+    });
     const auto settingsButton = Create::buttonOnlyIcon("设置.png", functionWidget);
+    settingsButton->setToolTip("设置");
     const auto minimizeButton = Create::buttonOnlyIcon("最小化.png", functionWidget);
+    minimizeButton->setToolTip("最小化");
     connect(minimizeButton, &QPushButton::clicked, this, [this, minimizeButton]() {
         if (this->parent()) {
             emit minimizeRequested();
@@ -51,6 +99,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
         }
     });
     const auto maximizeButton = Create::buttonOnlyIcon("最大化_1.png", functionWidget);
+    maximizeButton->setToolTip("最大化");
     connect(maximizeButton, &QPushButton::clicked, this, [this, maximizeButton]() {
         if (this->parent()) {
             emit maximizeRequested();
@@ -68,6 +117,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
     });
 
     const auto closeButton = Create::buttonOnlyIcon("关闭.png", functionWidget);
+    closeButton->setToolTip("退出");
     connect(closeButton, &QPushButton::clicked, this, [this]() {
         if (this->parent()) {
             emit closeRequested();
@@ -76,9 +126,10 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
             this->close();
         }
     });
-    const auto buttons = {settingsButton, minimizeButton, maximizeButton, closeButton};
+    const auto buttons = {fixedButton, settingsButton, minimizeButton, maximizeButton, closeButton};
     this->syncButtonBackground(buttons);
     Sync::buttonFixedSize(QSize(30, 30), buttons);
+    Sync::buttonNoFocus(buttons);
 
     layout->addStretch(1);
     Sync::buttonToLayout(layout, buttons);

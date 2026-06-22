@@ -70,9 +70,11 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     Sync::widgetToLayout(leftLayout, {
                              onlineMusic, myMusic
                          });
-    syncButtonToContain({
+    const auto buttons = {
         推荐, 电台, 漫游, 我喜欢的, 本地下载, 最近播放
-    });
+    };
+    syncButtonToContain(buttons);
+    Sync::buttonNoFocus(buttons);
 
     leftLayout->addStretch(1);
     return leftWidget;
@@ -128,6 +130,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
 
     constexpr QSize buttonsSize(30, 30);
     Sync::buttonFixedSize(buttonsSize, buttons);
+    Sync::buttonNoFocus(buttons);
     Sync::buttonToHLayout(centralLayout, buttons);
 
     // [进度]

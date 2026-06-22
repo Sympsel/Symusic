@@ -4,6 +4,8 @@
 #include <QLayout>
 #include <QStackedWidget>
 
+#include "ui/NavigationButton.h"
+
 class Sync {
 public:
     static void buttonBackground(const std::initializer_list<QPushButton*>& buttons,
@@ -27,6 +29,18 @@ public:
     static void buttonFixedSize(const QSize size, const std::initializer_list<QPushButton*>& buttons) {
         for (const auto button : buttons) {
             button->setFixedSize(size);
+        }
+    }
+
+    static void buttonNoFocus(const std::initializer_list<QPushButton*>& buttons) {
+        for (const auto button : buttons) {
+            button->setFocusPolicy(Qt::NoFocus);
+        }
+    }
+
+    static void buttonNoFocus(const std::initializer_list<NavigationButton*>& buttons) {
+        for (const auto button : buttons) {
+            button->setFocusPolicy(Qt::NoFocus);
         }
     }
 

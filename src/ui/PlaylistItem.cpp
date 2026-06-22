@@ -19,6 +19,7 @@ PlaylistItem::PlaylistItem(const SongPtr& song, QString description, QWidget* pa
     layout->setSpacing(4);
 
     _button = new QPushButton(this);
+    _button->setFocusPolicy(Qt::NoFocus);
     _button->setFixedSize(coverLength - 16, coverLength - 16);
     _button->setIcon(_song->getCover());
     _button->setIconSize(QSize(coverLength - 16, coverLength - 16));
