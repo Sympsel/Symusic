@@ -9,7 +9,6 @@
 QString loadQss(const QString& path) {
     QFile file{path};
     if (!file.open(QFile::ReadOnly)) {
-        qDebug() << "Failed to load style";
         return {};
     }
     return file.readAll();

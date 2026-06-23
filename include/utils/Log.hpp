@@ -467,6 +467,12 @@ namespace sym {
                 return *this;
             }
 
+            // QString 特化版本
+            LogMsg &operator<<(const QString &info) {
+                _log_info += info.toStdString();
+                return *this;
+            }
+
             LogMsg &operator<<(std::ostream &(*manip)(std::ostream &)) {
                 std::stringstream ss;
                 ss << manip;

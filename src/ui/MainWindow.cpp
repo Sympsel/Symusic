@@ -130,15 +130,13 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         // todo 替换为稳定的路径
         QDir dir{QDir::currentPath()};
         dir.cdUp();
-        qDebug() << dir;
         fileDialog.setDirectory(dir);
         // 设置一次性可以打开多个
         fileDialog.setFileMode(QFileDialog::ExistingFiles);
-        fileDialog.setNameFilter("代码文件(*.h *.cpp *.hpp)");
+        fileDialog.setNameFilter("音乐文件(*.mp3 *.wav)");
         if (QDialog::Accepted == fileDialog.exec()) {
-            LOG_DEBUG() << "打开";
             const auto urls = fileDialog.selectedUrls();
-            SongManager::getInstance().append(SongManager::getInstance().getDownloadList(), urls);
+            SongManager::append(SongManager::getInstance().getDownloadList(), urls);
         } else {
             LOG_DEBUG() << "取消";
         }

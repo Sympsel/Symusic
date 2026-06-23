@@ -207,17 +207,22 @@ public:
 
     static bool append(SongList& which, const QList<QUrl>& urls) {
         for (const auto& url : urls) {
-            QMimeDatabase mineDb;
-            QMimeType mimeType = mineDb.mimeTypeForName(url.toLocalFile());
+            QMimeDatabase mimeDb;
+            // 使用 mimeTypeForFile 而不是 mimeTypeForName
+            QMimeType mimeType = mimeDb.mimeTypeForFile(url.toLocalFile());
             QString mime = mimeType.name();
+            LOG_DEBUG() << "文件:" << url.toLocalFile() << ", MIME类型:" << mime;
             if (const auto& supportedList = SupportSongType::getInstance().getList();
                 !supportedList.contains(mime)) {
+                LOG_WARN() << "不支持的文件类型:" << mime << "，已跳过";
                 continue;
             }
+            LOG_DEBUG() << "开始创建歌曲对象...";
             const auto song = std::make_shared<Song>(url);
+            LOG_DEBUG() << "歌曲对象创建成功:" << *song;
             append(which, song);
         }
-        return false;
+        return true;
     }
 
     static bool remove(SongList& which, const QString& id) {

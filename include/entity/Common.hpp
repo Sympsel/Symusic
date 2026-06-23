@@ -49,11 +49,11 @@ struct SupportSongType {
 private:
     /**
      *
-     * audio/mepg - MP3
+     * audio/mpeg - MP3
      * audio/flac - 无损
      * audio/wav
      */
-    explicit SupportSongType() : _supportedList{"audio/mepg", "audio/flac", "audio/wav"} {
+    explicit SupportSongType() : _supportedList{"audio/mpeg", "audio/flac", "audio/wav"} {
     }
 
 public:
