@@ -156,7 +156,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto rightWidget = new QWidget(controlWidget);
     const auto rightLayout = new QHBoxLayout(rightWidget);
     const auto processLabel = new QLabel("00:00/3:14");
-    const auto lyricsButton = new QPushButton(QIcon(":/images/词.png"), "");
+    const auto lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
     lyricsButton->setFixedSize(buttonsSize);
     syncButtonBackground(buttons);
     syncButtonBackground({lyricsButton});
@@ -199,6 +199,9 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "Sympsel.png",
             "这里是你爱听的",
             _mainStackedWidget);
+        我喜欢的_页->setSpecial([]() {
+            LOG_INFO() << std::format("页面 {} 正常加载", "我喜欢的");
+        });
         我喜欢的_页->initData(SongManager::getInstance().getLikedList());
         connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this,
                 [this, 我喜欢的_页](const SongPtr& song) {

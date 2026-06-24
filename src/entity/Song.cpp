@@ -20,8 +20,8 @@ void Song::parseMusicMeta() {
 
     // 连接信号，当播放器状态改变时退出循环
     QObject::connect(player, &QMediaPlayer::mediaStatusChanged,
-                     [&]() {
-                         if (player->isAvailable()) {
+                     [&, player]() {
+                         if (player && player->isAvailable()) {
                              isReady = true;
                              loop.quit();
                          }
@@ -59,8 +59,8 @@ void Song::parseMusicMeta() {
         }
     }
 
-    // 清理播放器
-    delete player;
+    // 清理播放器 - 使用 deleteLater 确保信号处理完成后再删除
+    player->deleteLater();
 }
 
 Song::Song(const QUrl& url, const bool isLiked)

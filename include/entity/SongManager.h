@@ -174,6 +174,31 @@ public:
         return _historyList;
     }
 
+    [[nodiscard]] static bool contains(SongList& which, const QString& id) {
+        std::optional<SongPtr> song = std::nullopt;
+        bool hasValue = false;
+        for (const auto& allLists = ListMappingManager::getInstance().getAllLists();
+             const auto& listInfo : allLists) {
+            for (const auto& item : *(listInfo.list)) {
+                if (item->getId() == id) {
+                    song = item;
+                    hasValue = true;
+                    break;
+                }
+            }
+            if (hasValue) break;
+        }
+        if (!song.has_value()) {
+            return false;
+        }
+        if (const auto& listMappingManager = ListMappingManager::getInstance();
+            song->get()->getBelongStatus() &
+            static_cast<int>(listMappingManager.getExistIn(&which))) {
+            return true;
+        }
+        return false;
+    }
+
     [[nodiscard]] std::optional<SongPtr> findSong(const QString& id) {
         if (_findCache.contains(id)) {
             return _findCache[id];

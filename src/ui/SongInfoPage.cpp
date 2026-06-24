@@ -6,7 +6,6 @@
 
 #include "entity/Common.hpp"
 #include "entity/SongManager.h"
-#include "utils/FrameStyleSheet.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
@@ -53,7 +52,7 @@ void SongInfoPage::updateSong(const SongPtr& song) {
     for (const auto& tag : tags) {
         tagsStr.append(tag + " ");
     }
-    if (tagsStr.back() == ' ') {
+    if (!tagsStr.isEmpty() && tagsStr.back() == ' ') {
         tagsStr.removeLast();
     }
     _tagsLabel->setText(tagsStr.isEmpty() ? "标签：无" : "标签：" + tagsStr);
@@ -206,12 +205,16 @@ void SongInfoPage::applyStyles() {
         auto& songManager = SongManager::getInstance();
         auto& likedList = songManager.getLikedList();
         if (_song->isLiked()) {
-            // 添加到喜欢列表
-            songManager.append(likedList, _song);
-            LOG_DEBUG() << std::format("添加到喜欢列表: {}", *_song);
+            if (!SongManager::contains(likedList, _song->getId())) {
+                // 添加到喜欢列表
+                SongManager::append(likedList, _song);
+                LOG_DEBUG() << std::format("添加到喜欢列表: {}", *_song);
+            } else {
+                LOG_DEBUG() << std::format("已在喜欢列表中: {}", *_song);
+            }
         } else {
             // 从喜欢列表中移除
-            if (songManager.remove(likedList, _song->getId())) {
+            if (SongManager::remove(likedList, _song->getId())) {
                 LOG_DEBUG() << std::format("从喜欢列表删除了: {}", *_song);
             }
         }

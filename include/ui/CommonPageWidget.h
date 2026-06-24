@@ -2,6 +2,7 @@
 
 #include "ListItem.h"
 
+#include <functional>
 #include <QListWidget>
 #include <QWidget>
 
@@ -11,6 +12,9 @@
 
 class CommonPageWidget : public QWidget {
     Q_OBJECT
+
+public:
+    using SpecializationCallBack = std::function<void()>;
 
 private:
     [[nodiscard]] QWidget* createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const;
@@ -31,6 +35,10 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
+    void setSpecial(const SpecializationCallBack& specializationCb) {
+        _specializationCb = specializationCb;
+    }
+
 protected:
     void keyPressEvent(QKeyEvent* event) override;
 
@@ -41,4 +49,5 @@ private:
     QString _pageName;
     QPushButton* _playAllButton;
     QListWidget* _playlist;
+    SpecializationCallBack _specializationCb;
 };
