@@ -18,6 +18,11 @@ private:
     }
 
 public:
+    PlaySlider(const PlaySlider&) = delete;
+    PlaySlider(PlaySlider&&) = delete;
+    PlaySlider& operator=(const PlaySlider&) = delete;
+    PlaySlider& operator=(PlaySlider&&) = delete;
+
     /**
      *
      * @param parent the parent will be fixed all the time

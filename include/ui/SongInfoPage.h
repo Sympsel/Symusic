@@ -9,6 +9,10 @@
 class SongInfoPage : public QWidget {
     Q_OBJECT
 
+private:
+    void setupUI();
+    void applyStyles();
+
 public:
     explicit SongInfoPage(const SongPtr& song, QWidget* parent = nullptr);
 
@@ -18,15 +22,15 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
 
 signals:
     void likeStatusChanged();
 
 private:
-    void setupUI();
-    void applyStyles();
-
     SongPtr _song;
+    bool _originLiked;
+    bool _willLike;
 
     QLabel* _coverLabel;
     QLabel* _nameLabel;

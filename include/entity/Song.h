@@ -15,11 +15,11 @@ public:
     using TagList = std::vector<QString>;
 
     enum class ExistIn {
-        RECOMMEND_LIST = 0,
-        YOU_MAY_LIKE_LIST = 1,
-        LIKED_LIST = 2,
-        DOWNLOAD_LIST = 4,
-        HISTORY_LIST = 8
+        RECOMMEND_LIST = 1,
+        YOU_MAY_LIKE_LIST = 2,
+        LIKED_LIST = 4,
+        DOWNLOAD_LIST = 8,
+        HISTORY_LIST = 16
     };
 
     enum tag {

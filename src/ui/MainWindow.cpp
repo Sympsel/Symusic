@@ -135,11 +135,12 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         fileDialog.setNameFilter("音乐文件(*.mp3 *.wav)");
         if (QDialog::Accepted == fileDialog.exec()) {
             const auto urls = fileDialog.selectedUrls();
-            SongManager::append(SongManager::getInstance().getDownloadList(), urls);
+            auto& songManager = SongManager::getInstance();
+            SongManager::append(songManager.getDownloadList(), urls);
             if (const auto currentPage = _mainStackedWidget->currentWidget()) {
                 if (const auto downloadPage = qobject_cast<CommonPageWidget*>(currentPage)) {
                     if (downloadPage->getPageName() == "本地下载页") {
-                        downloadPage->reloadData(SongManager::getInstance().getDownloadList());
+                        downloadPage->reloadData(songManager.getDownloadList());
                     }
                 }
             }
@@ -206,10 +207,14 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "Sympsel.png",
             "这里是你爱听的",
             _mainStackedWidget);
-        我喜欢的_页->setSpecial([]() {
+        我喜欢的_页->setSpecialCallback([]() {
             LOG_INFO() << std::format("页面 {} 正常加载", "我喜欢的");
         });
-        我喜欢的_页->initData(SongManager::getInstance().getLikedList());
+        auto& songManager = SongManager::getInstance();
+        我喜欢的_页->setReloadCallback([&songManager](CommonPageWidget* page) {
+            page->reloadData(songManager.getLikedList());
+        });
+        我喜欢的_页->initData(songManager.getLikedList());
         connect(我喜欢的_页, &CommonPageWidget::songItemDoubleClicked, this,
                 [this, 我喜欢的_页](const SongPtr& song) {
                     handleRequestFromListWidgetItem(我喜欢的_页, song);
@@ -220,11 +225,15 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "Sympsel.png",
             "这里是你已下载或从本地添加的歌曲",
             _mainStackedWidget);
-        本地下载_页->initData(SongManager::getInstance().getDownloadList());
+        本地下载_页->setReloadCallback([&songManager](CommonPageWidget* page) {
+            page->reloadData(songManager.getDownloadList());
+        });
+        本地下载_页->initData(songManager.getDownloadList());
         connect(本地下载_页, &CommonPageWidget::songItemDoubleClicked, this,
                 [this, 本地下载_页](const SongPtr& song) {
                     handleRequestFromListWidgetItem(本地下载_页, song);
                 });
+
         const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
 
         const std::initializer_list<QWidget*>& pages = {
@@ -289,15 +298,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
                     if (const auto commonPage = qobject_cast<CommonPageWidget*>(currentPage)) {
-                        const auto& pageName = commonPage->getPageName();
-                        auto& songManager = SongManager::getInstance();
-                        if (commonPage->getPageName() == "我喜欢的") {
-                            commonPage->reloadData(songManager.getLikedList());
-                        } else if (pageName == "本地下载") {
-                            commonPage->reloadData(songManager.getDownloadList());
-                        } else {
-                            // todo
-                        }
+                        commonPage->reloadData();
                     }
                 }
             });
@@ -358,21 +359,19 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
 }
 
 void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song) {
-    if (_songInfoPage != nullptr) {
+    if (_songInfoPage) {
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
     _songInfoPage = new SongInfoPage(song);
 
-    connect(_songInfoPage, &QWidget::destroyed, this, [this, commonPageWidget]() {
-        auto& songManager = SongManager::getInstance();
-        const auto& pageName = commonPageWidget->getPageName();
-        if (pageName == "我喜欢的") {
-            commonPageWidget->reloadData(songManager.getLikedList());
-        } else if (pageName == "本地下载") {
-            commonPageWidget->reloadData(songManager.getDownloadList());
+    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
+        for (int i = 0; i < _mainStackedWidget->count(); ++i) {
+            if (auto* page = qobject_cast<CommonPageWidget*>(_mainStackedWidget->widget(i))) {
+                page->reloadData();
+            }
         }
-        LOG_DEBUG() << "喜欢状态改变，已刷新" << pageName.toStdString();
+        LOG_DEBUG() << "歌曲详情关闭，已刷新相关页面";
         _songInfoPage = nullptr;
     });
     _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);

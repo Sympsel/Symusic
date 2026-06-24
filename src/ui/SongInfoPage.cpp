@@ -12,6 +12,8 @@
 SongInfoPage::SongInfoPage(const SongPtr& song, QWidget* parent)
     : QWidget(parent)
       , _song(song)
+      , _originLiked(song->isLiked())
+      , _willLike(song->isLiked())
       , _coverLabel(new QLabel())
       , _nameLabel(new QLabel())
       , _artistLabel(new QLabel())
@@ -201,31 +203,12 @@ void SongInfoPage::applyStyles() {
     ).arg(color.background, color.hoverOn, color.pressed));
 
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
-        // 同步更新 SongManager 中的喜欢列表
-        auto& songManager = SongManager::getInstance();
-        auto& likedList = songManager.getLikedList();
-        if (_song->isLiked()) {
-            if (!SongManager::contains(likedList, _song->getId())) {
-                // 添加到喜欢列表
-                SongManager::append(likedList, _song);
-                LOG_DEBUG() << std::format("添加到喜欢列表: {}", *_song);
-            } else {
-                LOG_DEBUG() << std::format("已在喜欢列表中: {}", *_song);
-            }
-        } else {
-            // 从喜欢列表中移除
-            if (SongManager::remove(likedList, _song->getId())) {
-                LOG_DEBUG() << std::format("从喜欢列表删除了: {}", *_song);
-            }
-        }
-        // 发射信号通知上层外部喜欢状态已改变
-        emit likeStatusChanged();
         this->close();
     });
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
-        _song->setLiked(!_song->isLiked());
-        if (_song->isLiked()) {
+        _willLike = !_willLike;
+        if (_willLike) {
             _likeButton->setIcon(QIcon(prefix::normalImages + "赞_选中.png"));
             _likeButton->setToolTip("取消喜欢");
         } else {
@@ -262,4 +245,23 @@ void SongInfoPage::mousePressEvent(QMouseEvent* event) {
         return;
     }
     QWidget::mousePressEvent(event);
+}
+
+void SongInfoPage::closeEvent(QCloseEvent* event) {
+    LOG_DEBUG() << std::format("closeEvent: _originLiked={}, _willLike={}, belongStatus={}",
+                               _originLiked, _willLike, _song->getBelongStatus());
+
+    auto& songManager = SongManager::getInstance();
+    auto& likedList = songManager.getLikedList();
+
+    if (!_originLiked && _willLike) {
+        const bool result = SongManager::append(likedList, _song);
+        LOG_DEBUG() << std::format("添加到喜欢列表, append={}, likedList数量: {}", result, likedList.size());
+        emit likeStatusChanged();
+    } else if (_originLiked && !_willLike) {
+        const bool result = SongManager::remove(likedList, _song->getId());
+        LOG_DEBUG() << std::format("从喜欢列表移除, remove={}, likedList数量: {}", result, likedList.size());
+        emit likeStatusChanged();
+    }
+    QWidget::closeEvent(event);
 }

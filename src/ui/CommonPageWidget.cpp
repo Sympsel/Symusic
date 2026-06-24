@@ -89,6 +89,14 @@ void CommonPageWidget::reloadData(const SongList& songList) {
     }
 }
 
+void CommonPageWidget::reloadData() {
+    if (_reloadCb) {
+        _reloadCb(this);
+    } else {
+        LOG_ERROR() << "未注册页面刷新回调";
+    }
+}
+
 void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Space) {
         if (const auto currItem = _playlist->currentItem()) {

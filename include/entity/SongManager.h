@@ -149,6 +149,11 @@ private:
     }
 
 public:
+    SongManager(const SongManager&) = delete;
+    SongManager(SongManager&&) = delete;
+    SongManager& operator=(const SongManager&) = delete;
+    SongManager& operator=(SongManager&&) = delete;
+
     static SongManager& getInstance() {
         static SongManager instance;
         return instance;
@@ -242,9 +247,7 @@ public:
                 LOG_WARN() << "不支持的文件类型:" << mime << "，已跳过";
                 continue;
             }
-            // LOG_DEBUG() << "开始创建歌曲对象...";
             const auto song = std::make_shared<Song>(url);
-            // LOG_DEBUG() << "歌曲对象创建成功: " << *song;
             append(which, song);
         }
         return true;

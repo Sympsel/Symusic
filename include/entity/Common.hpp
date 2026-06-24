@@ -57,6 +57,11 @@ private:
     }
 
 public:
+    SupportSongType(const SupportSongType&) = delete;
+    SupportSongType(SupportSongType&&) = delete;
+    SupportSongType& operator=(const SupportSongType&) = delete;
+    SupportSongType& operator=(SupportSongType&&) = delete;
+
     [[nodiscard]] static SupportSongType& getInstance() {
         static SupportSongType instance;
         return instance;

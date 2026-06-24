@@ -15,6 +15,7 @@ class CommonPageWidget : public QWidget {
 
 public:
     using SpecializationCallBack = std::function<void()>;
+    using ReloadCallback = std::function<void(CommonPageWidget*)>;
 
 private:
     [[nodiscard]] QWidget* createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const;
@@ -35,9 +36,15 @@ public:
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-    void setSpecial(const SpecializationCallBack& specializationCb) {
+    void setSpecialCallback(const SpecializationCallBack& specializationCb) {
         _specializationCb = specializationCb;
     }
+
+    void setReloadCallback(const ReloadCallback& reloadCb) {
+        _reloadCb = reloadCb;
+    }
+
+    void reloadData();
 
 protected:
     void keyPressEvent(QKeyEvent* event) override;
@@ -50,4 +57,5 @@ private:
     QPushButton* _playAllButton;
     QListWidget* _playlist;
     SpecializationCallBack _specializationCb;
+    ReloadCallback _reloadCb;
 };

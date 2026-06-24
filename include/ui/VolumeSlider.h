@@ -15,6 +15,11 @@ private:
     }
 
 public:
+    VolumeSlider(const VolumeSlider&) = delete;
+    VolumeSlider(VolumeSlider&&) = delete;
+    VolumeSlider& operator=(const VolumeSlider&) = delete;
+    VolumeSlider& operator=(VolumeSlider&&) = delete;
+
     static VolumeSlider* getInstance(QWidget* parent = nullptr) {
         static auto instance = new VolumeSlider(parent);
         return instance;

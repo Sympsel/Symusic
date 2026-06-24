@@ -100,22 +100,15 @@ ListItem::ListItem(const SongPtr& song)
     setupUI();
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
-        _song->setLiked(!_song->isLiked());
-        updateIconStatus();
         auto& likedList = SongManager::getInstance().getLikedList();
-        if (_song->isLiked()) {
-            SongManager::getInstance().append(likedList, _song);
-            LOG_DEBUG() << "添加到喜欢列表: " << _song;
+        if (!_song->isLiked()) {
+            SongManager::append(likedList, _song);
+            LOG_DEBUG() << "添加到喜欢列表: " << _song->getName();
         } else {
-            if (const auto it = std::ranges::find_if(likedList,
-                                                     [this](const SongPtr& targetSong) {
-                                                         return targetSong->getId() == _song->getId();
-                                                     }); it != likedList.end()) {
-                likedList.erase(it);
-                LOG_DEBUG() << "从喜欢列表删除了: " << _song;
-            }
+            SongManager::remove(likedList, _song->getId());
+            LOG_DEBUG() << "从喜欢列表移除: " << _song->getName();
         }
-        // 发射信号更新界面
+        updateIconStatus();
         emit likeStatusUpdated();
     });
 }
