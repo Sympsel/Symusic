@@ -192,7 +192,7 @@ public:
             return false;
         }
         if (const auto& listMappingManager = ListMappingManager::getInstance();
-            song->get()->getBelongStatus() &
+            (*song)->getBelongStatus() &
             static_cast<int>(listMappingManager.getExistIn(&which))) {
             return true;
         }
@@ -242,9 +242,9 @@ public:
                 LOG_WARN() << "不支持的文件类型:" << mime << "，已跳过";
                 continue;
             }
-            LOG_DEBUG() << "开始创建歌曲对象...";
+            // LOG_DEBUG() << "开始创建歌曲对象...";
             const auto song = std::make_shared<Song>(url);
-            LOG_DEBUG() << "歌曲对象创建成功:" << *song;
+            // LOG_DEBUG() << "歌曲对象创建成功: " << *song;
             append(which, song);
         }
         return true;

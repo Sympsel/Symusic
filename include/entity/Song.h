@@ -145,7 +145,7 @@ struct std::formatter<Song> : std::formatter<std::string> {
             << "',artist='" << song.getArtist().toStdString()
             << "',album='" << song.getAlbum().toStdString()
             << "',filepath='" << song.getFilePath().toStdString()
-            << "',duration=" << song.getDuration() << 's'
+            << "',duration=" << song.getDuration() << "ms"
             << ",playCount=" << song.getPlayCount()
             << ",tags=[";
 

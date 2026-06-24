@@ -70,7 +70,9 @@ QWidget* CommonPageWidget::createMiddleWidget() {
 
 void CommonPageWidget::initData(const SongList& songList) {
     // 调用特化回调，方便对各个页面进行微调
-    _specializationCb();
+    if (_specializationCb) {
+        _specializationCb();
+    }
     reloadData(songList);
 }
 

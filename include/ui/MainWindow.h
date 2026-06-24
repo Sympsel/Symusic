@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QListWidget>
 #include <QLineEdit>
 #include <QPainter>
 #include <initializer_list>
@@ -10,6 +9,7 @@
 #include "HeadWidget.h"
 #include "SongInfoPage.h"
 #include "ui/NavigationButton.h"
+#include "ui/CommonPageWidget.h"
 #include "utils/Sync.hpp"
 #include "VolumeSlider.h"
 
@@ -40,6 +40,8 @@ private:
     void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
 
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
+
+    void handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song);
 
 protected:
     void mouseMoveEvent(QMouseEvent* event) override;

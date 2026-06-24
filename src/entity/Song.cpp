@@ -1,72 +1,107 @@
 #include "entity/Song.h"
 
+#include <QCoreApplication>
+#include <QMimeDatabase>
 #include <QTimer>
 #include <QtMultimedia/QMediaPlayer>
 #include <QtMultimedia/QMediaMetaData>
 
+#include "utils/Log.hpp"
+
 void Song::parseMusicMeta() {
-    // 检查URL是否有效
     if (!_url.isValid()) {
+        LOG_WARN() << "无效的URL";
         return;
     }
 
-    // 创建媒体播放对象（使用堆分配，避免立即销毁）
-    auto* player = new QMediaPlayer();
-    player->setSource(_url);
+    QMediaPlayer player;
 
-    // 使用事件循环等待媒体可用，设置超时
-    QEventLoop loop;
-    bool isReady = false;
+    bool loaded = false;
+    bool hasError = false;
+    bool finished = false;
 
-    // 连接信号，当播放器状态改变时退出循环
-    QObject::connect(player, &QMediaPlayer::mediaStatusChanged,
-                     [&, player]() {
-                         if (player && player->isAvailable()) {
-                             isReady = true;
-                             loop.quit();
+    QObject::connect(&player, &QMediaPlayer::mediaStatusChanged,
+                     [&](const QMediaPlayer::MediaStatus status) {
+                         if (finished) return;
+                         if (status == QMediaPlayer::LoadedMedia ||
+                             status == QMediaPlayer::BufferedMedia) {
+                             loaded = true;
+                             finished = true;
+                         } else if (status == QMediaPlayer::InvalidMedia) {
+                             hasError = true;
+                             finished = true;
                          }
                      });
 
-    // 设置5秒超时
-    QTimer::singleShot(5000, [&]() {
-        if (!isReady) {
-            loop.quit();
+    QObject::connect(&player, &QMediaPlayer::errorOccurred,
+                     [&](QMediaPlayer::Error, const QString& errorString) {
+                         LOG_WARN() << "播放器错误:" << errorString;
+                         hasError = true;
+                         finished = true;
+                     });
+
+    player.setSource(_url);
+
+    // 使用 processEvents 等待，但用 finished 标志判断是否完成
+    QTimer timer;
+    int elapsed = 0;
+    timer.setInterval(50);
+    QObject::connect(&timer, &QTimer::timeout, [&]() {
+        elapsed += 50;
+        if (elapsed >= 10000) {
+            LOG_WARN() << "读取媒体元数据超时";
+            finished = true;
         }
     });
+    timer.start();
 
-    // 执行事件循环（最多等待5秒）
-    loop.exec();
-
-    // 如果成功获取到元数据，则读取
-    if (isReady && player->isAvailable()) {
-        const auto metaData = player->metaData();
-
-        // 读取标题
-        if (const auto title = metaData.value(QMediaMetaData::Title); title.isValid()) {
-            _name = title.toString();
-        }
-        // 读取艺术家
-        if (const auto artist = metaData.value(QMediaMetaData::Author); artist.isValid()) {
-            _artist = artist.toString();
-        }
-        // 读取专辑
-        if (const auto album = metaData.value(QMediaMetaData::AlbumTitle); album.isValid()) {
-            _album = album.toString();
-        }
-        // 读取时长（毫秒）
-        if (const auto duration = metaData.value(QMediaMetaData::Duration); duration.isValid()) {
-            _duration = duration.toLongLong();
-        }
+    // 轮询等待媒体加载
+    while (!finished) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
 
-    // 清理播放器 - 使用 deleteLater 确保信号处理完成后再删除
-    player->deleteLater();
+    timer.stop();
+
+    if (loaded && !hasError) {
+        const auto metaData = player.metaData();
+
+        if (const auto title = metaData.value(QMediaMetaData::Title); title.isValid()) {
+            _name = title.toString();
+        } else {
+            LOG_WARN() << std::format("{} 读取出错", "歌曲名");
+            _name = "出错";
+        }
+
+        if (const auto artist = metaData.value(QMediaMetaData::Author); artist.isValid()) {
+            _artist = artist.toString();
+        } else {
+            // todo 读取失败时，从文件名中提取作曲家
+            LOG_WARN() << std::format("{} 读取出错", "作曲家");
+            _artist = "未知";
+        }
+        if (const auto album = metaData.value(QMediaMetaData::AlbumTitle); album.isValid()) {
+            _album = album.toString();
+        } else {
+            LOG_WARN() << std::format("{} 读取出错", "所在专辑");
+            _album = "未知";
+        }
+        if (const auto duration = metaData.value(QMediaMetaData::Duration);
+            duration.isValid() || duration.toLongLong() > 0) {
+            _duration = duration.toLongLong();
+        } else {
+            LOG_WARN() << std::format("{} 读取出错", "时长");
+            _duration = 0;
+        }
+        LOG_DEBUG() << "歌曲对象创建成功: " << *this;
+    } else {
+        LOG_WARN() << "无法加载媒体元数据: " << _url.toLocalFile().toStdString();
+    }
 }
 
 Song::Song(const QUrl& url, const bool isLiked)
     : _id(QUuid::createUuid().toString())
-      , _duration(0)
-      , _tagsFlag(0)
+      , _duration()
+      , _tagsFlag()
       , _belongingList(isLiked ? static_cast<int>(ExistIn::LIKED_LIST) : 0)
       , _url(url) {
     parseMusicMeta();
