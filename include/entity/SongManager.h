@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMimeDatabase>
+#include <QObject>
 #include <ranges>
 #include <unordered_map>
 #include <vector>
@@ -11,6 +12,7 @@
 
 using SongPtr = std::shared_ptr<Song>;
 using SongList = std::vector<SongPtr>;
+// using SongHistoryList = std::vector<SongPtr>;
 
 /**
  * @brief 多向映射管理器，管理 ExistIn、SongList* 和 列表名称 之间的映射关系
@@ -117,7 +119,12 @@ private:
     std::unordered_map<QString, int> _mapStringToIndex;
 };
 
-class SongManager {
+// 历史记录的最大记录数
+constexpr int HISTORY_SIZE = 100;
+
+class SongManager : public QObject {
+    Q_OBJECT
+
 private:
     SongManager() {
         // 注册映射关系
@@ -204,17 +211,18 @@ public:
         return false;
     }
 
-    [[nodiscard]] std::optional<SongPtr> findSong(const QString& id) {
-        if (_findCache.contains(id)) {
-            return _findCache[id];
-        }
+    [[nodiscard]] static std::optional<SongPtr> findSong(const QString& id) {
         for (const auto& allLists = ListMappingManager::getInstance().getAllLists();
-             const auto& listInfo : allLists) {
-            for (const auto& song : *(listInfo.list)) {
-                if (song->getId() == id) {
-                    _findCache[id] = song;
-                    return song;
-                }
+             auto& listInfo : allLists) {
+            return findSong(*listInfo.list, id);
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] static std::optional<SongPtr> findSong(SongList& which, const QString& id) {
+        for (auto& song : which) {
+            if (song->getId() == id) {
+                return song;
             }
         }
         return std::nullopt;
@@ -274,9 +282,52 @@ public:
         return false;
     }
 
-    void clearCache() {
-        _findCache.clear();
+    // 历史记录特化接口
+    bool appendToHistoryList(const SongPtr& song) {
+        if (!ListMappingManager::getInstance().contains(&_historyList)) {
+            LOG_ERROR() << "have no reflect";
+            return false;
+        }
+        std::erase_if(_historyList, [&song](const SongPtr& item) {
+            return item->getId() == song->getId();
+        });
+
+        _historyList.insert(_historyList.begin(), song);
+        if (_historyList.size() > _historySize) {
+            _historyList.pop_back();
+        }
+        return true;
     }
+
+    bool removeFromHistoryList(const QString& id) {
+        if (!ListMappingManager::getInstance().contains(&_historyList)) {
+            LOG_ERROR() << "have no reflect";
+            return false;
+        }
+        if (!contains(_historyList, id)) {
+            return true;
+        }
+
+        if (auto songOpt = findSong(_historyList, id); songOpt.has_value()) {
+            auto& song = *songOpt;
+            if (!_historyList.empty()) {
+                std::erase_if(_historyList, [&song](const SongPtr& item) {
+                    return item->getId() == song->getId();
+                });
+            }
+        }
+        return true;
+    }
+
+    // 播放相关
+    void play(const SongPtr& song) {
+        appendToHistoryList(song);
+        song->incrementPlayCount();
+        emit songPlayed(song);
+    }
+
+signals:
+    void songPlayed(const SongPtr& song);
 
 private:
     SongList _recommendList;
@@ -285,6 +336,5 @@ private:
     SongList _likedList;
     SongList _downloadList;
     SongList _historyList;
-
-    std::unordered_map<QString, SongPtr> _findCache{};
+    int _historySize{HISTORY_SIZE};
 };

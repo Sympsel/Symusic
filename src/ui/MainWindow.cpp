@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel("就绪"));
+        statusBar->addWidget(new QLabel("单击播放，双击打开歌曲详情页"));
         statusBar->addPermanentWidget(new QLabel("Alt + 鼠标左键拖拽窗口"));
         statusBar->setVisible(statusBarVisible);
     }
@@ -139,7 +140,7 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
             SongManager::append(songManager.getDownloadList(), urls);
             if (const auto currentPage = _mainStackedWidget->currentWidget()) {
                 if (const auto downloadPage = qobject_cast<CommonPageWidget*>(currentPage)) {
-                    if (downloadPage->getPageName() == "本地下载页") {
+                    if (downloadPage->getPageName() == "本地下载") {
                         downloadPage->reloadData(songManager.getDownloadList());
                     }
                 }
@@ -234,7 +235,22 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
                     handleRequestFromListWidgetItem(本地下载_页, song);
                 });
 
-        const auto 最近播放_页 = createPage("最近播放页面", _mainStackedWidget);
+        const auto 最近播放_页 = new CommonPageWidget(
+                "最近播放",
+                "Sympsel.png",
+                "这里是你曾经听过的",
+                _mainStackedWidget);
+        最近播放_页->setSpecialCallback([]() {
+            LOG_INFO() << std::format("页面 {} 正常加载", "最近播放");
+        });
+        最近播放_页->setReloadCallback([&songManager](CommonPageWidget* page) {
+             page->reloadData(songManager.getHistoryList());
+        });
+        最近播放_页->initData(songManager.getHistoryList());
+        connect(最近播放_页, &CommonPageWidget::songItemDoubleClicked, this,
+                [this, 最近播放_页](const SongPtr& song) {
+                    handleRequestFromListWidgetItem(最近播放_页, song);
+                });
 
         const std::initializer_list<QWidget*>& pages = {
             推荐_页, 电台_页, 漫游_页, 我喜欢的_页, 本地下载_页, 最近播放_页

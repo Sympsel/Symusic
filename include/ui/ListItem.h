@@ -22,7 +22,7 @@ public:
         return os;
     }
 
-    explicit ListItem(const SongPtr& song);
+    explicit ListItem(SongPtr  song);
 
     [[nodiscard]] const SongPtr& getSong() const {
         return _song;
@@ -31,6 +31,8 @@ public:
     void updateIconStatus() const;
 
 protected:
+    void mousePressEvent(QMouseEvent* event) override;
+
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 signals:
@@ -39,6 +41,9 @@ signals:
     void doubleClicked(const SongPtr& song);
 
 private:
+    QTimer* _clickTimer;
+    bool _pendingSingleClick{};
+    bool _skipNextPress{};
     QPushButton* _likeButton;
     SongPtr _song;
 };

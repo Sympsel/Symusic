@@ -66,7 +66,6 @@ void SongInfoPage::updateSong(const SongPtr& song) {
          const auto& listInfo : allLists) {
         if (belongStatus & static_cast<int>(listInfo.existIn)) {
             listNames.append(listInfo.name);
-            LOG_DEBUG() << "执行到";
         }
     }
     const QString listsStr = listNames.isEmpty() ? "所在列表：无" : "所在列表：" + listNames.join("、");
@@ -142,6 +141,9 @@ void SongInfoPage::setupUI() {
     _playButton->setMinimumWidth(120);
     _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
     _playButton->setIconSize(QSize(20, 20));
+    connect(_playButton, &QPushButton::clicked, this, [this]() {
+        SongManager::getInstance().play(_song);
+    });
 
     buttonLayout->addWidget(_likeButton);
     buttonLayout->addWidget(_playButton);

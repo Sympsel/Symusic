@@ -1,6 +1,10 @@
 #include "ui/ListItem.h"
 
+#include <QApplication>
+#include <qdatetime.h>
 #include <QMouseEvent>
+#include <QTimer>
+#include <utility>
 
 #include "utils/Log.hpp"
 #include "entity/SongManager.h"
@@ -75,9 +79,10 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(const SongPtr& song)
+ListItem::ListItem(SongPtr song)
     : _likeButton(new QPushButton)
-      , _song(std::move(song)) {
+      , _song(std::move(song))
+      , _clickTimer(new QTimer(this)) {
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
 
@@ -98,6 +103,18 @@ ListItem::ListItem(const SongPtr& song)
         "}"
     );
     setupUI();
+
+    // 设置为单次触发模式，超时自动停止
+    _clickTimer->setSingleShot(true);
+    _clickTimer->setInterval(QApplication::doubleClickInterval() + 50);
+    // _clickTimer->setInterval(QApplication::doubleClickInterval());
+    connect(_clickTimer, &QTimer::timeout, this, [this]() {
+        if (_pendingSingleClick) {
+            _pendingSingleClick = false;
+            SongManager::getInstance().play(_song);
+            LOG_DEBUG() << "单击播放: " << _song->getName();
+        }
+    });
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
         auto& likedList = SongManager::getInstance().getLikedList();
@@ -121,8 +138,33 @@ void ListItem::updateIconStatus() const {
     }
 }
 
+void ListItem::mousePressEvent(QMouseEvent* event) {
+    if (event->button() == Qt::LeftButton) {
+        if (_skipNextPress) {
+            // 跳过双击后的额外 press，即跳过对第二次按压的判别
+            _skipNextPress = false;
+            return;
+        }
+        // 当第二次按下时结束等待，判断是否超时，如果没有超时，取消单击逻辑
+        LOG_DEBUG() << "mousePressEvent, pending=" << _pendingSingleClick;
+        if (_pendingSingleClick) {
+            _clickTimer->stop();
+            _pendingSingleClick = false;
+            return;
+        }
+        // 当第一次按下时开始等待
+        _pendingSingleClick = true;
+        _clickTimer->start();
+    }
+    QWidget::mousePressEvent(event);
+}
+
 void ListItem::mouseDoubleClickEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
+        LOG_DEBUG() << "mouseDoubleClickEvent 触发";
+        _clickTimer->stop();
+        _pendingSingleClick = false;
+        _skipNextPress = true;
         emit doubleClicked(_song);
     }
     QWidget::mouseDoubleClickEvent(event);
