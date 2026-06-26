@@ -142,7 +142,7 @@ private:
     void mapTo() {
         auto& mapper = ListMappingManager::getInstance();
         mapper.registerList(Song::ExistIn::RECOMMEND_LIST, &_recommendList, "推荐");
-        mapper.registerList(Song::ExistIn::YOU_MAY_LIKE_LIST, &_youMayLikeList, "你可能喜欢");
+        mapper.registerList(Song::ExistIn::YOU_MAY_LIKE_LIST, &_youMayLikeList, "猜你喜欢");
         mapper.registerList(Song::ExistIn::LIKED_LIST, &_likedList, "我喜欢的");
         mapper.registerList(Song::ExistIn::DOWNLOAD_LIST, &_downloadList, "本地下载");
         mapper.registerList(Song::ExistIn::HISTORY_LIST, &_historyList, "最近播放");

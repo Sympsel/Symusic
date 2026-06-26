@@ -6,6 +6,7 @@
 #include <ranges>
 
 #include "entity/PlayManager.hpp"
+#include "entity/StatusManager.hpp"
 #include "ui/HeadWidget.h"
 #include "ui/NavigationWidget.h"
 #include "ui/PlaySlider.h"
@@ -23,9 +24,19 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
         statusBar->addWidget(new QLabel("就绪"));
-        statusBar->addWidget(new QLabel("单击播放，双击打开歌曲详情页"));
         statusBar->addPermanentWidget(new QLabel("Alt + 鼠标左键拖拽窗口"));
         statusBar->setVisible(statusBarVisible);
+
+        const auto& statusManager = StatusManager::getInstance();
+        // 连接状态管理器信号
+        connect(&statusManager, &StatusManager::statusChanged,
+                this, [statusBar](const QString& msg, const int timeout) {
+                    statusBar->showMessage(msg, timeout);
+                });
+        connect(&statusManager, &StatusManager::statusCleared,
+                this, [statusBar]() {
+                    statusBar->clearMessage();
+                });
     }
 
     _mapOfNavigationButtonsToWidget.resize(_pageCount);
@@ -230,6 +241,9 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->setSpecialCallback([]() {
+            StatusManager::getInstance().showMessage(
+                std::format("页面 {} 正常加载", "我喜欢的"), 2000
+            );
             LOG_INFO() << std::format("页面 {} 正常加载", "我喜欢的");
         });
         auto& songManager = SongManager::getInstance();
@@ -250,6 +264,12 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         本地下载_页->setReloadCallback([&songManager](CommonPageWidget* page) {
             page->reloadData(songManager.getDownloadList());
         });
+        本地下载_页->setSpecialCallback([]() {
+            StatusManager::getInstance().showMessage(
+                std::format("页面 {} 正常加载", "本地下载"), 2000
+            );
+            LOG_INFO() << std::format("页面 {} 正常加载", "本地下载");
+        });
         本地下载_页->initData(songManager.getDownloadList());
         connect(本地下载_页, &CommonPageWidget::songItemDoubleClicked, this,
                 [this, 本地下载_页](const SongPtr& song) {
@@ -262,6 +282,9 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             "这里是你曾经听过的",
             _mainStackedWidget);
         最近播放_页->setSpecialCallback([]() {
+            StatusManager::getInstance().showMessage(
+                std::format("页面 {} 正常加载", "最近播放"), 2000
+            );
             LOG_INFO() << std::format("页面 {} 正常加载", "最近播放");
         });
         最近播放_页->setReloadCallback([&songManager](CommonPageWidget* page) {
@@ -336,6 +359,10 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
                     if (const auto commonPage = qobject_cast<CommonPageWidget*>(currentPage)) {
                         commonPage->reloadData();
+                        StatusManager::getInstance().showMessage(
+                            std::format("切换到: {}，单击播放，双击打开歌曲详情页", commonPage->getPageName().toStdString()),
+                            2000
+                        );
                     }
                 }
             });

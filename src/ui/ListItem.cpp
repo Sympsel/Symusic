@@ -8,6 +8,7 @@
 #include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
 #include "entity/SongManager.h"
+#include "entity/StatusManager.hpp"
 
 void ListItem::setupUI() {
     this->setFixedHeight(40);
@@ -85,6 +86,10 @@ ListItem::ListItem(const SongContext& songCtx)
     : _songCtx(songCtx)
       , _clickTimer(new QTimer(this))
       , _likeButton(new QPushButton) {
+    if (!_songCtx.isValid()) {
+        LOG_ERROR() << "非法的歌曲上下文";
+        return;
+    }
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
     if (_songCtx.song->isLiked()) {
@@ -109,13 +114,21 @@ ListItem::ListItem(const SongContext& songCtx)
     _clickTimer->setSingleShot(true);
     _clickTimer->setInterval(QApplication::doubleClickInterval());
     connect(_clickTimer, &QTimer::timeout, this, [this]() {
-        if (const auto& song = _songCtx.song; _pendingSingleClick) {
+        auto& [song, list] = _songCtx;
+        if (list->empty()) {
+            StatusManager::getInstance().showMessage("当前列表为空，无法播放", 2000);
+            return;
+        }
+        if (_pendingSingleClick) {
             _pendingSingleClick = false;
             auto& playManager = PlayManager::getInstance();
             if (const auto& currPlaySong = playManager.getCurrPlay();
                 song != currPlaySong) {
-                playManager.play(song, *_songCtx.list);
-                LOG_DEBUG() << "单击播放: " << song->getName();
+                StatusManager::getInstance().showMessage(
+                    std::format("正在播放: {}", song->getName().toStdString()).c_str()
+                );
+                playManager.play(song, *list);
+                LOG_DEBUG() << "播放: " << song->getName();
             }
         }
     });

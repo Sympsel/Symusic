@@ -4,6 +4,7 @@
 
 #include "Common.hpp"
 #include "SongManager.h"
+#include "StatusManager.hpp"
 
 /**
  * @brief 歌曲上下文，记录触发播放逻辑时的歌曲和所在列表
@@ -109,6 +110,9 @@ public:
         _song = song;
         _songList = &playList;
         const auto& listMappingManager = ListMappingManager::getInstance();
+        StatusManager::getInstance().showMessage(
+               std::format("正在播放: {}", song->getName().toStdString()).c_str()
+           );
         LOG_DEBUG() << std::format("当前播放歌曲 {}，所在歌单 {}",
                                    _song->getName().toStdString(),
                                    listMappingManager.getName(&playList).toStdString());

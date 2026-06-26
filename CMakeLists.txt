@@ -47,6 +47,7 @@ add_executable(SymMusic_2
         include/ui/VolumeSlider.h
         include/entity/Common.hpp
         include/entity/PlayManager.hpp
+        include/entity/StatusManager.hpp
 )
 
 target_link_libraries(SymMusic_2

@@ -4,6 +4,7 @@
 
 #include "entity/PlayManager.hpp"
 #include "entity/SongManager.h"
+#include "entity/StatusManager.hpp"
 
 QWidget* CommonPageWidget::createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const {
     const auto headWidget = new QWidget();
@@ -169,12 +170,13 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
 
     connect(_playAllButton, &QPushButton::clicked, this, [this]() {
         if (!_songList || _songList->empty()) {
-            LOG_WARN() << "当前列表为空，无法播放";
+            StatusManager::getInstance().showMessage("当前列表为空，无法播放", 2000);
             return;
         }
 
+
         auto& playManager = PlayManager::getInstance();
-        const auto& mode = playManager.getPlayMode();
+        const auto mode = playManager.getPlayMode();
 
         SongPtr firstSong;
         switch (mode) {
@@ -183,16 +185,19 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
             static std::mt19937 gen(std::random_device{}());
             std::uniform_int_distribution<size_t> dis(0, _songList->size() - 1);
             firstSong = (*_songList)[dis(gen)];
-            LOG_DEBUG() << std::format("随机播放全部: 从 {} 首中随机选择", _songList->size());
+            StatusManager::getInstance().showMessage(
+                std::format("随机播放: 从 {} 首中随机选择", _songList->size())
+            );
             }
             break;
         case PlayMode::ORDERED:
         case PlayMode::SINGLE_LOOPING:
             firstSong = _songList->front();
-            LOG_DEBUG() << std::format("顺序播放全部: {} 首歌曲", _songList->size());
+            StatusManager::getInstance().showMessage(
+                std::format("顺序播放全部: {} 首歌曲", _songList->size())
+            );
             break;
         }
-
         playManager.play(firstSong, *_songList);
     });
 }

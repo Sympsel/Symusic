@@ -63,7 +63,8 @@ void RecommendWidget::initPlaylist() {
         _contain["今日推荐"].list.emplace_back(
             new PlaylistItem(
                 {song, songManager.getRecommendList()},
-                QString("推荐-%1").arg(id),
+                song->getName(),
+                // QString("推荐-%1").arg(id),
                 nullptr
             )
         );
@@ -73,7 +74,8 @@ void RecommendWidget::initPlaylist() {
         _contain["猜你喜欢"].list.emplace_back(
             new PlaylistItem(
                 {song, songManager.getYouMayLikeList()},
-                QString("推荐-%1").arg(id),
+                song->getName(),
+                // QString("推荐-%1").arg(id),
                 nullptr
             )
         );
