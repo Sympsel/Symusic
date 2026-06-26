@@ -1,7 +1,6 @@
 #include <QApplication>
 #include <QFile>
 #include <QLoggingCategory>
-#include <random>
 
 #include "ui/MainWindow.h"
 #include "utils/Log.hpp"

@@ -38,6 +38,7 @@ private:
     QLabel* _artistLabel;
     QLabel* _albumLabel;
     QLabel* _durationLabel;
+    QLabel* _playCountLabel;
     QLabel* _tagsLabel;
     QLabel* _listsLabel;
     QPushButton* _likeButton;

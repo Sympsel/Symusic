@@ -111,8 +111,12 @@ ListItem::ListItem(const SongContext& songCtx)
     connect(_clickTimer, &QTimer::timeout, this, [this]() {
         if (const auto& song = _songCtx.song; _pendingSingleClick) {
             _pendingSingleClick = false;
-            PlayManager::getInstance().play(song, *_songCtx.list);
-            LOG_DEBUG() << "单击播放: " << song->getName();
+            auto& playManager = PlayManager::getInstance();
+            if (const auto& currPlaySong = playManager.getCurrPlay();
+                song != currPlaySong) {
+                playManager.play(song, *_songCtx.list);
+                LOG_DEBUG() << "单击播放: " << song->getName();
+            }
         }
     });
 

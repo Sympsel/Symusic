@@ -20,6 +20,7 @@ SongInfoPage::SongInfoPage(const SongContext& songCtx, QWidget* parent)
       , _artistLabel(new QLabel())
       , _albumLabel(new QLabel())
       , _durationLabel(new QLabel())
+      , _playCountLabel(new QLabel())
       , _tagsLabel(new QLabel())
       , _listsLabel(new QLabel())
       , _likeButton(new QPushButton())
@@ -50,6 +51,7 @@ void SongInfoPage::updateSong(const SongPtr& song) {
     _artistLabel->setText(QString("歌手：%1").arg(song->getArtist()));
     _albumLabel->setText(QString("专辑：%1").arg(song->getAlbum()));
     _durationLabel->setText(QString("时长：%1").arg(song->getFormattedDuration()));
+    _playCountLabel->setText(QString("播放次数：%1").arg(song->getPlayCount()));
 
     const auto tags = song->getTags();
     QString tagsStr;
@@ -122,7 +124,7 @@ void SongInfoPage::setupUI() {
     Sync::widgetToLayout(
         infoLayout, {
             _nameLabel, _artistLabel, _albumLabel,
-            _durationLabel, _tagsLabel, _listsLabel
+            _durationLabel, _playCountLabel, _tagsLabel, _listsLabel
         });
     infoLayout->addStretch(1);
 

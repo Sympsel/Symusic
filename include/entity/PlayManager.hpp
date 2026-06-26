@@ -100,6 +100,10 @@ public:
         return _playMode;
     }
 
+    [[nodiscard]] const SongPtr& getCurrPlay() const {
+        return _song;
+    }
+
     // 播放相关
     void play(const SongPtr& song, SongList& playList) {
         _song = song;

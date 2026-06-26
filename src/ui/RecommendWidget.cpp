@@ -99,14 +99,14 @@ RecommendWidget::Items RecommendWidget::displayList(const QString& name) const {
         return Items{};
     }
 
-    Items playlist_items{
+    Items playlistItems{
         alist.list.begin() + alist.begin,
         std::min(
             alist.list.begin() + alist.begin + _rowSize,
             alist.list.end()
         )
     };
-    return playlist_items;
+    return playlistItems;
 }
 
 RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
