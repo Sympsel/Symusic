@@ -211,7 +211,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
     {
         // todo: 替换这段代码
         // 为每个页面创建独立的按钮和布局
-        auto createPage = [](const QString& text, QWidget* stack) -> QWidget* {
+        auto tempPage = [](const QString& text, QWidget* stack) -> QWidget* {
             const auto page = new QWidget(stack);
             const auto layout = new QVBoxLayout(page);
             const auto btn = new QPushButton(text, page);
@@ -221,8 +221,8 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
         };
 
         const auto 推荐_页 = new RecommendWidget(_mainStackedWidget);
-        const auto 电台_页 = createPage("电台", _mainStackedWidget);
-        const auto 漫游_页 = createPage("漫游页面", _mainStackedWidget);
+        const auto 电台_页 = tempPage("电台", _mainStackedWidget);
+        const auto 漫游_页 = tempPage("漫游页面", _mainStackedWidget);
 
         const auto 我喜欢的_页 = new CommonPageWidget(
             "我喜欢的",
@@ -401,28 +401,21 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
         _songInfoPage = nullptr;
     }
     const QString pageName = commonPageWidget->getPageName();
-    auto& songManager = SongManager::getInstance();
-    if (pageName == "我喜欢的") {
-        _songInfoPage = new SongInfoPage({song, songManager.getLikedList()});
-    } else if (pageName == "本地下载") {
-        _songInfoPage = new SongInfoPage({song, songManager.getDownloadList()});
-    } else if (pageName == "最近播放") {
-        _songInfoPage = new SongInfoPage({song, songManager.getHistoryList()});
-    } else {
+    SongList* list = commonPageWidget->getSongList();
+    if (!list) {
         LOG_ERROR() << "未注册播放列表";
         return;
     }
-    if (pageName == "")
-
-        connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
-            for (int i = 0; i < _mainStackedWidget->count(); ++i) {
-                if (auto* page = qobject_cast<CommonPageWidget*>(_mainStackedWidget->widget(i))) {
-                    page->reloadData();
-                }
+    _songInfoPage = new SongInfoPage({song, *list});
+    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
+        for (int i = 0; i < _mainStackedWidget->count(); ++i) {
+            if (auto* page = qobject_cast<CommonPageWidget*>(_mainStackedWidget->widget(i))) {
+                page->reloadData();
             }
-            LOG_DEBUG() << "歌曲详情关闭，已刷新相关页面";
-            _songInfoPage = nullptr;
-        });
+        }
+        LOG_DEBUG() << "歌曲详情关闭，已刷新相关页面";
+        _songInfoPage = nullptr;
+    });
     _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
     _songInfoPage->show();
 }

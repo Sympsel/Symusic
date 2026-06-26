@@ -35,7 +35,7 @@ private:
             /* do nothing */
             LOG_DEBUG() << "have no play a song yet";
         } else {
-            _song = *historyList.begin();
+            _song = historyList.front();
         }
     }
 
@@ -48,7 +48,7 @@ private:
             if (const auto curr = std::ranges::find(*_songList, _song);
                 curr != _songList->end()) {
                 if (curr + 1 == _songList->end()) {
-                    _song = *_songList->begin();
+                    _song = _songList->front();
                 } else {
                     _song = *(curr + 1);
                 }
@@ -66,7 +66,7 @@ private:
         case PlayMode::SINGLE_LOOPING:
             if (_song) {
                 if (!_songList->empty()) {
-                    _song = *_songList->begin();
+                    _song = _songList->front();
                 }
             }
             break;

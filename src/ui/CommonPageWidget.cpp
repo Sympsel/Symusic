@@ -71,6 +71,7 @@ QWidget* CommonPageWidget::createMiddleWidget() {
 }
 
 void CommonPageWidget::initData(const SongList& songList) {
+    _songList = const_cast<SongList*>(&songList);
     // 调用特化回调，方便对各个页面进行微调
     if (_specializationCb) {
         _specializationCb();
@@ -83,18 +84,11 @@ void CommonPageWidget::reloadData(const SongList& songList) {
     for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);
         item->setSizeHint(QSize(0, 40));
-        auto& songManager = SongManager::getInstance();
-        ListItem* listItem;
-        if (_pageName == "我喜欢的") {
-            listItem = new ListItem({song, songManager.getLikedList()});
-        } else if (_pageName == "本地下载") {
-            listItem = new ListItem({song, songManager.getDownloadList()});
-        } else if (_pageName == "最近播放") {
-            listItem = new ListItem({song, songManager.getHistoryList()});
-        } else {
+        if (!_songList) {
             LOG_ERROR() << "未注册播放列表";
             return;
         }
+        const auto listItem = new ListItem({song, *_songList});
         _playlist->setItemWidget(item, listItem);
         connect(listItem, &ListItem::doubleClicked, this, [this, song]() {
             emit songItemDoubleClicked(song);
@@ -174,7 +168,31 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
                          });
 
     connect(_playAllButton, &QPushButton::clicked, this, [this]() {
+        if (!_songList || _songList->empty()) {
+            LOG_WARN() << "当前列表为空，无法播放";
+            return;
+        }
+
         auto& playManager = PlayManager::getInstance();
-        // playManager.setSongList();
+        const auto& mode = playManager.getPlayMode();
+
+        SongPtr firstSong;
+        switch (mode) {
+        case PlayMode::RANDOMED:
+            {
+            static std::mt19937 gen(std::random_device{}());
+            std::uniform_int_distribution<size_t> dis(0, _songList->size() - 1);
+            firstSong = (*_songList)[dis(gen)];
+            LOG_DEBUG() << std::format("随机播放全部: 从 {} 首中随机选择", _songList->size());
+            }
+            break;
+        case PlayMode::ORDERED:
+        case PlayMode::SINGLE_LOOPING:
+            firstSong = _songList->front();
+            LOG_DEBUG() << std::format("顺序播放全部: {} 首歌曲", _songList->size());
+            break;
+        }
+
+        playManager.play(firstSong, *_songList);
     });
 }

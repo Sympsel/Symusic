@@ -30,9 +30,8 @@ public:
 
     void reloadData(const SongList& songList);
 
-    [[nodiscard]] const QString& getPageName() const {
-        return _pageName;
-    }
+    [[nodiscard]] const QString& getPageName() const { return _pageName; }
+    [[nodiscard]] SongList* getSongList() const { return _songList; }
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
@@ -56,6 +55,7 @@ private:
     QString _pageName;
     QPushButton* _playAllButton;
     QListWidget* _playlist;
+    SongList* _songList;
     SpecializationCallBack _specializationCb;
     ReloadCallback _reloadCb;
 };
