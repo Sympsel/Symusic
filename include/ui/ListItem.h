@@ -5,6 +5,7 @@
 #include <iostream>
 #include <QWidget>
 
+#include "entity/PlayManager.hpp"
 #include "entity/SongManager.h"
 #include "utils/Sync.hpp"
 
@@ -15,17 +16,10 @@ private:
     void setupUI();
 
 public:
-    friend std::ostream& operator<<(std::ostream& os, const ListItem& listItem) {
-        os << "{";
-        os << "song=" << listItem._song;
-        os << "}";
-        return os;
-    }
-
-    explicit ListItem(SongPtr song, SongList& songList);
+    explicit ListItem(const SongContext& songCtx);
 
     [[nodiscard]] const SongPtr& getSong() const {
-        return _song;
+        return _songCtx.song;
     }
 
     void updateIconStatus() const;
@@ -41,10 +35,9 @@ signals:
     void doubleClicked(const SongPtr& song);
 
 private:
+    SongContext _songCtx;
     QTimer* _clickTimer;
     bool _pendingSingleClick{};
     bool _skipNextPress{};
     QPushButton* _likeButton;
-    SongPtr _song;
-    SongList* _songList;
 };

@@ -10,12 +10,11 @@
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
-SongInfoPage::SongInfoPage(const SongPtr& song, SongList& songList, QWidget* parent)
+SongInfoPage::SongInfoPage(const SongContext& songCtx, QWidget* parent)
     : QWidget(parent)
-      , _song(song)
-      , _songList(&songList)
-      , _originLiked(song->isLiked())
-      , _willLike(song->isLiked())
+      , _songCtx(songCtx)
+      , _originLiked(songCtx.song->isLiked())
+      , _willLike(songCtx.song->isLiked())
       , _coverLabel(new QLabel())
       , _nameLabel(new QLabel())
       , _artistLabel(new QLabel())
@@ -32,10 +31,11 @@ SongInfoPage::SongInfoPage(const SongPtr& song, SongList& songList, QWidget* par
 
     setupUI();
     applyStyles();
-    updateSong(song);
+    updateSong(songCtx.song);
 }
 
 void SongInfoPage::updateSong(const SongPtr& song) {
+    auto& _song = _songCtx.song;
     _song = song;
 
     if (const QPixmap coverPixmap = song->getCover().scaled(
@@ -75,6 +75,7 @@ void SongInfoPage::updateSong(const SongPtr& song) {
 }
 
 void SongInfoPage::setupUI() {
+    auto& _song = _songCtx.song;
     const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(10, 0, 5, 0);
@@ -144,7 +145,7 @@ void SongInfoPage::setupUI() {
     _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
     _playButton->setIconSize(QSize(20, 20));
     connect(_playButton, &QPushButton::clicked, this, [this]() {
-        PlayManager::getInstance().play(_song, *_songList);
+        PlayManager::getInstance().play(_songCtx.song, *_songCtx.list);
     });
 
     buttonLayout->addWidget(_likeButton);
@@ -252,18 +253,19 @@ void SongInfoPage::mousePressEvent(QMouseEvent* event) {
 }
 
 void SongInfoPage::closeEvent(QCloseEvent* event) {
+    const auto& song = _songCtx.song;
     LOG_DEBUG() << std::format("closeEvent: _originLiked={}, _willLike={}, belongStatus={}",
-                               _originLiked, _willLike, _song->getBelongStatus());
+                               _originLiked, _willLike, song->getBelongStatus());
 
     auto& songManager = SongManager::getInstance();
     auto& likedList = songManager.getLikedList();
 
     if (!_originLiked && _willLike) {
-        const bool result = SongManager::append(likedList, _song);
+        const bool result = SongManager::append(likedList, song);
         LOG_DEBUG() << std::format("添加到喜欢列表, append={}, likedList数量: {}", result, likedList.size());
         emit likeStatusChanged();
     } else if (_originLiked && !_willLike) {
-        const bool result = SongManager::remove(likedList, _song->getId());
+        const bool result = SongManager::remove(likedList, song->getId());
         LOG_DEBUG() << std::format("从喜欢列表移除, remove={}, likedList数量: {}", result, likedList.size());
         emit likeStatusChanged();
     }

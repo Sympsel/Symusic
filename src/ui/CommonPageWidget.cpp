@@ -86,11 +86,11 @@ void CommonPageWidget::reloadData(const SongList& songList) {
         auto& songManager = SongManager::getInstance();
         ListItem* listItem;
         if (_pageName == "我喜欢的") {
-            listItem = new ListItem(song, songManager.getLikedList());
+            listItem = new ListItem({song, songManager.getLikedList()});
         } else if (_pageName == "本地下载") {
-            listItem = new ListItem(song, songManager.getDownloadList());
+            listItem = new ListItem({song, songManager.getDownloadList()});
         } else if (_pageName == "最近播放") {
-            listItem = new ListItem(song, songManager.getHistoryList());
+            listItem = new ListItem({song, songManager.getHistoryList()});
         } else {
             LOG_ERROR() << "未注册播放列表";
             return;

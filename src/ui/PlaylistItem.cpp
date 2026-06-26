@@ -8,11 +8,11 @@
 #include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
 
-PlaylistItem::PlaylistItem(SongPtr song, SongList& songList, QString description, QWidget* parent)
+PlaylistItem::PlaylistItem(const SongContext& songCtx, QString description, QWidget* parent)
     : QWidget(parent)
-      , _song(std::move(song))
-      , _songList(&songList)
+      , _songCtx(songCtx)
       , _description(std::move(description)) {
+    auto& [song, songList] = _songCtx;
     constexpr int coverLength = 120, coverHeight = 150;
     this->setFixedSize(coverLength, coverHeight);
 
@@ -23,7 +23,7 @@ PlaylistItem::PlaylistItem(SongPtr song, SongList& songList, QString description
     _button = new QPushButton(this);
     _button->setFocusPolicy(Qt::NoFocus);
     _button->setFixedSize(coverLength - 16, coverLength - 16);
-    _button->setIcon(_song->getCover());
+    _button->setIcon(song->getCover());
     _button->setIconSize(QSize(coverLength - 16, coverLength - 16));
     _button->setStyleSheet(
         "QPushButton {"
@@ -37,7 +37,7 @@ PlaylistItem::PlaylistItem(SongPtr song, SongList& songList, QString description
     // 安装事件过滤器
     _button->installEventFilter(this);
     connect(_button, &QPushButton::clicked, this, [this]() {
-        PlayManager::getInstance().play(_song, *_songList);
+        PlayManager::getInstance().play(_songCtx.song, *_songCtx.list);
     });
 
     const auto descriptionLabel = new QLabel(_description, this);

@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QPushButton>
 
+#include "entity/PlayManager.hpp"
 #include "entity/Song.h"
 #include "entity/SongManager.h"
 
@@ -14,7 +15,7 @@ private:
     void applyStyles();
 
 public:
-    explicit SongInfoPage(const SongPtr& song, SongList& songList, QWidget* parent = nullptr);
+    explicit SongInfoPage(const SongContext& songCtx, QWidget* parent = nullptr);
 
     void updateSong(const SongPtr& song);
 
@@ -28,8 +29,7 @@ signals:
     void likeStatusChanged();
 
 private:
-    SongPtr _song;
-    SongList* _songList;
+    SongContext _songCtx;
     bool _originLiked;
     bool _willLike;
 

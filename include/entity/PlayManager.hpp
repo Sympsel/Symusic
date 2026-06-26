@@ -5,6 +5,21 @@
 #include "Common.hpp"
 #include "SongManager.h"
 
+/**
+ * @brief 歌曲上下文，记录触发播放逻辑时的歌曲和所在列表
+ */
+struct SongContext {
+    SongPtr song;
+    SongList* list;
+
+    SongContext(SongPtr song, SongList& listRef)
+        : song(std::move(song)), list(&listRef) {}
+
+    [[nodiscard]] bool isValid() const {
+        return song && list;
+    }
+};
+
 class PlayManager : public QObject {
     Q_OBJECT
 

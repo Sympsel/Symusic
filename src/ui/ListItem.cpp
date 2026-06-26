@@ -4,7 +4,6 @@
 #include <qdatetime.h>
 #include <QMouseEvent>
 #include <QTimer>
-#include <utility>
 
 #include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
@@ -25,6 +24,8 @@ void ListItem::setupUI() {
                                             this, leftWidget, centralWidget, rightWidget
                                         }, true);
 
+    const auto& song = _songCtx.song;
+
     // [收藏按钮 歌曲名 标签]
     const auto leftLayout = new QHBoxLayout(leftWidget);
     Sync::clearWidgetMargins(leftWidget);
@@ -32,10 +33,10 @@ void ListItem::setupUI() {
     leftLayout->setSpacing(4);
 
     leftLayout->addWidget(_likeButton);
-    const auto nameLabel = new QLabel(_song->getName());
+    const auto nameLabel = new QLabel(song->getName());
     Sync::appendStyleSheet(nameLabel, "color: white;");
     leftLayout->addWidget(nameLabel);
-    const auto tags = _song->getTags();
+    const auto tags = song->getTags();
     QString tagsStr = "[";
     for (const auto& tag : tags) {
         tagsStr.append(tag + ", ");
@@ -53,7 +54,7 @@ void ListItem::setupUI() {
     const auto centralLayout = new QHBoxLayout(centralWidget);
     Sync::clearWidgetMargins(centralWidget);
     Sync::clearLayoutMargins(centralLayout);
-    const auto artistLabel = new QLabel(_song->getArtist());
+    const auto artistLabel = new QLabel(song->getArtist());
     Sync::appendStyleSheet(artistLabel, "color: white;");
     centralLayout->addWidget(artistLabel);
     centralLayout->addStretch(1);
@@ -63,7 +64,7 @@ void ListItem::setupUI() {
     Sync::clearWidgetMargins(rightWidget);
     Sync::clearLayoutMargins(rightLayout);
 
-    auto* albumLabel = new QLabel(_song->getAlbum());
+    auto* albumLabel = new QLabel(song->getAlbum());
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
 
@@ -80,15 +81,13 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(SongPtr song, SongList& songList)
-    : _clickTimer(new QTimer(this))
-      , _likeButton(new QPushButton)
-      , _song(std::move(song))
-      , _songList(&songList) {
+ListItem::ListItem(const SongContext& songCtx)
+    : _songCtx(songCtx)
+      , _clickTimer(new QTimer(this))
+      , _likeButton(new QPushButton) {
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
-
-    if (_song->isLiked()) {
+    if (_songCtx.song->isLiked()) {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
@@ -110,21 +109,21 @@ ListItem::ListItem(SongPtr song, SongList& songList)
     _clickTimer->setSingleShot(true);
     _clickTimer->setInterval(QApplication::doubleClickInterval());
     connect(_clickTimer, &QTimer::timeout, this, [this]() {
-        if (_pendingSingleClick) {
+        if (const auto& song = _songCtx.song; _pendingSingleClick) {
             _pendingSingleClick = false;
-            PlayManager::getInstance().play(_song, *_songList);
-            LOG_DEBUG() << "单击播放: " << _song->getName();
+            PlayManager::getInstance().play(song, *_songCtx.list);
+            LOG_DEBUG() << "单击播放: " << song->getName();
         }
     });
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
         auto& likedList = SongManager::getInstance().getLikedList();
-        if (!_song->isLiked()) {
-            SongManager::append(likedList, _song);
-            LOG_DEBUG() << "添加到喜欢列表: " << _song->getName();
+        if (const auto& song = _songCtx.song; !song->isLiked()) {
+            SongManager::append(likedList, song);
+            LOG_DEBUG() << "添加到喜欢列表: " << song->getName();
         } else {
-            SongManager::remove(likedList, _song->getId());
-            LOG_DEBUG() << "从喜欢列表移除: " << _song->getName();
+            SongManager::remove(likedList, song->getId());
+            LOG_DEBUG() << "从喜欢列表移除: " << song->getName();
         }
         updateIconStatus();
         emit likeStatusUpdated();
@@ -132,7 +131,7 @@ ListItem::ListItem(SongPtr song, SongList& songList)
 }
 
 void ListItem::updateIconStatus() const {
-    if (_song->isLiked()) {
+    if (_songCtx.song->isLiked()) {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞_选中.png"));
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
@@ -166,7 +165,7 @@ void ListItem::mouseDoubleClickEvent(QMouseEvent* event) {
         _clickTimer->stop();
         _pendingSingleClick = false;
         _skipNextPress = true;
-        emit doubleClicked(_song);
+        emit doubleClicked(_songCtx.song);
     }
     QWidget::mouseDoubleClickEvent(event);
 }
