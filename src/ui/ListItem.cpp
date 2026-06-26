@@ -127,7 +127,7 @@ ListItem::ListItem(const SongContext& songCtx)
                 StatusManager::getInstance().showMessage(
                     std::format("正在播放: {}", song->getName().toStdString()).c_str()
                 );
-                playManager.play(song, *list);
+                playManager.play(_songCtx);
                 LOG_DEBUG() << "播放: " << song->getName();
             }
         }

@@ -147,7 +147,7 @@ void SongInfoPage::setupUI() {
     _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
     _playButton->setIconSize(QSize(20, 20));
     connect(_playButton, &QPushButton::clicked, this, [this]() {
-        PlayManager::getInstance().play(_songCtx.song, *_songCtx.list);
+        PlayManager::getInstance().play(_songCtx);
     });
 
     buttonLayout->addWidget(_likeButton);

@@ -37,7 +37,7 @@ PlaylistItem::PlaylistItem(const SongContext& songCtx, QString description, QWid
     // 安装事件过滤器
     _button->installEventFilter(this);
     connect(_button, &QPushButton::clicked, this, [this]() {
-        PlayManager::getInstance().play(_songCtx.song, *_songCtx.list);
+        PlayManager::getInstance().play(_songCtx);
     });
 
     const auto descriptionLabel = new QLabel(_description, this);

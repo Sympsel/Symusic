@@ -123,25 +123,54 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         switch (auto& playManager = PlayManager::getInstance();
             playManager.getPlayMode()) {
         case PlayMode::ORDERED:
-            playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
-            playModeButton->setToolTip("切换到随机播放模式");
+            // 当前是顺序播放 → 切换到随机播放
             playManager.setPlayMode(PlayMode::RANDOMED);
+            playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
+            playModeButton->setToolTip("已切换到随机播放，点击切换到单曲循环");
+            StatusManager::getInstance().showMessage("已切换到随机播放模式", 1000);
             break;
         case PlayMode::RANDOMED:
-            playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
-            playModeButton->setToolTip("切换到单曲循环模式");
+            // 当前是随机播放 → 切换到单曲循环
             playManager.setPlayMode(PlayMode::SINGLE_LOOPING);
+            playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
+            playModeButton->setToolTip("已切换到单曲循环，点击切换到顺序播放");
+            StatusManager::getInstance().showMessage("已切换到单曲循环模式", 1000);
             break;
         case PlayMode::SINGLE_LOOPING:
-            playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
-            playModeButton->setToolTip("切换到顺序播放模式");
+            // 当前是单曲循环 → 切换到顺序播放
             playManager.setPlayMode(PlayMode::ORDERED);
+            playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
+            playModeButton->setToolTip("已切换到顺序播放，点击切换到随机播放");
+            StatusManager::getInstance().showMessage("已切换到顺序播放模式", 1000);
             break;
         }
     });
     const auto prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
+    connect(prevButton, &QPushButton::clicked, this, []() {
+        StatusManager::getInstance().showMessage("播放上一首", 1000);
+        PlayManager::getInstance().prevPlay();
+    });
     const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
+    connect(playButton, &QPushButton::clicked, this, [playButton]() {
+        auto& playManager = PlayManager::getInstance();
+        auto& statusManager = StatusManager::getInstance();
+        if (playManager.getPlayStatus()) {
+            // 正在播放 → 暂停
+            playManager.pause();
+            statusManager.showMessage("已暂停", 1000);
+            playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
+        } else {
+            // 已暂停 → 继续播放
+            playManager.start();
+            statusManager.showMessage("继续播放", 1000);
+            playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
+        }
+    });
     const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
+    connect(nextButton, &QPushButton::clicked, this, []() {
+        StatusManager::getInstance().showMessage("播放下一首", 1000);
+        PlayManager::getInstance().nextPlay();
+    });
     const auto volumeButton = Create::buttonOnlyIcon("中等音量.png", centralWidget);
     _volumeSlider->setRelationButton(volumeButton);
     connect(volumeButton, &QPushButton::clicked, this, [this, volumeButton]() {

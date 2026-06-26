@@ -198,6 +198,6 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
             );
             break;
         }
-        playManager.play(firstSong, *_songList);
+        playManager.play({firstSong, *_songList});
     });
 }
