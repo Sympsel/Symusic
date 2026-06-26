@@ -3,8 +3,8 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-#include "entity/Song.h"
 #include "NavigationButton.h"
+#include "entity/Song.h"
 #include "entity/SongManager.h"
 
 class PlaylistItem : public QWidget {
