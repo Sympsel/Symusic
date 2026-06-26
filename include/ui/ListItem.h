@@ -22,7 +22,7 @@ public:
         return os;
     }
 
-    explicit ListItem(SongPtr  song);
+    explicit ListItem(SongPtr song, SongList& songList);
 
     [[nodiscard]] const SongPtr& getSong() const {
         return _song;
@@ -46,4 +46,5 @@ private:
     bool _skipNextPress{};
     QPushButton* _likeButton;
     SongPtr _song;
+    SongList* _songList;
 };

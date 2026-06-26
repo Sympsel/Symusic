@@ -1,7 +1,9 @@
 #include "ui/CommonPageWidget.h"
-#include "entity/SongManager.h"
 
 #include <QKeyEvent>
+
+#include "entity/PlayManager.hpp"
+#include "entity/SongManager.h"
 
 QWidget* CommonPageWidget::createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const {
     const auto headWidget = new QWidget();
@@ -81,7 +83,18 @@ void CommonPageWidget::reloadData(const SongList& songList) {
     for (const auto& song : songList) {
         const auto item = new QListWidgetItem(_playlist);
         item->setSizeHint(QSize(0, 40));
-        const auto listItem = new ListItem(song);
+        auto& songManager = SongManager::getInstance();
+        ListItem* listItem;
+        if (_pageName == "我喜欢的") {
+            listItem = new ListItem(song, songManager.getLikedList());
+        } else if (_pageName == "本地下载") {
+            listItem = new ListItem(song, songManager.getDownloadList());
+        } else if (_pageName == "最近播放") {
+            listItem = new ListItem(song, songManager.getHistoryList());
+        } else {
+            LOG_ERROR() << "未注册播放列表";
+            return;
+        }
         _playlist->setItemWidget(item, listItem);
         connect(listItem, &ListItem::doubleClicked, this, [this, song]() {
             emit songItemDoubleClicked(song);
@@ -159,4 +172,9 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
     Sync::widgetToLayout(mainLayout, {
                              headWidget, middleLabel, _playlist
                          });
+
+    connect(_playAllButton, &QPushButton::clicked, this, [this]() {
+        auto& playManager = PlayManager::getInstance();
+        // playManager.setSongList();
+    });
 }

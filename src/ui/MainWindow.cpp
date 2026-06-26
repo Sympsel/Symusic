@@ -5,6 +5,7 @@
 #include <QStatusBar>
 #include <ranges>
 
+#include "entity/PlayManager.hpp"
 #include "ui/HeadWidget.h"
 #include "ui/NavigationWidget.h"
 #include "ui/PlaySlider.h"
@@ -104,9 +105,29 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
     const auto centralWidget = new QWidget(controlWidget);
     const auto centralLayout = new QHBoxLayout(centralWidget);
-    const auto playModeButton = Create::buttonOnlyIcon("随机播放.png", centralWidget);
-    playModeButton->setToolTip("点击切换到xxx模式");
+    const auto playModeButton = Create::buttonOnlyIcon("列表播放.png", centralWidget);
     playModeButton->setToolTipDuration(3000);
+    playModeButton->setToolTip("切换到随机播放模式");
+    connect(playModeButton, &QPushButton::clicked, this, [playModeButton]() {
+        switch (auto& playManager = PlayManager::getInstance();
+            playManager.getPlayMode()) {
+        case PlayMode::ORDERED:
+            playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
+            playModeButton->setToolTip("切换到随机播放模式");
+            playManager.setPlayMode(PlayMode::RANDOMED);
+            break;
+        case PlayMode::RANDOMED:
+            playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
+            playModeButton->setToolTip("切换到单曲循环模式");
+            playManager.setPlayMode(PlayMode::SINGLE_LOOPING);
+            break;
+        case PlayMode::SINGLE_LOOPING:
+            playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
+            playModeButton->setToolTip("切换到顺序播放模式");
+            playManager.setPlayMode(PlayMode::ORDERED);
+            break;
+        }
+    });
     const auto prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
     const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
     const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
@@ -236,15 +257,15 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
                 });
 
         const auto 最近播放_页 = new CommonPageWidget(
-                "最近播放",
-                "Sympsel.png",
-                "这里是你曾经听过的",
-                _mainStackedWidget);
+            "最近播放",
+            "Sympsel.png",
+            "这里是你曾经听过的",
+            _mainStackedWidget);
         最近播放_页->setSpecialCallback([]() {
             LOG_INFO() << std::format("页面 {} 正常加载", "最近播放");
         });
         最近播放_页->setReloadCallback([&songManager](CommonPageWidget* page) {
-             page->reloadData(songManager.getHistoryList());
+            page->reloadData(songManager.getHistoryList());
         });
         最近播放_页->initData(songManager.getHistoryList());
         connect(最近播放_页, &CommonPageWidget::songItemDoubleClicked, this,
@@ -379,7 +400,19 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
-    _songInfoPage = new SongInfoPage(song);
+    const QString pageName = commonPageWidget->getPageName();
+    auto& songManager = SongManager::getInstance();
+    if (pageName == "我喜欢的") {
+        _songInfoPage = new SongInfoPage(song, songManager.getLikedList());
+    } else if (pageName == "本地下载") {
+        _songInfoPage = new SongInfoPage(song, songManager.getDownloadList());
+    } else if (pageName == "最近播放") {
+        _songInfoPage = new SongInfoPage(song, songManager.getHistoryList());
+    } else {
+        LOG_ERROR() << "未注册播放列表";
+        return;
+    }
+    if (pageName == "")
 
     connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
         for (int i = 0; i < _mainStackedWidget->count(); ++i) {

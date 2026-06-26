@@ -319,16 +319,6 @@ public:
         return true;
     }
 
-    // 播放相关
-    void play(const SongPtr& song) {
-        appendToHistoryList(song);
-        song->incrementPlayCount();
-        emit songPlayed(song);
-    }
-
-signals:
-    void songPlayed(const SongPtr& song);
-
 private:
     SongList _recommendList;
     SongList _youMayLikeList;

@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <utility>
 
+#include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
 #include "entity/SongManager.h"
 
@@ -79,10 +80,11 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(SongPtr song)
-    : _likeButton(new QPushButton)
+ListItem::ListItem(SongPtr song, SongList& songList)
+    : _clickTimer(new QTimer(this))
+      , _likeButton(new QPushButton)
       , _song(std::move(song))
-      , _clickTimer(new QTimer(this)) {
+      , _songList(&songList) {
     _likeButton->setFixedSize(24, 24);
     _likeButton->setFocusPolicy(Qt::NoFocus);
 
@@ -106,12 +108,11 @@ ListItem::ListItem(SongPtr song)
 
     // 设置为单次触发模式，超时自动停止
     _clickTimer->setSingleShot(true);
-    _clickTimer->setInterval(QApplication::doubleClickInterval() + 50);
-    // _clickTimer->setInterval(QApplication::doubleClickInterval());
+    _clickTimer->setInterval(QApplication::doubleClickInterval());
     connect(_clickTimer, &QTimer::timeout, this, [this]() {
         if (_pendingSingleClick) {
             _pendingSingleClick = false;
-            SongManager::getInstance().play(_song);
+            PlayManager::getInstance().play(_song, *_songList);
             LOG_DEBUG() << "单击播放: " << _song->getName();
         }
     });
@@ -141,7 +142,7 @@ void ListItem::updateIconStatus() const {
 void ListItem::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         if (_skipNextPress) {
-            // 跳过双击后的额外 press，即跳过对第二次按压的判别
+            // 跳过双击中的第二次 press，即跳过对第二次按压的判别
             _skipNextPress = false;
             return;
         }

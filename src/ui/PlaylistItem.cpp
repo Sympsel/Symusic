@@ -5,11 +5,13 @@
 #include <QLabel>
 #include <utility>
 
+#include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
 
-PlaylistItem::PlaylistItem(const SongPtr& song, QString description, QWidget* parent)
+PlaylistItem::PlaylistItem(SongPtr song, SongList& songList, QString description, QWidget* parent)
     : QWidget(parent)
-      , _song(song)
+      , _song(std::move(song))
+      , _songList(&songList)
       , _description(std::move(description)) {
     constexpr int coverLength = 120, coverHeight = 150;
     this->setFixedSize(coverLength, coverHeight);
@@ -32,8 +34,11 @@ PlaylistItem::PlaylistItem(const SongPtr& song, QString description, QWidget* pa
     );
     // 透明
     _button->setFlat(true);
-    // 安装时间过滤器
+    // 安装事件过滤器
     _button->installEventFilter(this);
+    connect(_button, &QPushButton::clicked, this, [this]() {
+        PlayManager::getInstance().play(_song, *_songList);
+    });
 
     const auto descriptionLabel = new QLabel(_description, this);
     descriptionLabel->setFixedSize(coverLength - 16, coverHeight - coverLength - 4);

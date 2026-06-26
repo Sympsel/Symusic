@@ -84,3 +84,9 @@ namespace prefix {
 
     inline QString styleFiles = ":/resource/styles/";
 }
+
+enum class PlayMode {
+    ORDERED,
+    RANDOMED,
+    SINGLE_LOOPING
+};

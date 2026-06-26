@@ -11,12 +11,13 @@ class PlaylistItem : public QWidget {
     Q_OBJECT
 
 public:
-    explicit PlaylistItem(const SongPtr& song, QString description, QWidget* parent = nullptr);
+    explicit PlaylistItem(SongPtr song, SongList& songList, QString description, QWidget* parent = nullptr);
 
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
     SongPtr _song;
+    SongList* _songList;
     QPushButton* _button;
     QString _description;
 };

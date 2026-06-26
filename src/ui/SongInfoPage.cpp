@@ -1,17 +1,19 @@
 #include "ui/SongInfoPage.h"
 
-#include <QHBoxLayout>
 #include <QWidget>
 #include <QMouseEvent>
 
 #include "entity/Common.hpp"
+#include "entity/PlayManager.hpp"
 #include "entity/SongManager.h"
+#include "ui/PlaylistItem.h"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
-SongInfoPage::SongInfoPage(const SongPtr& song, QWidget* parent)
+SongInfoPage::SongInfoPage(const SongPtr& song, SongList& songList, QWidget* parent)
     : QWidget(parent)
       , _song(song)
+      , _songList(&songList)
       , _originLiked(song->isLiked())
       , _willLike(song->isLiked())
       , _coverLabel(new QLabel())
@@ -142,7 +144,7 @@ void SongInfoPage::setupUI() {
     _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
     _playButton->setIconSize(QSize(20, 20));
     connect(_playButton, &QPushButton::clicked, this, [this]() {
-        SongManager::getInstance().play(_song);
+        PlayManager::getInstance().play(_song, *_songList);
     });
 
     buttonLayout->addWidget(_likeButton);

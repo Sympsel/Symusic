@@ -14,7 +14,7 @@ private:
     void applyStyles();
 
 public:
-    explicit SongInfoPage(const SongPtr& song, QWidget* parent = nullptr);
+    explicit SongInfoPage(const SongPtr& song, SongList& songList, QWidget* parent = nullptr);
 
     void updateSong(const SongPtr& song);
 
@@ -29,6 +29,7 @@ signals:
 
 private:
     SongPtr _song;
+    SongList* _songList;
     bool _originLiked;
     bool _willLike;
 
