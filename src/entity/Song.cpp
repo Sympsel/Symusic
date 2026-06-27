@@ -1,7 +1,6 @@
 #include "entity/Song.h"
 
 #include <QCoreApplication>
-#include <QMimeDatabase>
 #include <QTimer>
 #include <QtMultimedia/QMediaPlayer>
 #include <QtMultimedia/QMediaMetaData>

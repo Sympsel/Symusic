@@ -107,13 +107,13 @@ void CommonPageWidget::reloadData() {
 
 void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Space) {
-        if (const auto currItem = _playlist->currentItem()) {
-            if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
-                const auto song = listItemWidget->getSong();
-                emit songItemDoubleClicked(song);
-            }
-        }
-        event->accept();
+        //if (const auto currItem = _playlist->currentItem()) {
+        //    if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
+        //        const auto song = listItemWidget->getSong();
+        //        emit songItemDoubleClicked(song);
+        //    }
+        //}
+        //event->accept();
         return;
     }
     QWidget::keyPressEvent(event);

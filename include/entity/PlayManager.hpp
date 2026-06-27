@@ -1,6 +1,9 @@
 #pragma once
 
 #include <random>
+#include <QtMultimedia/QAudioOutput>
+#include <QtMultimedia/QMediaMetaData>
+#include <QtMultimedia/QMediaPlayer>
 
 #include "Common.hpp"
 #include "SongManager.h"
@@ -21,14 +24,37 @@ struct SongContext {
     }
 };
 
+enum class PlayStatus {
+    STOPPED = QMediaPlayer::StoppedState,
+    PLAYING = QMediaPlayer::PlayingState,
+    PAUSED = QMediaPlayer::PausedState,
+    ERROR
+};
+
 class PlayManager : public QObject {
     Q_OBJECT
 
 private:
     explicit PlayManager()
-        : _isPlaying()
+        : _player(new QMediaPlayer(this))
+          , _audioOutput(new QAudioOutput(this))
           , _songCtx({nullptr, SongManager::getInstance().getYouMayLikeList()})
           , _playMode(PlayMode::ORDERED), _historyIndex(-1) {
+        _player->setAudioOutput(_audioOutput);
+        setVolume(50);
+
+        connect(_player, &QMediaPlayer::mediaStatusChanged, this, [this](
+                const QMediaPlayer::MediaStatus status) {
+                    if (status == QMediaPlayer::EndOfMedia) {
+                        LOG_DEBUG() << "歌曲播放完毕,自动播放下一首";
+                        nextPlay();
+                    }
+                });
+        // 监听播放进度变化
+        connect(_player, &QMediaPlayer::positionChanged, this, [this](const LL position) {
+            emit positionChanged(position, _player->duration());
+        });
+
     }
 
     void setPrevPlay() {
@@ -42,6 +68,10 @@ private:
         }
 
         // 如果当前歌曲在历史记录中，向后移动
+        if (_historyIndex < 0 || static_cast<int>(_historyIndex >= historyList.size() - 1)) {
+            statusManager.showMessage("已经到底了", 1000);
+            return;
+        }
         if (_historyIndex >= 0 && _historyIndex < static_cast<int>(historyList.size()) - 1) {
             ++_historyIndex;
             _songCtx.song = historyList[_historyIndex];
@@ -55,8 +85,6 @@ private:
             statusManager.showMessage(
                 std::format("上一首: {}", _songCtx.song->getName().toStdString()).c_str()
             );
-        } else {
-            statusManager.showMessage("已经到底了", 1000);
         }
     }
 
@@ -95,6 +123,14 @@ private:
         }
     }
 
+    void play() {
+        if (_songCtx.isValid()) {
+            play(_songCtx);
+        } else {
+            StatusManager::getInstance().showMessage("还没有选中歌曲，请先播放一首歌曲");
+        }
+    }
+
 public:
     PlayManager(const PlayManager&) = delete;
     PlayManager(PlayManager&&) = delete;
@@ -104,6 +140,21 @@ public:
     static PlayManager& getInstance() {
         static PlayManager instance;
         return instance;
+    }
+
+    void setVolume(int value) {
+        if (value < 0) {
+            value = 0;
+        }
+        if (value > 100) {
+            value = 100;
+        }
+        _audioOutput->setVolume(1.f * value / 100);
+        emit volumeChanged(value);
+    }
+
+    [[nodiscard]] int getVolume() const {
+        return 100 * _audioOutput->volume();
     }
 
     void setPlayMode(const PlayMode& playMode) {
@@ -126,6 +177,63 @@ public:
         return _songCtx.song;
     }
 
+    /**
+     * @brief 获取当前播放进度(毫秒)
+     */
+    [[nodiscard]] LL getPosition() const {
+        return _player ? _player->position() : 0;
+    }
+
+    /**
+     * @brief 获取歌曲总时长(毫秒)
+     */
+    [[nodiscard]] LL getDuration() const {
+        return _player ? _player->duration() : 0;
+    }
+
+    /**
+     * @brief 获取格式化的播放进度 "mm:ss/mm:ss"
+     */
+    [[nodiscard]] QString getFormattedProgress() const {
+        if (!_player || !_songCtx.song) {
+            return "00:00/00:00";
+        }
+
+        const LL position = _player->position();
+        const LL duration = _player->duration();
+
+        const auto formatTime = [](const LL ms) -> QString {
+            const int totalSeconds = static_cast<int>(ms / 1000);
+            const int minutes = totalSeconds / 60;
+            const int seconds = totalSeconds % 60;
+            return QString("%1:%2").arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
+        };
+
+        return QString("%1/%2").arg(formatTime(position)).arg(formatTime(duration));
+    }
+
+    /**
+    * @brief 设置播放位置
+    * @param position 位置(毫秒)
+    */
+    void setPosition(const LL position) const {
+        if (_player && position >= 0) {
+            _player->setPosition(position);
+        }
+    }
+
+
+    int getPositionPercent() const {
+        return static_cast<int>(100.0 * getPosition() / getDuration());
+    }
+
+    /**
+     * @brief 获取播放器指针(用于设置播放位置)
+     */
+    [[nodiscard]] QMediaPlayer* getPlayer() const {
+        return _player;
+    }
+
     // 播放相关
     void play(const SongContext& songCtx) {
         _songCtx = songCtx;
@@ -143,19 +251,40 @@ public:
         _historyIndex = 0;
         song->incrementPlayCount();
         start();
+
+        _player->setSource(_songCtx.song->getUrl());
+        _player->play();
+
         emit songPlayed(song);
     }
 
-    [[nodiscard]] bool getPlayStatus() const {
-        return _isPlaying;
+    [[nodiscard]] PlayStatus getPlayStatus() const {
+        if (!_player) {
+            LOG_ERROR() << "player is null";
+            return PlayStatus::ERROR;
+        }
+        switch (_player->playbackState()) {
+        case QMediaPlayer::StoppedState:
+            return PlayStatus::STOPPED;
+        case QMediaPlayer::PlayingState:
+            return PlayStatus::PLAYING;
+        case QMediaPlayer::PausedState:
+            return PlayStatus::PAUSED;
+        default:
+            return PlayStatus::ERROR;
+        }
     }
 
-    void pause() {
-        _isPlaying = false;
+    void pause() const {
+        if (_player) {
+            _player->pause();
+        }
     }
 
-    void start() {
-        _isPlaying = true;
+    void start() const {
+        if (_player) {
+            _player->play();
+        }
     }
 
     // 用于漫游模式
@@ -171,17 +300,22 @@ public:
 
     void nextPlay() {
         setNextPlay();
+        play();
     }
 
     void prevPlay() {
         setPrevPlay();
+        play();
     }
 
 signals:
     void songPlayed(const SongPtr&);
+    void volumeChanged(double volume);
+    void positionChanged(qint64 position, qint64 duration);
 
 private:
-    bool _isPlaying;
+    QMediaPlayer* _player;
+    QAudioOutput* _audioOutput;
     SongContext _songCtx;
     PlayMode _playMode;
     int _historyIndex;

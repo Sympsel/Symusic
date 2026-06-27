@@ -39,6 +39,10 @@ public:
         _relateButton = button;
     }
 
+    void setVolume(const int percent) const {
+        _slider->setValue(percent);
+    }
+
 signals:
     void volumeChanged(int volume);
 

@@ -56,7 +56,9 @@ public:
     [[nodiscard]] static TagList getTags(int flag);
 
     [[nodiscard]] QString getName() const { return _name; }
-    [[nodiscard]] QString getArtist() const { return _artist; }
+    [[nodiscard]] QString getArtist() const {
+        return _artist;
+    }
     [[nodiscard]] QString getAlbum() const { return _album; }
     [[nodiscard]] QString getFilePath() const { return _url.toLocalFile(); }
     [[nodiscard]] QPixmap getCover() const { return _cover; }

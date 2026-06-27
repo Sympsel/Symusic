@@ -37,18 +37,21 @@ void ListItem::setupUI() {
     const auto nameLabel = new QLabel(song->getName());
     Sync::appendStyleSheet(nameLabel, "color: white;");
     leftLayout->addWidget(nameLabel);
-    const auto tags = song->getTags();
-    QString tagsStr = "[";
-    for (const auto& tag : tags) {
-        tagsStr.append(tag + ", ");
+    QLabel* tagsLabel = nullptr;
+    if (!song->getTags().empty()) {
+        const auto tags = song->getTags();
+        QString tagsStr = "[";
+        for (const auto& tag : tags) {
+            tagsStr.append(tag + ", ");
+        }
+        if (!tags.empty()) {
+            tagsStr.chop(2);
+        }
+        tagsStr.append("]");
+        tagsLabel = new QLabel(tagsStr);
+        Sync::appendStyleSheet(tagsLabel, "color: gray;");
+        leftLayout->addWidget(tagsLabel);
     }
-    if (!tags.empty()) {
-        tagsStr.chop(2);
-    }
-    tagsStr.append("]");
-    const auto tagsLabel = new QLabel(tagsStr);
-    Sync::appendStyleSheet(tagsLabel, "color: gray;");
-    leftLayout->addWidget(tagsLabel);
     leftLayout->addStretch(1);
 
     // [歌手]
@@ -69,11 +72,19 @@ void ListItem::setupUI() {
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
 
-    Sync::widgetTransparentBackground({
-        this,
-        nameLabel, tagsLabel, artistLabel, albumLabel,
-        leftWidget, rightWidget, centralWidget
-    });
+    if (tagsLabel) {
+        Sync::widgetTransparentBackground({
+            this,
+            nameLabel, tagsLabel, artistLabel, albumLabel,
+            leftWidget, rightWidget, centralWidget
+        });
+    } else {
+        Sync::widgetTransparentBackground({
+            this,
+            nameLabel, artistLabel, albumLabel,
+            leftWidget, rightWidget, centralWidget
+        });
+    }
 
     Sync::widgetToLayout(mainLayout, {
                              {leftWidget, 3},

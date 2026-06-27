@@ -48,6 +48,8 @@ add_executable(SymMusic_2
         include/entity/Common.hpp
         include/entity/PlayManager.hpp
         include/entity/StatusManager.hpp
+        src/ui/MarqueeLabel.cpp
+        include/ui/MarqueeLabel.h
 )
 
 target_link_libraries(SymMusic_2

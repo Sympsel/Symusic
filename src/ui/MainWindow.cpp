@@ -8,6 +8,7 @@
 #include "entity/PlayManager.hpp"
 #include "entity/StatusManager.hpp"
 #include "ui/HeadWidget.h"
+#include "ui/MarqueeLabel.h"
 #include "ui/NavigationWidget.h"
 #include "ui/PlaySlider.h"
 #include "ui/RecommendWidget.h"
@@ -107,8 +108,21 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto leftLayout = new QHBoxLayout(leftWidget);
 
     const auto songInfoLayout = new QVBoxLayout(songInfoWidget);
-    const auto songName = new QLabel("歌曲");
-    const auto singer = new QLabel("歌手");
+    // const auto songName = new QLabel("歌曲");
+    const auto songName = new MarqueeLabel();
+    songName->setFixedWidth(150);
+    songName->setText("歌曲");
+    // const auto singer = new QLabel("歌手");
+    const auto singer = new MarqueeLabel();
+    singer->setFixedWidth(150);
+    singer->setText("歌手");
+
+    auto& playManager = PlayManager::getInstance();
+    connect(&playManager, &PlayManager::songPlayed, this, [songName, singer, &playManager]() {
+        songName->setMarqueeText("歌曲：" + playManager.getCurrPlay()->getName());
+        const QString artist = playManager.getCurrPlay()->getArtist();
+        singer->setMarqueeText("歌手：" + (artist.isEmpty() ? "未知" : artist));
+    });
 
     Sync::widgetToLayout(songInfoLayout, {songName, singer});
     Sync::widgetToLayout(leftLayout, {songCover, songInfoWidget});
@@ -119,28 +133,27 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto playModeButton = Create::buttonOnlyIcon("列表播放.png", centralWidget);
     playModeButton->setToolTipDuration(3000);
     playModeButton->setToolTip("切换到随机播放模式");
-    connect(playModeButton, &QPushButton::clicked, this, [playModeButton]() {
-        switch (auto& playManager = PlayManager::getInstance();
-            playManager.getPlayMode()) {
+    connect(playModeButton, &QPushButton::clicked, this, [playModeButton, &playManager]() {
+        switch (playManager.getPlayMode()) {
         case PlayMode::ORDERED:
-            // 当前是顺序播放 → 切换到随机播放
+            // 顺序播放 → 随机播放
             playManager.setPlayMode(PlayMode::RANDOMED);
             playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
-            playModeButton->setToolTip("已切换到随机播放，点击切换到单曲循环");
+            playModeButton->setToolTip("点击切换到单曲循环");
             StatusManager::getInstance().showMessage("已切换到随机播放模式", 1000);
             break;
         case PlayMode::RANDOMED:
-            // 当前是随机播放 → 切换到单曲循环
+            // 随机播放 → 单曲循环
             playManager.setPlayMode(PlayMode::SINGLE_LOOPING);
             playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
-            playModeButton->setToolTip("已切换到单曲循环，点击切换到顺序播放");
+            playModeButton->setToolTip("点击切换到顺序播放");
             StatusManager::getInstance().showMessage("已切换到单曲循环模式", 1000);
             break;
         case PlayMode::SINGLE_LOOPING:
-            // 当前是单曲循环 → 切换到顺序播放
+            // 单曲循环 → 顺序播放
             playManager.setPlayMode(PlayMode::ORDERED);
             playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
-            playModeButton->setToolTip("已切换到顺序播放，点击切换到随机播放");
+            playModeButton->setToolTip("点击切换到随机播放");
             StatusManager::getInstance().showMessage("已切换到顺序播放模式", 1000);
             break;
         }
@@ -151,20 +164,32 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
         PlayManager::getInstance().prevPlay();
     });
     const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
-    connect(playButton, &QPushButton::clicked, this, [playButton]() {
-        auto& playManager = PlayManager::getInstance();
+    connect(playButton, &QPushButton::clicked, this, [playButton, &playManager]() {
         auto& statusManager = StatusManager::getInstance();
-        if (playManager.getPlayStatus()) {
+        switch (playManager.getPlayStatus()) {
+        case PlayStatus::STOPPED:
+            statusManager.showMessage("请先选则要播放的歌曲");
+            break;
+        case PlayStatus::PLAYING:
             // 正在播放 → 暂停
             playManager.pause();
             statusManager.showMessage("已暂停", 1000);
             playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
-        } else {
+            break;
+        case PlayStatus::PAUSED:
             // 已暂停 → 继续播放
             playManager.start();
             statusManager.showMessage("继续播放", 1000);
             playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
+            break;
+        case PlayStatus::ERROR:
+            LOG_ERROR() << "播放错误";
+            break;
         }
+    });
+    connect(&PlayManager::getInstance(), &PlayManager::songPlayed, this, [playButton]() {
+        // 这里是让任意地方触发播放时都会设置
+        playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
     });
     const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
     connect(nextButton, &QPushButton::clicked, this, []() {
@@ -224,7 +249,10 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     // [进度]
     const auto rightWidget = new QWidget(controlWidget);
     const auto rightLayout = new QHBoxLayout(rightWidget);
-    const auto processLabel = new QLabel("00:00/3:14");
+    const auto processLabel = new QLabel("00:00/00:00");
+    connect(&playManager, &PlayManager::positionChanged, [processLabel, &playManager]() {
+         processLabel->setText(playManager.getFormattedProgress());
+    });
     const auto lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
     lyricsButton->setFixedSize(buttonsSize);
     syncButtonBackground(buttons);
@@ -463,6 +491,7 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
         return;
     }
     _songInfoPage = new SongInfoPage({song, *list});
+    // todo 修复歌曲详情页
     connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
         for (int i = 0; i < _mainStackedWidget->count(); ++i) {
             if (auto* page = qobject_cast<CommonPageWidget*>(_mainStackedWidget->widget(i))) {

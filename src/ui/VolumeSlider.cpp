@@ -2,9 +2,10 @@
 
 #include <QVBoxLayout>
 
-#include "utils/Sync.hpp"
 #include "entity/Common.hpp"
+#include "entity/PlayManager.hpp"
 #include "utils/Log.hpp"
+#include "utils/Sync.hpp"
 
 VolumeSlider::VolumeSlider(QWidget* parent) : QWidget(parent, Qt::Popup | Qt::FramelessWindowHint)
                                               , _quiet(false)
@@ -15,10 +16,12 @@ VolumeSlider::VolumeSlider(QWidget* parent) : QWidget(parent, Qt::Popup | Qt::Fr
     layout->setContentsMargins(5, 5, 5, 5);
 
     _slider->setRange(0, 100);
-    _slider->setValue(50);
-    _label->setText("50%");
-    connect(_slider, &QSlider::valueChanged, this, [this](const int value) {
+    auto& playManager = PlayManager::getInstance();
+    _slider->setValue(playManager.getVolume());
+    _label->setText(QString("%1%").arg(_slider->value()));
+    connect(_slider, &QSlider::valueChanged, this, [this, &playManager](const int value) {
         _label->setText(QString("%1%").arg(value));
+        playManager.setVolume(value);
         emit volumeChanged(value);
         _quiet = (value == 0);
         if (_relateButton) {
@@ -26,7 +29,7 @@ VolumeSlider::VolumeSlider(QWidget* parent) : QWidget(parent, Qt::Popup | Qt::Fr
                 _relateButton->setIcon(QIcon(prefix::normalImages + "关闭音量.png"));
             } else {
                 if (const int volume = _slider->value(); volume < 33) {
-                _relateButton->setIcon(QIcon(prefix::normalImages + "最小音量.png"));
+                    _relateButton->setIcon(QIcon(prefix::normalImages + "最小音量.png"));
                 } else if (value > 66) {
                     _relateButton->setIcon(QIcon(prefix::normalImages + "最大音量.png"));
                 } else {
