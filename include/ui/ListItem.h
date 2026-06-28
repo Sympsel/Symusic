@@ -12,6 +12,8 @@ class ListItem : public QWidget {
 private:
     void setupUI();
 
+    void highLightCurrPlay();
+
 public:
     explicit ListItem(SongContext  songCtx);
 

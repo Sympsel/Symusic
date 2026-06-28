@@ -13,6 +13,10 @@ find_package(Qt6 REQUIRED COMPONENTS
         Multimedia
 )
 
+# 设置 TagLib 路径
+set(TagLib_DIR "D:/taglib-install/lib/cmake/taglib")
+find_package(TagLib REQUIRED)
+
 include_directories(include)
 
 add_executable(SymMusic_2
@@ -57,10 +61,19 @@ target_link_libraries(SymMusic_2
         Qt6::Gui
         Qt6::Widgets
         Qt6::Multimedia
+        TagLib::tag
 )
 
 set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.9.3/mingw_64")
 set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
+
+# 复制 TagLib DLL 到输出目录
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "D:/taglib-install/bin/libtag.dll"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/"
+        COMMENT "Copying TagLib DLL to output directory..."
+)
 
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt
         HINTS "${QT_INSTALL_PATH}/bin")

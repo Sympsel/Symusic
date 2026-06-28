@@ -51,7 +51,7 @@ public:
           , _belongingList(isLiked ? static_cast<int>(ExistIn::LIKED_LIST) : 0) {
     }
 
-    explicit Song(const QUrl& url, bool isLiked = false);
+    explicit Song(QUrl  url, bool isLiked = false);
 
     [[nodiscard]] static TagList getTags(int flag);
 

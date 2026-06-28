@@ -23,6 +23,10 @@ struct Color {
     QString arrowButtonPressed = "0, 122, 204";
     Color() = default;
 
+    // 播放列表项颜色
+    QString hover = "40, 40, 40";
+    QString playing = "60, 60, 60";
+
     // 置顶按钮颜色
     QString fixedActivate = "60, 60, 60";
 };

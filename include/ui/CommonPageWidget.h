@@ -6,6 +6,7 @@
 #include <QListWidget>
 #include <QWidget>
 
+#include "MarqueeLabel.h"
 #include "entity/SongManager.h"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
@@ -18,13 +19,14 @@ public:
     using ReloadCallback = std::function<void(CommonPageWidget*)>;
 
 private:
-    [[nodiscard]] QWidget* createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const;
+    [[nodiscard]] QWidget* createHeadWidget(const QString& description) const;
+
+    void setCover() const;
 
     static QWidget* createMiddleWidget();
 
 public:
-    explicit CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description = "",
-                              QWidget* parent = nullptr);
+    explicit CommonPageWidget(QString pageName, const QString& description = "", QWidget* parent = nullptr);
 
     void initData(const SongList& songList);
 
@@ -54,6 +56,7 @@ signals:
 
 private:
     QString _pageName;
+    QLabel* _coverLabel;
     QPushButton* _playAllButton;
     QListWidget* _playlist;
     SongList* _songList;

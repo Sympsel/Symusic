@@ -1,18 +1,18 @@
 #include "ui/CommonPageWidget.h"
 
 #include <QKeyEvent>
+#include <QLabel>
 
 #include "entity/PlayManager.hpp"
 #include "entity/SongManager.h"
 #include "entity/StatusManager.hpp"
 
-QWidget* CommonPageWidget::createHeadWidget(const QString& coverFileWithoutPath, const QString& description) const {
+QWidget* CommonPageWidget::createHeadWidget(const QString& description) const {
     const auto headWidget = new QWidget();
     headWidget->setFixedHeight(120);
-    const auto coverLabel = new QLabel();
-    coverLabel->setScaledContents(true);
-    coverLabel->setPixmap(QPixmap(prefix::normalImages + coverFileWithoutPath));
-    coverLabel->setFixedSize(QSize(120, 120));
+    _coverLabel->setScaledContents(true);
+
+    _coverLabel->setFixedSize(QSize(120, 120));
 
     const auto hLayout = new QHBoxLayout(headWidget);
 
@@ -31,10 +31,18 @@ QWidget* CommonPageWidget::createHeadWidget(const QString& coverFileWithoutPath,
     _playAllButton->setFixedWidth(150);
 
     Sync::widgetToLayout(hLayout, {
-                             coverLabel, rightWidget
+                             _coverLabel, rightWidget
                          });
 
     return headWidget;
+}
+
+void CommonPageWidget::setCover() const {
+    if (!_songList->empty()) {
+        _coverLabel->setPixmap(_songList->front()->getCover());
+    } else {
+        _coverLabel->setPixmap(QPixmap(prefix::normalImages + "Sympsel.png"));
+    }
 }
 
 QWidget* CommonPageWidget::createMiddleWidget() {
@@ -66,7 +74,6 @@ QWidget* CommonPageWidget::createMiddleWidget() {
 
     middleWidget->setFixedHeight(40);
     Sync::widgetToLayout(layout, {
-                             // musicLabel, singerLabel, albumLabel
                              {musicLabel, 4},
                              {singerLabel, 3},
                              {albumLabel, 3}
@@ -76,7 +83,7 @@ QWidget* CommonPageWidget::createMiddleWidget() {
 
 void CommonPageWidget::initData(const SongList& songList) {
     _songList = const_cast<SongList*>(&songList);
-
+    setCover();
     // 调用特化回调，方便对各个页面进行微调
     if (_specializationCb) {
         _specializationCb();
@@ -99,6 +106,7 @@ void CommonPageWidget::reloadData(const SongList& songList) {
             emit songItemDoubleClicked(song);
         });
     }
+    setCover();
 }
 
 void CommonPageWidget::reloadData() {
@@ -111,13 +119,6 @@ void CommonPageWidget::reloadData() {
 
 void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Space) {
-        //if (const auto currItem = _playlist->currentItem()) {
-        //    if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
-        //        const auto song = listItemWidget->getSong();
-        //        emit songItemDoubleClicked(song);
-        //    }
-        //}
-        //event->accept();
         return;
     }
     QWidget::keyPressEvent(event);
@@ -139,9 +140,10 @@ bool CommonPageWidget::eventFilter(QObject* watched, QEvent* event) {
 }
 
 
-CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWithoutPath, const QString& description,
+CommonPageWidget::CommonPageWidget(QString pageName, const QString& description,
                                    QWidget* parent) : QWidget(parent)
                                                       , _pageName(std::move(pageName))
+                                                      , _coverLabel(new QLabel())
                                                       , _playAllButton(new QPushButton("播放全部"))
                                                       , _playlist(new QListWidget())
                                                       , _songList(nullptr) {
@@ -166,7 +168,7 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
 
     const auto mainLayout = new QVBoxLayout(this);
 
-    const auto headWidget = createHeadWidget(coverFileWithoutPath, description);
+    const auto headWidget = createHeadWidget(description);
     const auto middleLabel = createMiddleWidget();
 
     Sync::widgetToLayout(mainLayout, {

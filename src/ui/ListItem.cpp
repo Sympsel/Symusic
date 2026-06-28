@@ -6,10 +6,10 @@
 #include <utility>
 
 #include "entity/PlayManager.hpp"
-#include "ui/MarqueeLabel.h"
-#include "utils/Log.hpp"
 #include "entity/SongManager.h"
 #include "entity/StatusManager.hpp"
+#include "ui/MarqueeLabel.h"
+#include "utils/Log.hpp"
 
 void ListItem::setupUI() {
     this->setFixedHeight(40);
@@ -39,7 +39,6 @@ void ListItem::setupUI() {
     const auto nameLabel = new MarqueeLabel();
     nameLabel->setMarqueeText(song->getName());
     nameLabel->setMinimumWidth(250);
-    // nameLabel->setMaximumWidth(1000);
     nameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     Sync::appendStyleSheet(nameLabel, "color: white;");
@@ -67,8 +66,7 @@ void ListItem::setupUI() {
     Sync::clearLayoutMargins(centralLayout);
     const auto artistLabel = new MarqueeLabel();
     artistLabel->setMarqueeText(song->getArtist());
-    artistLabel->setMinimumWidth(60);
-    // artistLabel->setMaximumWidth(120);
+    artistLabel->setMinimumWidth(120);
     artistLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(artistLabel, "color: white;");
     centralLayout->addWidget(artistLabel);
@@ -82,7 +80,6 @@ void ListItem::setupUI() {
     const auto albumLabel = new MarqueeLabel();
     albumLabel->setMarqueeText(song->getAlbum());
     albumLabel->setMinimumWidth(60);
-    // albumLabel->setMaximumWidth(200);
     albumLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
@@ -106,6 +103,27 @@ void ListItem::setupUI() {
                              {centralWidget, 2},
                              {rightWidget, 2}
                          });
+}
+
+void ListItem::highLightCurrPlay() {
+    const auto& playManager = PlayManager::getInstance();
+    const auto currPlaySong = playManager.getCurrPlay();
+    const Color& color = ColorTheme::getInstance().getColor();
+    if (_songCtx.song == currPlaySong) {
+        // 当前正在播放，设置高亮样式
+        setStyleSheet(QString(
+            "QWidget {"
+            "   background-color: rgb(%1);"
+            "}"
+        ).arg(color.playing));
+    } else {
+        // 未播放，恢复默认样式（透明背景）
+        setStyleSheet(
+            "QWidget {"
+            "   background-color: transparent;"
+            "}"
+        );
+    }
 }
 
 ListItem::ListItem(SongContext songCtx)
@@ -171,6 +189,10 @@ ListItem::ListItem(SongContext songCtx)
         }
         updateIconStatus();
         emit likeStatusUpdated();
+    });
+
+    connect(&PlayManager::getInstance(), &PlayManager::songPlayed, this, [this]() {
+        highLightCurrPlay();
     });
 }
 

@@ -153,7 +153,6 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
 
         const auto 我喜欢的_页 = new CommonPageWidget(
             "我喜欢的",
-            "Sympsel.png",
             "这里是你爱听的",
             _mainStackedWidget);
         我喜欢的_页->setSpecialCallback([]() {
@@ -174,7 +173,6 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
 
         const auto 本地下载_页 = new CommonPageWidget(
             "本地下载",
-            "Sympsel.png",
             "这里是你已下载或从本地添加的歌曲",
             _mainStackedWidget);
         本地下载_页->setReloadCallback([&songManager](CommonPageWidget* page) {
@@ -194,7 +192,6 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
 
         const auto 最近播放_页 = new CommonPageWidget(
             "最近播放",
-            "Sympsel.png",
             "这里是你曾经听过的",
             _mainStackedWidget);
         最近播放_页->setSpecialCallback([]() {
@@ -277,8 +274,20 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     _volumeSlider = VolumeSlider::getInstance(this);
     _volumeSlider->setVisible(false);
 
+    auto& playManager = PlayManager::getInstance();
     // [封面 歌名/歌手]
     QLabel* songCover = Create::squarePixmap(controlWidget, "Sympsel.png", 50);
+    connect(&playManager, &PlayManager::songPlayed, this, [songCover, &playManager]() {
+        const auto song = playManager.getCurrPlay();
+        if (song) {
+            if (const QPixmap cover = song->getCover(); !cover.isNull()) {
+                songCover->setPixmap(cover.scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+            } else {
+                songCover->setPixmap(QPixmap(prefix::normalImages + "Sympsel.png").scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+                LOG_DEBUG() << "使用默认封面";
+            }
+        }
+    });
     const auto leftWidget = new QWidget(controlWidget);
     const auto songInfoWidget = new QWidget(leftWidget);
     const auto leftLayout = new QHBoxLayout(leftWidget);
@@ -291,7 +300,6 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     singer->setFixedWidth(150);
     singer->setText("歌手");
 
-    auto& playManager = PlayManager::getInstance();
     connect(&playManager, &PlayManager::songPlayed, this, [songName, singer, &playManager]() {
         songName->setMarqueeText("歌曲：" + playManager.getCurrPlay()->getName());
         const QString artist = playManager.getCurrPlay()->getArtist();
