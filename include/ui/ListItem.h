@@ -1,9 +1,6 @@
 #pragma once
 
-#include <QLabel>
-#include <QHBoxLayout>
 #include <iostream>
-#include <QWidget>
 
 #include "entity/PlayManager.hpp"
 #include "entity/SongManager.h"
@@ -16,7 +13,7 @@ private:
     void setupUI();
 
 public:
-    explicit ListItem(const SongContext& songCtx);
+    explicit ListItem(SongContext  songCtx);
 
     [[nodiscard]] const SongPtr& getSong() const {
         return _songCtx.song;

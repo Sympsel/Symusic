@@ -1,20 +1,33 @@
 #include "ui/MarqueeLabel.h"
 
-MarqueeLabel::MarqueeLabel(QWidget* parent) : QLabel(parent), _offset(0) {
-    // 启用悬停支持,使 Tooltip 生效
+MarqueeLabel::MarqueeLabel(QWidget* parent) : QLabel(parent), _offset(0), _pauseTimer(new QTimer(this)) {
     setAttribute(Qt::WA_Hover, true);
     _timer = new QTimer(this);
+
+    connect(_pauseTimer, &QTimer::timeout, this, [this]() {
+        _pauseTimer->stop();
+        _offset = 0;
+        if (const int textWidth = fontMetrics().horizontalAdvance(_fullText);
+            textWidth > width() && width() > 0) {
+            _timer->start(50);
+        }
+        update();
+    });
+
     connect(_timer, &QTimer::timeout, this, [this]() {
         const int textWidth = fontMetrics().horizontalAdvance(_fullText);
+        const int widgetWidth = width();
 
-        if (const int widgetWidth = width(); textWidth > widgetWidth && widgetWidth > 0) {
-            // 滚动到文本末尾后,暂停一段时间再重新开始
-            if (_offset >= textWidth) {
-                _offset = 0;
+        if (textWidth > widgetWidth && widgetWidth > 0) {
+            if (const int scrollEndOffset = textWidth - widgetWidth; _offset >= scrollEndOffset) {
+                _offset = scrollEndOffset;
+                _timer->stop();
+                _pauseTimer->start(1000);
+                update();
             } else {
                 _offset += 2;
+                update();
             }
-            update();
         } else {
             _timer->stop();
             _offset = 0;
@@ -22,21 +35,39 @@ MarqueeLabel::MarqueeLabel(QWidget* parent) : QLabel(parent), _offset(0) {
     });
 }
 
+void MarqueeLabel::adjustWidthToContent(const int padding) {
+    const int textWidth = fontMetrics().horizontalAdvance(_fullText);
+    const int targetWidth = textWidth + padding;
+
+    if (_minWidth > 0 || _maxWidth > 0) {
+        int constrainedWidth = targetWidth;
+        if (_minWidth > 0 && constrainedWidth < _minWidth) {
+            constrainedWidth = _minWidth;
+        }
+        if (_maxWidth > 0 && constrainedWidth > _maxWidth) {
+            constrainedWidth = _maxWidth;
+        }
+        setFixedWidth(constrainedWidth);
+    } else {
+        setFixedWidth(targetWidth);
+    }
+}
+
 void MarqueeLabel::setMarqueeText(const QString& text) {
     _fullText = text;
     setToolTip(text);
 
-    // 直接在 paintEvent 中绘制
-
     const int textWidth = fontMetrics().horizontalAdvance(text);
+    const int widgetWidth = width();
 
-    if (const int widgetWidth = width(); textWidth > widgetWidth && widgetWidth > 0) {
-        _offset = 0;
-        _timer->start(50);
-    } else {
-        _timer->stop();
-        _offset = 0;
+    _offset = 0;
+    _timer->stop();
+    _pauseTimer->stop();
+
+    if (textWidth > widgetWidth && widgetWidth > 0) {
+        _pauseTimer->start(1000);
     }
+
     update();
 }
 
@@ -46,39 +77,43 @@ void MarqueeLabel::paintEvent(QPaintEvent* event) {
     }
 
     QPainter painter(this);
-    // 启用文本抗锯齿
     painter.setRenderHint(QPainter::TextAntialiasing);
 
-    // 如果文本为空,使用默认绘制
     if (_fullText.isEmpty()) {
         QLabel::paintEvent(event);
         return;
     }
+
     const int textWidth = fontMetrics().horizontalAdvance(_fullText);
     const int widgetWidth = width();
-    // 如果不需要滚动,居中显示
-    if (textWidth <= widgetWidth || _offset == 0) {
-        painter.drawText(0, 0, widgetWidth, height(), alignment(), _fullText);
+    const int widgetHeight = height();
+
+    if (textWidth <= widgetWidth) {
+        painter.drawText(0, 0, widgetWidth, widgetHeight, Qt::AlignLeft | Qt::AlignVCenter, _fullText);
         return;
     }
 
-    // 绘制滚动文本
-     painter.drawText(-_offset, 0,
-                      fontMetrics().horizontalAdvance(_fullText), height(),
-                      Qt::AlignLeft | Qt::AlignVCenter, _fullText);
+    if (_pauseTimer->isActive()) {
+        painter.drawText(0, 0, widgetWidth, widgetHeight, Qt::AlignLeft | Qt::AlignVCenter, _fullText);
+        return;
+    }
+
+    painter.drawText(-_offset, 0, textWidth, widgetHeight, Qt::AlignLeft | Qt::AlignVCenter, _fullText);
 }
 
 void MarqueeLabel::resizeEvent(QResizeEvent* event) {
     QLabel::resizeEvent(event);
-    // 窗口大小改变时重新判断是否需要滚动
     if (!_fullText.isEmpty()) {
-        if (const int textWidth = fontMetrics().horizontalAdvance(_fullText);
-            textWidth > width()) {
-            _timer->start(50);
-        } else {
-            _timer->stop();
-            _offset = 0;
-            update();
+        const int textWidth = fontMetrics().horizontalAdvance(_fullText);
+
+        _timer->stop();
+        _pauseTimer->stop();
+        _offset = 0;
+
+        if (textWidth > width()) {
+            _pauseTimer->start(1000);
         }
+
+        update();
     }
 }

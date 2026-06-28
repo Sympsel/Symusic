@@ -66,13 +66,17 @@ QWidget* CommonPageWidget::createMiddleWidget() {
 
     middleWidget->setFixedHeight(40);
     Sync::widgetToLayout(layout, {
-                             musicLabel, singerLabel, albumLabel
+                             // musicLabel, singerLabel, albumLabel
+                             {musicLabel, 4},
+                             {singerLabel, 3},
+                             {albumLabel, 3}
                          });
     return middleWidget;
 }
 
 void CommonPageWidget::initData(const SongList& songList) {
     _songList = const_cast<SongList*>(&songList);
+
     // 调用特化回调，方便对各个页面进行微调
     if (_specializationCb) {
         _specializationCb();
@@ -121,7 +125,7 @@ void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
 
 bool CommonPageWidget::eventFilter(QObject* watched, QEvent* event) {
     if (watched == _playlist && event->type() == QEvent::KeyPress) {
-        if (const auto keyEvent = static_cast<QKeyEvent*>(event); keyEvent->key() == Qt::Key_Space) {
+        if (const auto keyEvent = dynamic_cast<QKeyEvent*>(event); keyEvent->key() == Qt::Key_Space) {
             if (const auto currItem = _playlist->currentItem()) {
                 if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
                     const auto song = listItemWidget->getSong();
@@ -139,7 +143,8 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
                                    QWidget* parent) : QWidget(parent)
                                                       , _pageName(std::move(pageName))
                                                       , _playAllButton(new QPushButton("播放全部"))
-                                                      , _playlist(new QListWidget()) {
+                                                      , _playlist(new QListWidget())
+                                                      , _songList(nullptr) {
     const Color& color = ColorTheme::getInstance().getColor();
     _playlist->setStyleSheet(QString(
         "QListWidget {"
@@ -199,5 +204,10 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& coverFileWit
             break;
         }
         playManager.play({firstSong, *_songList});
+        connect(&SongManager::getInstance(), &SongManager::updated, this, [this](const SongList& updatedList) {
+            if (_songList == &updatedList) {
+                emit needUpdate();
+            }
+        });
     });
 }

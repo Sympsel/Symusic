@@ -228,7 +228,7 @@ public:
         return std::nullopt;
     }
 
-    static bool append(SongList& which, const SongPtr& song) {
+    bool append(SongList& which, const SongPtr& song) {
         if (!ListMappingManager::getInstance().contains(&which)) {
             LOG_ERROR() << "have no reflect";
             return false;
@@ -238,12 +238,13 @@ public:
             which.emplace_back(song);
             const auto newStatus = song->getBelongStatus() | static_cast<int>(listEnum);
             song->setBelongStatus(static_cast<Song::ExistIn>(newStatus));
+            emit updated(which);
             return true;
         }
         return false;
     }
 
-    static bool append(SongList& which, const QList<QUrl>& urls) {
+    bool append(SongList& which, const QList<QUrl>& urls) {
         for (const auto& url : urls) {
             QMimeDatabase mimeDb;
             // 使用 mimeTypeForFile 而不是 mimeTypeForName
@@ -261,7 +262,7 @@ public:
         return true;
     }
 
-    static bool remove(SongList& which, const QString& id) {
+    bool remove(SongList& which, const QString& id) {
         if (!ListMappingManager::getInstance().contains(&which)) {
             LOG_ERROR() << "have no reflect";
             return false;
@@ -277,6 +278,7 @@ public:
             (*it)->setBelongStatus(static_cast<Song::ExistIn>(newStatus));
 
             which.erase(it);
+            emit updated(which);
             return true;
         }
         return false;
@@ -296,6 +298,7 @@ public:
         if (_historyList.size() > _historySize) {
             _historyList.pop_back();
         }
+        emit updated(_historyList);
         return true;
     }
 
@@ -311,13 +314,20 @@ public:
         if (auto songOpt = findSong(_historyList, id); songOpt.has_value()) {
             auto& song = *songOpt;
             if (!_historyList.empty()) {
-                std::erase_if(_historyList, [&song](const SongPtr& item) {
-                    return item->getId() == song->getId();
+                std::erase_if(_historyList, [this, &song](const SongPtr& item) {
+                    const bool found = item->getId() == song->getId();
+                    if (found) {
+                        emit updated(_historyList);
+                    }
+                    return found;
                 });
             }
         }
         return true;
     }
+
+signals:
+    void updated(const SongList&);
 
 private:
     SongList _recommendList;

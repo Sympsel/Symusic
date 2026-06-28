@@ -3,9 +3,10 @@
 #include <QApplication>
 #include <qdatetime.h>
 #include <QMouseEvent>
-#include <QTimer>
+#include <utility>
 
 #include "entity/PlayManager.hpp"
+#include "ui/MarqueeLabel.h"
 #include "utils/Log.hpp"
 #include "entity/SongManager.h"
 #include "entity/StatusManager.hpp"
@@ -34,7 +35,13 @@ void ListItem::setupUI() {
     leftLayout->setSpacing(4);
 
     leftLayout->addWidget(_likeButton);
-    const auto nameLabel = new QLabel(song->getName());
+
+    const auto nameLabel = new MarqueeLabel();
+    nameLabel->setMarqueeText(song->getName());
+    nameLabel->setMinimumWidth(250);
+    // nameLabel->setMaximumWidth(1000);
+    nameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
     Sync::appendStyleSheet(nameLabel, "color: white;");
     leftLayout->addWidget(nameLabel);
     QLabel* tagsLabel = nullptr;
@@ -58,7 +65,11 @@ void ListItem::setupUI() {
     const auto centralLayout = new QHBoxLayout(centralWidget);
     Sync::clearWidgetMargins(centralWidget);
     Sync::clearLayoutMargins(centralLayout);
-    const auto artistLabel = new QLabel(song->getArtist());
+    const auto artistLabel = new MarqueeLabel();
+    artistLabel->setMarqueeText(song->getArtist());
+    artistLabel->setMinimumWidth(60);
+    // artistLabel->setMaximumWidth(120);
+    artistLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(artistLabel, "color: white;");
     centralLayout->addWidget(artistLabel);
     centralLayout->addStretch(1);
@@ -68,7 +79,11 @@ void ListItem::setupUI() {
     Sync::clearWidgetMargins(rightWidget);
     Sync::clearLayoutMargins(rightLayout);
 
-    auto* albumLabel = new QLabel(song->getAlbum());
+    const auto albumLabel = new MarqueeLabel();
+    albumLabel->setMarqueeText(song->getAlbum());
+    albumLabel->setMinimumWidth(60);
+    // albumLabel->setMaximumWidth(200);
+    albumLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
 
@@ -93,8 +108,8 @@ void ListItem::setupUI() {
                          });
 }
 
-ListItem::ListItem(const SongContext& songCtx)
-    : _songCtx(songCtx)
+ListItem::ListItem(SongContext songCtx)
+    : _songCtx(std::move(songCtx))
       , _clickTimer(new QTimer(this))
       , _likeButton(new QPushButton) {
     if (!_songCtx.isValid()) {
@@ -145,12 +160,13 @@ ListItem::ListItem(const SongContext& songCtx)
     });
 
     connect(_likeButton, &QPushButton::clicked, this, [this]() {
+        auto& songManager = SongManager::getInstance();
         auto& likedList = SongManager::getInstance().getLikedList();
         if (const auto& song = _songCtx.song; !song->isLiked()) {
-            SongManager::append(likedList, song);
+            songManager.append(likedList, song);
             LOG_DEBUG() << "添加到喜欢列表: " << song->getName();
         } else {
-            SongManager::remove(likedList, song->getId());
+            songManager.remove(likedList, song->getId());
             LOG_DEBUG() << "从喜欢列表移除: " << song->getName();
         }
         updateIconStatus();

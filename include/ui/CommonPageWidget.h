@@ -50,6 +50,7 @@ protected:
 
 signals:
     void songItemDoubleClicked(const SongPtr& song);
+    void needUpdate();
 
 private:
     QString _pageName;

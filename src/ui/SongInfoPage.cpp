@@ -263,11 +263,11 @@ void SongInfoPage::closeEvent(QCloseEvent* event) {
     auto& likedList = songManager.getLikedList();
 
     if (!_originLiked && _willLike) {
-        const bool result = SongManager::append(likedList, song);
+        const bool result = songManager.append(likedList, song);
         LOG_DEBUG() << std::format("添加到喜欢列表, append={}, likedList数量: {}", result, likedList.size());
         emit likeStatusChanged();
     } else if (_originLiked && !_willLike) {
-        const bool result = SongManager::remove(likedList, song->getId());
+        const bool result = songManager.remove(likedList, song->getId());
         LOG_DEBUG() << std::format("从喜欢列表移除, remove={}, likedList数量: {}", result, likedList.size());
         emit likeStatusChanged();
     }

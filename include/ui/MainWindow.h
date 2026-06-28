@@ -39,6 +39,8 @@ private:
 
     void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
 
+    void syncCommonWidgetConnect(const std::initializer_list<CommonPageWidget*>& commonPages);
+
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
 
     void handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song);
