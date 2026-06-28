@@ -31,7 +31,8 @@ SongInfoPage::SongInfoPage(const SongContext& songCtx, QWidget* parent)
     this->setAttribute(Qt::WA_DeleteOnClose);
 
     setupUI();
-    applyStyles();
+    setupButtonStyle();
+    setupButtonConnect();
     updateSong(songCtx.song);
 }
 
@@ -77,7 +78,7 @@ void SongInfoPage::updateSong(const SongPtr& song) {
 }
 
 void SongInfoPage::setupUI() {
-    auto& _song = _songCtx.song;
+    const auto& _song = _songCtx.song;
     const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setSpacing(0);
     mainLayout->setContentsMargins(10, 0, 5, 0);
@@ -165,7 +166,7 @@ void SongInfoPage::setupUI() {
     Sync::widgetToLayout(mainLayout, {headerWidget, contentWidget});
 }
 
-void SongInfoPage::applyStyles() {
+void SongInfoPage::setupButtonStyle() {
     const Color& color = ColorTheme::getInstance().getColor();
 
     setStyleSheet(QString(
@@ -208,7 +209,9 @@ void SongInfoPage::applyStyles() {
         "   background-color: rgb(%3);"
         "}"
     ).arg(color.background, color.hoverOn, color.pressed));
+}
 
+void SongInfoPage::setupButtonConnect() {
     connect(_closeButton, &QPushButton::clicked, this, [this]() {
         this->close();
     });

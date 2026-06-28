@@ -2,7 +2,6 @@
 
 #include <QMainWindow>
 #include <QLineEdit>
-#include <QPainter>
 #include <initializer_list>
 #include <QPainterPath>
 
@@ -23,40 +22,56 @@ public:
     ~MainWindow() override;
 
 private:
+    // UI 组件创建
     QWidget* createBodyWidget(QWidget* parent = nullptr);
-
     QWidget* createMainStackedWidget(QWidget* parent);
-
     QWidget* createBodyLeftWidget(QWidget* bodyWidget);
-    // 显示调试边框，可以显示子控件的边界
-    void setBorder(bool enabled = false) const;
-
     QWidget* createControlWidget(QWidget* parent = nullptr);
 
-    static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
+    // 样式设置
+    void setupStyles();
+    void setBorder(bool enabled = false) const;
 
-    void syncButtonToContain(const std::initializer_list<NavigationButton*>& buttons);
+    // 信号连接
+    void setupConnections();
 
-    void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
-
-    void syncCommonWidgetConnect(const std::initializer_list<CommonPageWidget*>& commonPages);
-
+    // 业务逻辑
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
-
     void handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song);
+
+    // 同步辅助方法
+    static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
+    void syncButtonToContain(const std::initializer_list<NavigationButton*>& buttons);
+    void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
+    void syncCommonWidgetConnect(const std::initializer_list<CommonPageWidget*>& commonPages);
 
 protected:
     void mouseMoveEvent(QMouseEvent* event) override;
-
     void mousePressEvent(QMouseEvent* event) override;
-
     void closeEvent(QCloseEvent* event) override;
 
 private:
+    // 窗口拖拽
     QPoint _dragPos;
+
+    // 主要 UI 组件
     QStackedWidget* _mainStackedWidget{};
-    std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
-    SongInfoPage* _songInfoPage;
-    int _pageCount = 6;
     VolumeSlider* _volumeSlider;
+    SongInfoPage* _songInfoPage;
+
+    // 导航相关
+    std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
+    int _pageCount = 6;
+
+    // 控制区组件
+    QPushButton* _playModeButton;
+    QPushButton* _prevButton;
+    QPushButton* _playButton;
+    QPushButton* _nextButton;
+    QPushButton* _volumeButton;
+    QPushButton* _addToButton;
+    QLabel* _songCover;
+    MarqueeLabel* _songNameLabel;
+    MarqueeLabel* _singerLabel;
+    QLabel* _processLabel;
 };

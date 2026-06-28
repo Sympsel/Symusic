@@ -45,6 +45,10 @@ void CommonPageWidget::setCover() const {
     }
 }
 
+void CommonPageWidget::updateCover() const {
+   setCover();
+}
+
 QWidget* CommonPageWidget::createMiddleWidget() {
     const Color& color = ColorTheme::getInstance().getColor();
 

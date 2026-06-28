@@ -10,6 +10,8 @@
 #include "entity/SongManager.h"
 #include "utils/Create.hpp"
 
+// ==================== 样式设置 ====================
+
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
                                       const int width,
                                       const int height) {
@@ -43,6 +45,8 @@ void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>&
     }
 }
 
+// ==================== 业务逻辑 ====================
+
 void RecommendWidget::initPlaylist() {
     SongManager& songManager = SongManager::getInstance();
     // 初始化推荐页面展示图片
@@ -64,7 +68,6 @@ void RecommendWidget::initPlaylist() {
             new PlaylistItem(
                 {song, songManager.getRecommendList()},
                 song->getName(),
-                // QString("推荐-%1").arg(id),
                 nullptr
             )
         );
@@ -75,7 +78,6 @@ void RecommendWidget::initPlaylist() {
             new PlaylistItem(
                 {song, songManager.getYouMayLikeList()},
                 song->getName(),
-                // QString("推荐-%1").arg(id),
                 nullptr
             )
         );
@@ -90,7 +92,7 @@ RecommendWidget::Items RecommendWidget::displayList(const QString& name) const {
         return Items{};
     }
 
-    const auto& alist = it->second;
+    const auto& alist = it.value();
     if (alist.list.empty()) {
         LOG_WARN() << "播放列表为空:" << name.toUtf8().constData();
         return Items{};
@@ -111,50 +113,6 @@ RecommendWidget::Items RecommendWidget::displayList(const QString& name) const {
     return playlistItems;
 }
 
-RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
-    // 初始化防抖定时器
-    _resizeTimer = new QTimer(this);
-    _resizeTimer->setSingleShot(true);
-
-    _contain["今日推荐"] = Alist{};
-    _contain["猜你喜欢"] = Alist{};
-
-    connect(_resizeTimer, &QTimer::timeout, this, [this]() {
-        // 定时器触发时，窗口已经稳定
-        updateRowSize();
-    });
-
-    const auto mainLayout = new QVBoxLayout(this);
-    Sync::clearLayoutMargins(mainLayout);
-
-    const auto scrollArea = new QScrollArea(this);
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    scrollArea->setFrameShape(QFrame::NoFrame);
-    const auto scrollContent = new QWidget();
-    const auto contentLayout = new QVBoxLayout(scrollContent);
-
-    // 初始化推荐列表
-    initPlaylist();
-    auto recommendWidget = createPlateWidget("今日推荐");
-    auto youMayLikeWidget = createPlateWidget("猜你喜欢");
-
-    Sync::widgetToLayout(contentLayout, {
-                             recommendWidget, youMayLikeWidget
-                         });
-    contentLayout->addStretch(1);
-
-    scrollArea->setWidget(scrollContent);
-    mainLayout->addWidget(scrollArea);
-}
-
-void RecommendWidget::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-    // 启动防抖定时器，延迟启动防止更新错误
-    _resizeTimer->start(100);
-}
-
 void RecommendWidget::updateRowSize() {
     const int widgetWidth = this->width();
     constexpr int itemLen = 120;
@@ -167,7 +125,7 @@ void RecommendWidget::updateRowSize() {
         _rowSize = newRowSize;
 
         // 调整列表的begin，确保不会越界，防止窗口放大不会往前扩容
-        for (auto& alist : _contain | std::views::values) {
+        for (auto& alist : _contain) {
             if (const int totalSize = static_cast<int>(alist.list.size());
                 alist.begin + _rowSize > totalSize) {
                 alist.begin = std::max(0, totalSize - _rowSize);
@@ -181,7 +139,7 @@ void RecommendWidget::updateRowSize() {
 
 void RecommendWidget::updateButtonVisibility(const QString& name) const {
     if (_contain.contains(name)) {
-        const auto& alist = _contain.at(name);
+        const auto& alist = _contain[name];
 
         if (const bool couldGoLeft = alist.begin != 0) {
             alist.leftButton->setEnabled(couldGoLeft);
@@ -199,70 +157,9 @@ void RecommendWidget::updateButtonVisibility(const QString& name) const {
     }
 }
 
-QWidget* RecommendWidget::createPlateWidget(const QString& name) {
-    const auto items = displayList(name);
-    const auto vWidget = new QWidget();
-    const auto vWidgetLayout = new QVBoxLayout(vWidget);
-    Sync::clearLayoutMargins(vWidgetLayout);
-    vWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-
-    auto label = new QLabel(name);
-    label->setFixedHeight(30);
-    label->setStyleSheet("font-size: 25px;");
-
-    auto& leftButton = _contain.at(name).leftButton;
-    leftButton = Create::buttonOnlyIcon("向左.png");
-
-    auto centralWidget = new QWidget();
-    const auto centralHLayout = new QHBoxLayout(centralWidget);
-    Sync::clearLayoutVMargins({centralHLayout});
-
-    centralHLayout->addStretch(1);
-    for (const auto& item : items) {
-        // 添加到布局的同时设置父控件
-        centralHLayout->addWidget(item);
-    }
-    centralHLayout->addStretch(1);
-
-    auto& rightButton = _contain.at(name).rightButton;
-    rightButton = Create::buttonOnlyIcon("向右.png");
-    syncButtonStyle({leftButton, rightButton}, 30, 120);
-    auto widgetH = new QWidget();
-    Sync::clearWidgetMargins(widgetH);
-
-    const auto hWidgetLayout = new QHBoxLayout(widgetH);
-    Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
-
-    Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
-    Sync::buttonNoFocus({leftButton, rightButton});
-
-    if (_contain.contains(name)) {
-        auto& alist = _contain.at(name);
-        alist.widget = centralWidget;
-
-        // 连接左右按钮信号
-        connect(leftButton, &QPushButton::clicked, this, [this, name, &alist]() {
-            if (int& begin = alist.begin; begin > 0) {
-                --begin;
-                updateWidgetLayout(name);
-            }
-        });
-        connect(rightButton, &QPushButton::clicked, this, [this, name, &alist]() {
-            if (int& begin = alist.begin;
-                begin + _rowSize < static_cast<int>(alist.list.size())) {
-                ++begin;
-                updateWidgetLayout(name);
-            }
-        });
-
-        updateButtonVisibility(name);
-    }
-    return vWidget;
-}
-
 void RecommendWidget::updateWidgetLayout(const QString& name) {
-    if (const auto it = _contain.find(name); it != _contain.end() && it->second.widget != nullptr) {
-        const auto& alist = it->second;
+    if (const auto it = _contain.find(name); it != _contain.end() && it.value().widget) {
+        const auto& alist = it.value();
         auto* centralWidget = alist.widget;
 
         if (const auto layout = qobject_cast<QHBoxLayout*>(centralWidget->layout())) {
@@ -312,9 +209,116 @@ void RecommendWidget::updateWidgetLayout(const QString& name) {
     }
 }
 
+// ==================== UI 组件创建 ====================
+
+RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
+    // 初始化防抖定时器
+    _resizeTimer = new QTimer(this);
+    _resizeTimer->setSingleShot(true);
+
+    _contain["今日推荐"] = Alist{};
+    _contain["猜你喜欢"] = Alist{};
+
+    connect(_resizeTimer, &QTimer::timeout, this, [this]() {
+        // 定时器触发时，窗口已经稳定
+        updateRowSize();
+    });
+
+    const auto mainLayout = new QVBoxLayout(this);
+    Sync::clearLayoutMargins(mainLayout);
+
+    const auto scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setFrameShape(QFrame::NoFrame);
+    const auto scrollContent = new QWidget();
+    const auto contentLayout = new QVBoxLayout(scrollContent);
+
+    // 初始化推荐列表
+    initPlaylist();
+    auto recommendWidget = createPlateWidget("今日推荐");
+    auto youMayLikeWidget = createPlateWidget("猜你喜欢");
+
+    Sync::widgetToLayout(contentLayout, {
+                             recommendWidget, youMayLikeWidget
+                         });
+    contentLayout->addStretch(1);
+
+    scrollArea->setWidget(scrollContent);
+    mainLayout->addWidget(scrollArea);
+}
+
+void RecommendWidget::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    // 启动防抖定时器，延迟启动防止更新错误
+    _resizeTimer->start(100);
+}
+
+QWidget* RecommendWidget::createPlateWidget(const QString& name) {
+    const auto items = displayList(name);
+    const auto vWidget = new QWidget();
+    const auto vWidgetLayout = new QVBoxLayout(vWidget);
+    Sync::clearLayoutMargins(vWidgetLayout);
+    vWidget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+
+    auto label = new QLabel(name);
+    label->setFixedHeight(30);
+    label->setStyleSheet("font-size: 25px;");
+
+    auto& leftButton = _contain[name].leftButton;
+    leftButton = Create::buttonOnlyIcon("向左.png");
+
+    auto centralWidget = new QWidget();
+    const auto centralHLayout = new QHBoxLayout(centralWidget);
+    Sync::clearLayoutVMargins({centralHLayout});
+
+    centralHLayout->addStretch(1);
+    for (const auto& item : items) {
+        // 添加到布局的同时设置父控件
+        centralHLayout->addWidget(item);
+    }
+    centralHLayout->addStretch(1);
+
+    auto& rightButton = _contain[name].rightButton;
+    rightButton = Create::buttonOnlyIcon("向右.png");
+    syncButtonStyle({leftButton, rightButton}, 30, 120);
+    auto widgetH = new QWidget();
+    Sync::clearWidgetMargins(widgetH);
+
+    const auto hWidgetLayout = new QHBoxLayout(widgetH);
+    Sync::widgetToLayout(hWidgetLayout, {leftButton, centralWidget, rightButton});
+
+    Sync::widgetToLayout(vWidgetLayout, {label, widgetH});
+    Sync::buttonNoFocus({leftButton, rightButton});
+
+    if (_contain.contains(name)) {
+        auto& alist = _contain[name];
+        alist.widget = centralWidget;
+
+        // 连接左右按钮信号
+        connect(leftButton, &QPushButton::clicked, this, [this, name, &alist]() {
+            if (int& begin = alist.begin; begin > 0) {
+                --begin;
+                updateWidgetLayout(name);
+            }
+        });
+        connect(rightButton, &QPushButton::clicked, this, [this, name, &alist]() {
+            if (int& begin = alist.begin;
+                begin + _rowSize < static_cast<int>(alist.list.size())) {
+                ++begin;
+                updateWidgetLayout(name);
+            }
+        });
+
+        updateButtonVisibility(name);
+    }
+    return vWidget;
+}
+
 RecommendWidget::~RecommendWidget() {
-    for (auto& alist : _contain | std::views::values) {
-        for (const auto& item : alist.list) {
+    for (auto it = _contain.begin(); it != _contain.end(); ++it) {
+        for (auto& alist = it.value(); const auto& item : alist.list) {
             delete item;
         }
     }

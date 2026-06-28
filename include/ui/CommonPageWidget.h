@@ -26,6 +26,8 @@ private:
     static QWidget* createMiddleWidget();
 
 public:
+    void updateCover() const;
+
     explicit CommonPageWidget(QString pageName, const QString& description = "", QWidget* parent = nullptr);
 
     void initData(const SongList& songList);

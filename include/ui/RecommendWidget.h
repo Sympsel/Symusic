@@ -1,59 +1,49 @@
 #pragma once
 
-#include <QResizeEvent>
-#include <QTimer>
+#include <QLabel>
+#include <QMap>
+#include <QWidget>
 
-#include "utils/Log.hpp"
-#include "NavigationWidget.h"
 #include "PlaylistItem.h"
 
 class RecommendWidget : public QWidget {
     Q_OBJECT
 
 public:
-    using Items = std::vector<PlaylistItem*>;
-
-    struct Alist {
-        QPushButton* leftButton;
-        QPushButton* rightButton;
-
-        QWidget* widget;
-        Items list;
-        int begin = 0;
-    };
+    explicit RecommendWidget(QWidget* parent = nullptr);
+    ~RecommendWidget() override;
 
 private:
-    static void syncButtonStyle(const std::initializer_list<QPushButton*>& buttons, int width, int height);
+    struct Alist {
+        QList<PlaylistItem*> list;
+        int begin{0};
+        QPushButton* leftButton{nullptr};
+        QPushButton* rightButton{nullptr};
+        QWidget* widget{nullptr};
+    };
 
+    using Items = QList<PlaylistItem*>;
+
+    // UI 组件创建
     void initPlaylist();
-
+    [[nodiscard]] QWidget* createPlateWidget(const QString& name);
     [[nodiscard]] Items displayList(const QString& name) const;
 
-    QWidget* createPlateWidget(const QString& name);
+    // 样式设置
+    static void syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
+                                int width,
+                                int height);
 
+    // 业务逻辑
+    void updateRowSize();
+    void updateButtonVisibility(const QString& name) const;
     void updateWidgetLayout(const QString& name);
 
-
-    void updateRowSize();
-
-    void updateButtonVisibility(const QString& name) const;
-
 protected:
-    // resize 事件处理
     void resizeEvent(QResizeEvent* event) override;
 
-public:
-    explicit RecommendWidget(QWidget* parent);
-
-    void setRowSize(const int rowSize) {
-        _rowSize = rowSize;
-    }
-
-    ~RecommendWidget() override;;
-
- private:
-    std::unordered_map<QString, Alist> _contain;
-    int _rowSize = 4;
-    // 防抖定时器
-    QTimer* _resizeTimer = nullptr;
+private:
+    QMap<QString, Alist> _contain;
+    int _rowSize{5};
+    QTimer* _resizeTimer;
 };

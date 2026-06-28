@@ -4,7 +4,6 @@
 #include <QPushButton>
 
 #include "entity/PlayManager.hpp"
-#include "entity/Song.h"
 #include "entity/SongManager.h"
 
 class SongInfoPage : public QWidget {
@@ -12,7 +11,8 @@ class SongInfoPage : public QWidget {
 
 private:
     void setupUI();
-    void applyStyles();
+    void setupButtonStyle();
+    void setupButtonConnect();
 
 public:
     explicit SongInfoPage(const SongContext& songCtx, QWidget* parent = nullptr);

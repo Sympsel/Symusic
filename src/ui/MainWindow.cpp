@@ -2,6 +2,7 @@
 
 #include <QFileDialog>
 #include <QGraphicsDropShadowEffect>
+#include <QMouseEvent>
 #include <QStatusBar>
 #include <ranges>
 
@@ -20,7 +21,18 @@
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent)
-      , _volumeSlider(nullptr) {
+      , _volumeSlider(nullptr)
+      , _songInfoPage(nullptr)
+      , _playModeButton(nullptr)
+      , _prevButton(nullptr)
+      , _playButton(nullptr)
+      , _nextButton(nullptr)
+      , _volumeButton(nullptr)
+      , _addToButton(nullptr)
+      , _songCover(nullptr)
+      , _songNameLabel(nullptr)
+      , _singerLabel(nullptr)
+      , _processLabel(nullptr) {
     {
         this->resize(848, 655);
         this->setWindowFlag(Qt::FramelessWindowHint);
@@ -30,7 +42,6 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
         statusBar->setVisible(statusBarVisible);
 
         const auto& statusManager = StatusManager::getInstance();
-        // 连接状态管理器信号
         connect(&statusManager, &StatusManager::statusChanged,
                 this, [statusBar](const QString& msg, const int timeout) {
                     statusBar->showMessage(msg, timeout);
@@ -42,7 +53,6 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     }
 
     _mapOfNavigationButtonsToWidget.resize(_pageCount);
-    _songInfoPage = nullptr;
 
     const auto centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
@@ -55,17 +65,284 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     QWidget* bodyWidget = createBodyWidget();
     QFrame* line = Create::line(QFrame::HLine);
 
-    // 4. 添加到布局
     Sync::widgetToLayout(headBodyLayout, {
                              headWidget, line
                          });
     headBodyLayout->addWidget(bodyWidget, 1);
 
+    // 设置样式
+    setupStyles();
     setBorder(debugBorder);
+    // 连接信号
+    setupConnections();
 }
 
 MainWindow::~MainWindow() {
     LOG_DEBUG() << std::format("程序退出，退出时宽高为 [{}, {}]", this->width(), this->height());
+}
+
+// ==================== 样式设置 ====================
+void MainWindow::setupStyles() {
+    const Color& color = ColorTheme::getInstance().getColor();
+
+    // 保存按钮原始样式
+    std::vector<QString> originalStyleSheets;
+    for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
+        originalStyleSheets.emplace_back(navigationButton->styleSheet());
+    }
+
+    // 设置默认选中状态
+    if (!_mapOfNavigationButtonsToWidget.empty()) {
+        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0], color);
+    }
+
+    // 设置控制按钮样式
+    constexpr QSize buttonsSize(30, 30);
+    Sync::buttonFixedSize(buttonsSize, {
+                              _playModeButton, _prevButton, _playButton, _nextButton, _volumeButton, _addToButton
+                          });
+    Sync::buttonNoFocus({
+        _playModeButton, _prevButton, _playButton, _nextButton, _volumeButton, _addToButton
+    });
+    syncButtonBackground({
+        _playModeButton, _prevButton, _playButton, _nextButton, _volumeButton, _addToButton
+    });
+}
+
+// ==================== 信号连接 ====================
+void MainWindow::setupConnections() {
+    const Color& color = ColorTheme::getInstance().getColor();
+
+    // 保存按钮原始样式（用于页面切换）
+    std::vector<QString> originalStyleSheets;
+    for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
+        originalStyleSheets.emplace_back(navigationButton->styleSheet());
+    }
+
+    // 点击按钮切换页面
+    for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
+        connect(_mapOfNavigationButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
+            _mainStackedWidget->setCurrentIndex(static_cast<int>(i));
+        });
+    }
+
+    // 监听页面切换信号
+    connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
+            [this, originalStyleSheets, color](const int index) {
+                for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
+                    const bool selected = (static_cast<int>(i) == index);
+                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i], color);
+                }
+
+                if (const auto currentPage = _mainStackedWidget->widget(index)) {
+                    if (const auto commonPage = qobject_cast<CommonPageWidget*>(currentPage)) {
+                        commonPage->reloadData();
+                        StatusManager::getInstance().showMessage(
+                            std::format("切换到: {}，单击播放，双击打开歌曲详情页", commonPage->getPageName().toStdString()),
+                            2000
+                        );
+                    }
+                }
+            });
+
+    // PlayManager 相关信号连接
+    auto& playManager = PlayManager::getInstance();
+
+    // 封面更新
+    connect(&playManager, &PlayManager::songPlayed, this, [this, &playManager]() {
+        const auto song = playManager.getCurrPlay();
+        if (song) {
+            if (QPixmap cover = song->getCover(); !cover.isNull()) {
+                _songCover->setPixmap(cover.scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
+            } else {
+                _songCover->setPixmap(
+                    QPixmap(prefix::itemImages + "Sympsel.png").scaled(50, 50, Qt::KeepAspectRatioByExpanding,
+                                                                       Qt::SmoothTransformation));
+            }
+        }
+    });
+
+    // 歌曲信息更新
+    connect(&playManager, &PlayManager::songPlayed, this, [this]() {
+        const auto song = PlayManager::getInstance().getCurrPlay();
+        _songNameLabel->setMarqueeText("歌曲：" + song->getName());
+        const QString artist = song->getArtist();
+        _singerLabel->setMarqueeText("歌手：" + (artist.isEmpty() ? "未知" : artist));
+    });
+
+    // 播放按钮状态
+    connect(&playManager, &PlayManager::songPlayed, this, [this]() {
+        _playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
+    });
+    connect(&playManager, &PlayManager::playStateChanged, this, [this]() {
+        _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
+    });
+
+    // 进度更新
+    connect(&playManager, &PlayManager::positionChanged, this, [this]() {
+        _processLabel->setText(PlayManager::getInstance().getFormattedProgress());
+    });
+
+    // 播放模式按钮
+    connect(_playModeButton, &QPushButton::clicked, this, [this]() {
+        auto& playManager = PlayManager::getInstance();
+        switch (playManager.getPlayMode()) {
+        case PlayMode::ORDERED:
+            playManager.setPlayMode(PlayMode::RANDOMED);
+            _playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
+            _playModeButton->setToolTip("点击切换到单曲循环");
+            StatusManager::getInstance().showMessage("已切换到随机播放模式", 1000);
+            break;
+        case PlayMode::RANDOMED:
+            playManager.setPlayMode(PlayMode::SINGLE_LOOPING);
+            _playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
+            _playModeButton->setToolTip("点击切换到顺序播放");
+            StatusManager::getInstance().showMessage("已切换到单曲循环模式", 1000);
+            break;
+        case PlayMode::SINGLE_LOOPING:
+            playManager.setPlayMode(PlayMode::ORDERED);
+            _playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
+            _playModeButton->setToolTip("点击切换到随机播放");
+            StatusManager::getInstance().showMessage("已切换到顺序播放模式", 1000);
+            break;
+        }
+    });
+
+    // 上一首
+    connect(_prevButton, &QPushButton::clicked, this, []() {
+        StatusManager::getInstance().showMessage("播放上一首", 1000);
+        PlayManager::getInstance().prevPlay();
+    });
+
+    // 播放/暂停
+    connect(_playButton, &QPushButton::clicked, this, [this]() {
+        auto& playManager = PlayManager::getInstance();
+        auto& statusManager = StatusManager::getInstance();
+        switch (playManager.getPlayStatus()) {
+        case PlayStatus::STOPPED:
+            statusManager.showMessage("请先选则要播放的歌曲");
+            break;
+        case PlayStatus::PLAYING:
+            playManager.pause();
+            statusManager.showMessage("已暂停", 1000);
+            _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
+            break;
+        case PlayStatus::PAUSED:
+            playManager.start();
+            statusManager.showMessage("继续播放", 1000);
+            _playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
+            break;
+        case PlayStatus::ERROR:
+            LOG_ERROR() << "播放错误";
+            break;
+        }
+    });
+
+    // 下一首
+    connect(_nextButton, &QPushButton::clicked, this, []() {
+        StatusManager::getInstance().showMessage("播放下一首", 1000);
+        PlayManager::getInstance().nextPlay();
+    });
+
+    // 音量按钮
+    connect(_volumeButton, &QPushButton::clicked, this, [this]() {
+        const QPoint buttonGlobalPos = _volumeButton->mapToGlobal(QPoint(0, 0));
+        const QSize sliderSize = _volumeSlider->sizeHint();
+        const int x = buttonGlobalPos.x() + (_volumeButton->width() - sliderSize.width()) / 2;
+        const int y = buttonGlobalPos.y() - sliderSize.height() - 10;
+        _volumeSlider->showAtPosition(QPoint(x, y));
+    });
+
+    // 添加本地音乐
+    connect(_addToButton, &QPushButton::clicked, this, [this]() {
+        QFileDialog fileDialog(this);
+        fileDialog.setWindowTitle("添加本地音乐");
+
+        QDir dir{QDir::currentPath()};
+        dir.cdUp();
+        fileDialog.setDirectory(dir);
+        fileDialog.setFileMode(QFileDialog::ExistingFiles);
+        fileDialog.setNameFilter("音乐文件(*.mp3 *.wav)");
+        if (QDialog::Accepted == fileDialog.exec()) {
+            const auto urls = fileDialog.selectedUrls();
+            auto& songManager = SongManager::getInstance();
+            songManager.append(songManager.getDownloadList(), urls);
+            if (const auto currentPage = _mainStackedWidget->currentWidget()) {
+                if (const auto downloadPage = qobject_cast<CommonPageWidget*>(currentPage)) {
+                    if (downloadPage->getPageName() == "本地下载") {
+                        downloadPage->reloadData(songManager.getDownloadList());
+                        downloadPage->updateCover();
+                    }
+                }
+            }
+        } else {
+            LOG_DEBUG() << "用户取消添加";
+        }
+    });
+}
+
+QWidget* MainWindow::createControlWidget(QWidget* parent) {
+    const auto controlWidget = new QWidget(parent);
+    const auto controlLayout = new QHBoxLayout(controlWidget);
+    Sync::clearWidgetMargins(controlWidget);
+    _volumeSlider = VolumeSlider::getInstance(this);
+    _volumeSlider->setVisible(false);
+
+    // [封面 歌名/歌手]
+    _songCover = Create::squarePixmap(controlWidget, "Sympsel.png", 50);
+
+    const auto leftWidget = new QWidget(controlWidget);
+    const auto songInfoWidget = new QWidget(leftWidget);
+    const auto leftLayout = new QHBoxLayout(leftWidget);
+
+    const auto songInfoLayout = new QVBoxLayout(songInfoWidget);
+    _songNameLabel = new MarqueeLabel();
+    _songNameLabel->setFixedWidth(150);
+    _songNameLabel->setText("歌曲");
+    _singerLabel = new MarqueeLabel();
+    _singerLabel->setFixedWidth(150);
+    _singerLabel->setText("歌手");
+
+    Sync::widgetToLayout(songInfoLayout, {_songNameLabel, _singerLabel});
+    Sync::widgetToLayout(leftLayout, {_songCover, songInfoWidget});
+
+    // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
+    const auto centralWidget = new QWidget(controlWidget);
+    const auto centralLayout = new QHBoxLayout(centralWidget);
+    _playModeButton = Create::buttonOnlyIcon("列表播放.png", centralWidget);
+    _playModeButton->setToolTipDuration(3000);
+    _playModeButton->setToolTip("切换到随机播放模式");
+
+    _prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
+    _playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
+    _nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
+    _volumeButton = Create::buttonOnlyIcon("中等音量.png", centralWidget);
+    _volumeSlider->setRelationButton(_volumeButton);
+    _addToButton = Create::buttonOnlyIcon("添加.png", centralWidget);
+    _addToButton->setToolTip("从本地添加");
+    _addToButton->setToolTipDuration(3000);
+
+    Sync::buttonToHLayout(centralLayout, {
+                              _playModeButton, _prevButton, _playButton, _nextButton, _volumeButton, _addToButton
+                          });
+
+    // [进度]
+    const auto rightWidget = new QWidget(controlWidget);
+    const auto rightLayout = new QHBoxLayout(rightWidget);
+    _processLabel = new QLabel("00:00/00:00");
+    const auto lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
+    lyricsButton->setFixedSize(QSize(30, 30));
+    syncButtonBackground({lyricsButton});
+    rightLayout->addWidget(_processLabel);
+    rightLayout->addWidget(lyricsButton, 0, Qt::AlignCenter);
+
+    controlLayout->addWidget(leftWidget);
+    controlLayout->addStretch(1);
+    controlLayout->addWidget(centralWidget);
+    controlLayout->addStretch(1);
+    controlLayout->addWidget(rightWidget);
+    Sync::clearLayoutVMargins({controlLayout, leftLayout, centralLayout, rightLayout});
+    return controlWidget;
 }
 
 QWidget* MainWindow::createBodyWidget(QWidget* parent) {
@@ -267,193 +544,26 @@ void MainWindow::setBorder(const bool enabled) const {
     FrameStyleSheet::setBorder(this->centralWidget(), enabled);
 }
 
-QWidget* MainWindow::createControlWidget(QWidget* parent) {
-    const auto controlWidget = new QWidget(parent);
-    const auto controlLayout = new QHBoxLayout(controlWidget);
-    Sync::clearWidgetMargins(controlWidget);
-    _volumeSlider = VolumeSlider::getInstance(this);
-    _volumeSlider->setVisible(false);
-
-    auto& playManager = PlayManager::getInstance();
-    // [封面 歌名/歌手]
-    QLabel* songCover = Create::squarePixmap(controlWidget, "Sympsel.png", 50);
-    connect(&playManager, &PlayManager::songPlayed, this, [songCover, &playManager]() {
-        const auto song = playManager.getCurrPlay();
-        if (song) {
-            if (const QPixmap cover = song->getCover(); !cover.isNull()) {
-                songCover->setPixmap(cover.scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-            } else {
-                songCover->setPixmap(QPixmap(prefix::normalImages + "Sympsel.png").scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-                LOG_DEBUG() << "使用默认封面";
-            }
-        }
+void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song) {
+    if (_songInfoPage) {
+        _songInfoPage->close();
+        _songInfoPage = nullptr;
+    }
+    SongList* list = commonPageWidget->getSongList();
+    if (!list) {
+        LOG_ERROR() << "未注册播放列表";
+        return;
+    }
+    _songInfoPage = new SongInfoPage({song, *list});
+    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
+        _songInfoPage = nullptr;
     });
-    const auto leftWidget = new QWidget(controlWidget);
-    const auto songInfoWidget = new QWidget(leftWidget);
-    const auto leftLayout = new QHBoxLayout(leftWidget);
-
-    const auto songInfoLayout = new QVBoxLayout(songInfoWidget);
-    const auto songName = new MarqueeLabel();
-    songName->setFixedWidth(150);
-    songName->setText("歌曲");
-    const auto singer = new MarqueeLabel();
-    singer->setFixedWidth(150);
-    singer->setText("歌手");
-
-    connect(&playManager, &PlayManager::songPlayed, this, [songName, singer, &playManager]() {
-        songName->setMarqueeText("歌曲：" + playManager.getCurrPlay()->getName());
-        const QString artist = playManager.getCurrPlay()->getArtist();
-        singer->setMarqueeText("歌手：" + (artist.isEmpty() ? "未知" : artist));
-    });
-
-    Sync::widgetToLayout(songInfoLayout, {songName, singer});
-    Sync::widgetToLayout(leftLayout, {songCover, songInfoWidget});
-
-    // [随机播放 上一首 暂停/播放 下一首 音量 添加到我喜欢]
-    const auto centralWidget = new QWidget(controlWidget);
-    const auto centralLayout = new QHBoxLayout(centralWidget);
-    const auto playModeButton = Create::buttonOnlyIcon("列表播放.png", centralWidget);
-    playModeButton->setToolTipDuration(3000);
-    playModeButton->setToolTip("切换到随机播放模式");
-    connect(playModeButton, &QPushButton::clicked, this, [playModeButton, &playManager]() {
-        switch (playManager.getPlayMode()) {
-        case PlayMode::ORDERED:
-            // 顺序播放 → 随机播放
-            playManager.setPlayMode(PlayMode::RANDOMED);
-            playModeButton->setIcon(QIcon(prefix::normalImages + "随机播放.png"));
-            playModeButton->setToolTip("点击切换到单曲循环");
-            StatusManager::getInstance().showMessage("已切换到随机播放模式", 1000);
-            break;
-        case PlayMode::RANDOMED:
-            // 随机播放 → 单曲循环
-            playManager.setPlayMode(PlayMode::SINGLE_LOOPING);
-            playModeButton->setIcon(QIcon(prefix::normalImages + "单曲循环.png"));
-            playModeButton->setToolTip("点击切换到顺序播放");
-            StatusManager::getInstance().showMessage("已切换到单曲循环模式", 1000);
-            break;
-        case PlayMode::SINGLE_LOOPING:
-            // 单曲循环 → 顺序播放
-            playManager.setPlayMode(PlayMode::ORDERED);
-            playModeButton->setIcon(QIcon(prefix::normalImages + "列表播放.png"));
-            playModeButton->setToolTip("点击切换到随机播放");
-            StatusManager::getInstance().showMessage("已切换到顺序播放模式", 1000);
-            break;
-        }
-    });
-    const auto prevButton = Create::buttonOnlyIcon("上一首.png", centralWidget);
-    connect(prevButton, &QPushButton::clicked, this, []() {
-        StatusManager::getInstance().showMessage("播放上一首", 1000);
-        PlayManager::getInstance().prevPlay();
-    });
-    const auto playButton = Create::buttonOnlyIcon("播放.png", centralWidget);
-    connect(playButton, &QPushButton::clicked, this, [playButton, &playManager]() {
-        auto& statusManager = StatusManager::getInstance();
-        switch (playManager.getPlayStatus()) {
-        case PlayStatus::STOPPED:
-            statusManager.showMessage("请先选则要播放的歌曲");
-            break;
-        case PlayStatus::PLAYING:
-            // 正在播放 → 暂停
-            playManager.pause();
-            statusManager.showMessage("已暂停", 1000);
-            playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
-            break;
-        case PlayStatus::PAUSED:
-            // 已暂停 → 继续播放
-            playManager.start();
-            statusManager.showMessage("继续播放", 1000);
-            playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
-            break;
-        case PlayStatus::ERROR:
-            LOG_ERROR() << "播放错误";
-            break;
-        }
-    });
-    connect(&playManager, &PlayManager::songPlayed, this, [playButton]() {
-        // 这里是让任意地方触发播放时都会设置
-        playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
-    });
-    connect(&playManager, &PlayManager::playStateChanged, this, [playButton]() {
-        playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
-    });
-    const auto nextButton = Create::buttonOnlyIcon("下一首.png", centralWidget);
-    connect(nextButton, &QPushButton::clicked, this, []() {
-        StatusManager::getInstance().showMessage("播放下一首", 1000);
-        PlayManager::getInstance().nextPlay();
-    });
-    const auto volumeButton = Create::buttonOnlyIcon("中等音量.png", centralWidget);
-    _volumeSlider->setRelationButton(volumeButton);
-    connect(volumeButton, &QPushButton::clicked, this, [this, volumeButton]() {
-        const QPoint buttonGlobalPos = volumeButton->mapToGlobal(QPoint(0, 0));
-        const QSize sliderSize = _volumeSlider->sizeHint();
-
-        const int x = buttonGlobalPos.x() + (volumeButton->width() - sliderSize.width()) / 2;
-        const int y = buttonGlobalPos.y() - sliderSize.height() - 10;
-
-        _volumeSlider->showAtPosition(QPoint(x, y));
-    });
-    const auto addToButton = Create::buttonOnlyIcon("添加.png", centralWidget);
-    addToButton->setToolTip("从本地添加");
-    connect(addToButton, &QPushButton::clicked, this, [this]() {
-        QFileDialog fileDialog(this);
-        fileDialog.setWindowTitle("添加本地音乐");
-
-        // todo 替换为稳定的路径
-        QDir dir{QDir::currentPath()};
-        dir.cdUp();
-        fileDialog.setDirectory(dir);
-        // 设置一次性可以打开多个
-        fileDialog.setFileMode(QFileDialog::ExistingFiles);
-        fileDialog.setNameFilter("音乐文件(*.mp3 *.wav)");
-        if (QDialog::Accepted == fileDialog.exec()) {
-            const auto urls = fileDialog.selectedUrls();
-            auto& songManager = SongManager::getInstance();
-            songManager.append(songManager.getDownloadList(), urls);
-            if (const auto currentPage = _mainStackedWidget->currentWidget()) {
-                if (const auto downloadPage = qobject_cast<CommonPageWidget*>(currentPage)) {
-                    if (downloadPage->getPageName() == "本地下载") {
-                        downloadPage->reloadData(songManager.getDownloadList());
-                    }
-                }
-            }
-        } else {
-            LOG_DEBUG() << "用户取消添加";
-        }
-    });
-    addToButton->setToolTipDuration(3000);
-
-    const auto buttons = {
-        playModeButton, prevButton, playButton, nextButton, volumeButton, addToButton
-    };
-
-    constexpr QSize buttonsSize(30, 30);
-    Sync::buttonFixedSize(buttonsSize, buttons);
-    Sync::buttonNoFocus(buttons);
-    Sync::buttonToHLayout(centralLayout, buttons);
-
-    // [进度]
-    const auto rightWidget = new QWidget(controlWidget);
-    const auto rightLayout = new QHBoxLayout(rightWidget);
-    const auto processLabel = new QLabel("00:00/00:00");
-    connect(&playManager, &PlayManager::positionChanged, [processLabel, &playManager]() {
-        processLabel->setText(playManager.getFormattedProgress());
-    });
-    const auto lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
-    lyricsButton->setFixedSize(buttonsSize);
-    syncButtonBackground(buttons);
-    syncButtonBackground({lyricsButton});
-    rightLayout->addWidget(processLabel);
-    rightLayout->addWidget(lyricsButton, 0, Qt::AlignCenter);
-
-    controlLayout->addWidget(leftWidget);
-    controlLayout->addStretch(1);
-    controlLayout->addWidget(centralWidget);
-    controlLayout->addStretch(1);
-    controlLayout->addWidget(rightWidget);
-    Sync::clearLayoutVMargins({controlLayout, leftLayout, centralLayout, rightLayout});
-    return controlWidget;
+    _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
+    _songInfoPage->show();
 }
 
+
+// ============= Sync ==============
 void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
     const Color& color = ColorTheme::getInstance().getColor();
     Sync::buttonBackground(buttons, color.background, color.hoverOn, color.pressed);
@@ -509,24 +619,7 @@ void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
     });
 }
 
-void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song) {
-    if (_songInfoPage) {
-        _songInfoPage->close();
-        _songInfoPage = nullptr;
-    }
-    SongList* list = commonPageWidget->getSongList();
-    if (!list) {
-        LOG_ERROR() << "未注册播放列表";
-        return;
-    }
-    _songInfoPage = new SongInfoPage({song, *list});
-    connect(_songInfoPage, &QWidget::destroyed, this, [this]() {
-        _songInfoPage = nullptr;
-    });
-    _songInfoPage->setAttribute(Qt::WA_DeleteOnClose);
-    _songInfoPage->show();
-}
-
+// ============== 事件 ===============
 void MainWindow::mouseMoveEvent(QMouseEvent* event) {
     if ((event->buttons() & Qt::LeftButton) &&
         // 检测当前修饰键状态中，Alt 键对应的位是否为 1，下同
@@ -555,6 +648,5 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
-
     QMainWindow::closeEvent(event);
 }

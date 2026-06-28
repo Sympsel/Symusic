@@ -10,8 +10,15 @@ class ListItem : public QWidget {
     Q_OBJECT
 
 private:
+    // UI 组件创建
     void setupUI();
 
+    // 样式设置
+    void setupDefaultStyle();
+    void setupPlayingStyle();
+    void setupLikeButtonStyle() const;
+
+    // 业务逻辑
     void highLightCurrPlay();
 
 public:

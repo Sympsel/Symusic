@@ -6,13 +6,14 @@
 #include <utility>
 
 #include "entity/PlayManager.hpp"
-#include "entity/SongManager.h"
-#include "entity/StatusManager.hpp"
 #include "ui/MarqueeLabel.h"
 #include "utils/Log.hpp"
+#include "entity/SongManager.h"
+#include "entity/StatusManager.hpp"
 
 void ListItem::setupUI() {
     this->setFixedHeight(40);
+    setupLikeButtonStyle();
 
     const auto mainLayout = new QHBoxLayout(this);
     Sync::clearWidgetMargins(this);
@@ -105,24 +106,44 @@ void ListItem::setupUI() {
                          });
 }
 
+void ListItem::setupDefaultStyle() {
+    setStyleSheet(
+        "QWidget {"
+        "   background-color: transparent;"
+        "}"
+    );
+}
+
+void ListItem::setupPlayingStyle() {
+    setStyleSheet(
+        "QWidget {"
+        "   background-color: rgb(40, 40, 40);"
+        "}"
+    );
+}
+
+void ListItem::setupLikeButtonStyle() const {
+    _likeButton->setStyleSheet(
+        "QPushButton {"
+        "   padding: 0px;"
+        "   min-height: 0px;"
+        "   min-width: 0px;"
+        "   max-height: 24px;"
+        "   max-width: 24px;"
+        "   background-color: transparent;"
+        "   border: none;"
+        "}"
+    );
+}
+
 void ListItem::highLightCurrPlay() {
     const auto& playManager = PlayManager::getInstance();
     const auto currPlaySong = playManager.getCurrPlay();
-    const Color& color = ColorTheme::getInstance().getColor();
+    // 设置高亮
     if (_songCtx.song == currPlaySong) {
-        // 当前正在播放，设置高亮样式
-        setStyleSheet(QString(
-            "QWidget {"
-            "   background-color: rgb(%1);"
-            "}"
-        ).arg(color.playing));
+        setupPlayingStyle();
     } else {
-        // 未播放，恢复默认样式（透明背景）
-        setStyleSheet(
-            "QWidget {"
-            "   background-color: transparent;"
-            "}"
-        );
+        setupDefaultStyle();
     }
 }
 
@@ -141,18 +162,11 @@ ListItem::ListItem(SongContext songCtx)
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
     }
-    _likeButton->setStyleSheet(
-        "QPushButton {"
-        "   padding: 0px;"
-        "   min-height: 0px;"
-        "   min-width: 0px;"
-        "   max-height: 24px;"
-        "   max-width: 24px;"
-        "   background-color: transparent;"
-        "   border: none;"
-        "}"
-    );
+
     setupUI();
+
+    // 初始化高亮状态
+    highLightCurrPlay();
 
     // 设置为单次触发模式，超时自动停止
     _clickTimer->setSingleShot(true);
@@ -191,6 +205,7 @@ ListItem::ListItem(SongContext songCtx)
         emit likeStatusUpdated();
     });
 
+    // 连接 PlayManager 的 songPlayed 信号来更新高亮状态
     connect(&PlayManager::getInstance(), &PlayManager::songPlayed, this, [this]() {
         highLightCurrPlay();
     });
