@@ -1,7 +1,6 @@
 #include "ui/MarqueeLabel.h"
 
 MarqueeLabel::MarqueeLabel(QWidget* parent) : QLabel(parent), _offset(0), _pauseTimer(new QTimer(this)) {
-    setAttribute(Qt::WA_Hover, true);
     _timer = new QTimer(this);
 
     connect(_pauseTimer, &QTimer::timeout, this, [this]() {

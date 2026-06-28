@@ -7,13 +7,13 @@
 class FrameStyleSheet {
 public:
     static void setBorder(QWidget* widget, const bool enabled = false) {
-        const Color& color = ColorTheme::getInstance().getColor();
+        const auto& color = ColorTheme::getInstance();
         if (enabled) {
             if (widget) {
                 widget->setStyleSheet(QString(
                     "background-color: rgb(%1);"
                     "border: 2px solid rgb(%2);"
-                ).arg(color.background, color.border));
+                ).arg(color.getGlobalBGColor(), color.getBaseColor().bd));
             }
         } else {
             if (widget) {
@@ -23,7 +23,7 @@ public:
                     "   background-color: rgb(%1);"
                     "   border: 2px solid rgb(%2);"
                     "}"
-                ).arg(color.background, color.border));
+                ).arg(color.getGlobalBGColor(), color.getBaseColor().bd));
             }
         }
     }

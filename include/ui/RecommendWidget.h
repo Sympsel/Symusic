@@ -17,8 +17,8 @@ private:
     struct Alist {
         QList<PlaylistItem*> list;
         int begin{0};
-        QPushButton* leftButton{nullptr};
-        QPushButton* rightButton{nullptr};
+        QPushButton* leftButton{};
+        QPushButton* rightButton{};
         QWidget* widget{nullptr};
     };
 

@@ -43,7 +43,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
     fixedButton->setCheckable(true);
     fixedButton->setToolTip("置顶窗口");
     connect(fixedButton, &QPushButton::toggled, this, [this, fixedButton](const bool checked) {
-        const auto& color = ColorTheme::getInstance().getColor();
+        const auto& [activate] = ColorTheme::getInstance().getFixedButtonColor();
         if (checked) {
             fixedButton->setStyleSheet(QString(
                 "QPushButton {"
@@ -56,7 +56,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
                 "QPushButton:pressed {"
                 "   background-color: rgb(%1);"
                 "}"
-            ).arg(color.fixedActivate));
+            ).arg(activate));
 
             if (this->window()) {
                 this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, true);
@@ -76,7 +76,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
                 "QPushButton:pressed {"
                 "   background-color: rgb(%1);"
                 "}"
-            ).arg(color.background));
+            ).arg(ColorTheme::getInstance().getGlobalBGColor()));
 
             if (this->window()) {
                 this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, false);
@@ -137,6 +137,8 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
     return functionWidget;
 }
 
-void HeadWidget::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) const {
-    Sync::buttonBackground(buttons, _color.background, _color.hoverOn, _color.pressed);
+void HeadWidget::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
+    const auto& color = ColorTheme::getInstance();
+    const auto& [hover, pressed] = color.getControlButtonColor();
+    Sync::buttonBackground(buttons, color.getGlobalBGColor(), hover, pressed);
 }

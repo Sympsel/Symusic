@@ -2,20 +2,15 @@
 
 #include <QScrollArea>
 #include <QVBoxLayout>
-#include <string>
-#include <random>
-#include <ranges>
 
 #include "utils/Sync.hpp"
 #include "entity/SongManager.h"
 #include "utils/Create.hpp"
 
-// ==================== 样式设置 ====================
-
 void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>& buttons,
                                       const int width,
                                       const int height) {
-    const auto& color = ColorTheme::getInstance().getColor();
+    const auto& [hover, pressed] = ColorTheme::getInstance().getArrowButtonColor();
     QString widthStr = std::to_string(width).c_str();
     QString heightStr = std::to_string(height).c_str();
     for (const auto button : buttons) {
@@ -39,13 +34,11 @@ void RecommendWidget::syncButtonStyle(const std::initializer_list<QPushButton*>&
             "QPushButton#navArrowButton:pressed {"
             "    background-color: rgb(%2);"
             "}"
-        ).arg(color.arrowButtonHover, color.arrowButtonPressed, widthStr, heightStr);
+        ).arg(hover, pressed, widthStr, heightStr);
 
         button->setStyleSheet(style);
     }
 }
-
-// ==================== 业务逻辑 ====================
 
 void RecommendWidget::initPlaylist() {
     SongManager& songManager = SongManager::getInstance();
@@ -208,8 +201,6 @@ void RecommendWidget::updateWidgetLayout(const QString& name) {
         }
     }
 }
-
-// ==================== UI 组件创建 ====================
 
 RecommendWidget::RecommendWidget(QWidget* parent) : QWidget(parent) {
     // 初始化防抖定时器

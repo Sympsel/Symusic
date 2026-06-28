@@ -167,7 +167,8 @@ void SongInfoPage::setupUI() {
 }
 
 void SongInfoPage::setupButtonStyle() {
-    const Color& color = ColorTheme::getInstance().getColor();
+    const auto& color = ColorTheme::getInstance();
+    const auto& [hover, pressed] = color.getControlButtonColor();
 
     setStyleSheet(QString(
         "#SongInfoPageWidget {"
@@ -180,10 +181,10 @@ void SongInfoPage::setupButtonStyle() {
         "   font-weight: bold;"
         "}"
         "QLabel {"
-        "   color: rgb(200, 200, 200);"
+        "   color: rgb(%3);"
         "   background-color: transparent;"
         "}"
-    ).arg(color.background, color.border));
+    ).arg(color.getGlobalBGColor(), color.getBaseColor().bd, color.getLabelColor().text));
 
     _likeButton->setStyleSheet(QString(
         "QPushButton {"
@@ -208,7 +209,7 @@ void SongInfoPage::setupButtonStyle() {
         "QPushButton:pressed {"
         "   background-color: rgb(%3);"
         "}"
-    ).arg(color.background, color.hoverOn, color.pressed));
+    ).arg(color.getGlobalBGColor(), hover, pressed));
 }
 
 void SongInfoPage::setupButtonConnect() {

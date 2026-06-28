@@ -83,8 +83,6 @@ MainWindow::~MainWindow() {
 
 // ==================== 样式设置 ====================
 void MainWindow::setupStyles() {
-    const Color& color = ColorTheme::getInstance().getColor();
-
     // 保存按钮原始样式
     std::vector<QString> originalStyleSheets;
     for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
@@ -93,7 +91,7 @@ void MainWindow::setupStyles() {
 
     // 设置默认选中状态
     if (!_mapOfNavigationButtonsToWidget.empty()) {
-        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0], color);
+        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0]);
     }
 
     // 设置控制按钮样式
@@ -111,8 +109,6 @@ void MainWindow::setupStyles() {
 
 // ==================== 信号连接 ====================
 void MainWindow::setupConnections() {
-    const Color& color = ColorTheme::getInstance().getColor();
-
     // 保存按钮原始样式（用于页面切换）
     std::vector<QString> originalStyleSheets;
     for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
@@ -128,10 +124,10 @@ void MainWindow::setupConnections() {
 
     // 监听页面切换信号
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
-            [this, originalStyleSheets, color](const int index) {
+            [this, originalStyleSheets](const int index) {
                 for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
                     const bool selected = (static_cast<int>(i) == index);
-                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i], color);
+                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
                 }
 
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
@@ -377,13 +373,12 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
         });
     }
 
-    const Color& color = ColorTheme::getInstance().getColor();
     // 监听页面切换信号
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
-            [this, originalStyleSheets, color](const int index) {
+            [this, originalStyleSheets](const int index) {
                 for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
                     const bool selected = (static_cast<int>(i) == index);
-                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i], color);
+                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
                 }
 
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
@@ -399,7 +394,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
 
     // 默认选中第一个页面
     if (!_mapOfNavigationButtonsToWidget.empty()) {
-        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0], color);
+        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0]);
     }
 
     return bodyWidget;
@@ -419,7 +414,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             const auto page = new QWidget(stack);
             const auto layout = new QVBoxLayout(page);
             const auto btn = new QPushButton(text, page);
-            layout->addWidget(btn, 0, Qt::AlignCenter);
+    layout->addWidget(btn, 0, Qt::AlignCenter);
             layout->addStretch(1);
             return page;
         };
@@ -513,7 +508,7 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     leftWidget->setMaximumWidth(150);
     const auto leftLayout = new QVBoxLayout(leftWidget);
 
-    // 这里文本缩进写死是因为按钮宽度固定
+// 这里文本缩进写死是因为按钮宽度固定
     auto 推荐 = new NavigationButton("推荐.png", "     推荐");
     auto 电台 = new NavigationButton("电台.png", "     电台");
     auto 漫游 = new NavigationButton("漫游.png", "     漫游");
@@ -565,8 +560,9 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
 
 // ============= Sync ==============
 void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
-    const Color& color = ColorTheme::getInstance().getColor();
-    Sync::buttonBackground(buttons, color.background, color.hoverOn, color.pressed);
+    const auto& color = ColorTheme::getInstance();
+    const auto& [hover, pressed] = color.getControlButtonColor();
+    Sync::buttonBackground(buttons, color.getGlobalBGColor(), hover, pressed);
 }
 
 void MainWindow::syncButtonToContain(

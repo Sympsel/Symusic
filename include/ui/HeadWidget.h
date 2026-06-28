@@ -11,13 +11,10 @@ class HeadWidget final : public QWidget {
 public:
     explicit HeadWidget(QWidget* parent = nullptr);
     QWidget* createFunctionWidget(QWidget* parent);
-    void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) const;
+    static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
 signals:
     // 向父窗口发送请求
     void closeRequested();
     void minimizeRequested();
     void maximizeRequested();
-
-private:
-    Color _color;
 };

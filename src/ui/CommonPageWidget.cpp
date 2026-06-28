@@ -46,12 +46,10 @@ void CommonPageWidget::setCover() const {
 }
 
 void CommonPageWidget::updateCover() const {
-   setCover();
+    setCover();
 }
 
 QWidget* CommonPageWidget::createMiddleWidget() {
-    const Color& color = ColorTheme::getInstance().getColor();
-
     const auto middleWidget = new QWidget();
     const auto layout = new QHBoxLayout(middleWidget);
     const auto musicLabel = new QLabel("音乐");
@@ -66,7 +64,7 @@ QWidget* CommonPageWidget::createMiddleWidget() {
         "QLabel:hover {"
         "   background-color: rgb(%1);"
         "}"
-    ).arg(color.hoverOn);
+    ).arg(ColorTheme::getInstance().getLabelColor().hover);
 
     musicLabel->setAttribute(Qt::WA_Hover, true);
     musicLabel->setStyleSheet(labelStyle);
@@ -151,7 +149,7 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& description,
                                                       , _playAllButton(new QPushButton("播放全部"))
                                                       , _playlist(new QListWidget())
                                                       , _songList(nullptr) {
-    const Color& color = ColorTheme::getInstance().getColor();
+    const auto& [hover, pressed, playing] = ColorTheme::getInstance().getPlayItemColor();
     _playlist->setStyleSheet(QString(
         "QListWidget {"
         "   outline: none;"
@@ -166,7 +164,7 @@ CommonPageWidget::CommonPageWidget(QString pageName, const QString& description,
         "QListWidget::item:hover {"
         "   background-color: rgb(%2);"
         "}"
-    ).arg(color.hoverOn, color.pressed));
+    ).arg(hover, pressed));
 
     _playlist->installEventFilter(this);
 

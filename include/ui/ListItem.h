@@ -15,6 +15,7 @@ private:
 
     // 样式设置
     void setupDefaultStyle();
+    void setupHoverStyle();
     void setupPlayingStyle();
     void setupLikeButtonStyle() const;
 
@@ -31,8 +32,9 @@ public:
     void updateIconStatus() const;
 
 protected:
+    void enterEvent(QEnterEvent* event) override;
+    void leaveEvent(QEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
-
     void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 signals:
@@ -45,5 +47,6 @@ private:
     QTimer* _clickTimer;
     bool _pendingSingleClick{};
     bool _skipNextPress{};
+    bool _isHovered{false};
     QPushButton* _likeButton;
 };

@@ -39,7 +39,7 @@ void ListItem::setupUI() {
 
     const auto nameLabel = new MarqueeLabel();
     nameLabel->setMarqueeText(song->getName());
-    nameLabel->setMinimumWidth(250);
+    nameLabel->setMinWidth(250);
     nameLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
 
     Sync::appendStyleSheet(nameLabel, "color: white;");
@@ -67,7 +67,7 @@ void ListItem::setupUI() {
     Sync::clearLayoutMargins(centralLayout);
     const auto artistLabel = new MarqueeLabel();
     artistLabel->setMarqueeText(song->getArtist());
-    artistLabel->setMinimumWidth(120);
+    artistLabel->setMinWidth(120);
     artistLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(artistLabel, "color: white;");
     centralLayout->addWidget(artistLabel);
@@ -80,7 +80,7 @@ void ListItem::setupUI() {
 
     const auto albumLabel = new MarqueeLabel();
     albumLabel->setMarqueeText(song->getAlbum());
-    albumLabel->setMinimumWidth(60);
+    albumLabel->setMinWidth(60);
     albumLabel->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
     Sync::appendStyleSheet(albumLabel, "color: white;");
     rightLayout->addWidget(albumLabel);
@@ -114,11 +114,24 @@ void ListItem::setupDefaultStyle() {
     );
 }
 
+void ListItem::setupHoverStyle() {
+    const auto& colors = ColorTheme::getInstance().getPlayItemColor();
+    setStyleSheet(
+        QString(
+            "QWidget {"
+            "   background-color: rgb(%1);"
+            "}"
+        ).arg(colors.hover)
+    );
+}
+
 void ListItem::setupPlayingStyle() {
     setStyleSheet(
-        "QWidget {"
-        "   background-color: rgb(40, 40, 40);"
-        "}"
+        QString(
+            "QWidget {"
+            "   background-color: rgb(%1);"
+            "}"
+        ).arg(ColorTheme::getInstance().getPlayItemColor().playing)
     );
 }
 
@@ -217,6 +230,22 @@ void ListItem::updateIconStatus() const {
     } else {
         _likeButton->setIcon(QPixmap(prefix::normalImages + "赞.png"));
     }
+}
+
+void ListItem::enterEvent(QEnterEvent* event) {
+    _isHovered = true;
+    // 如果不在播放状态，应用 hover 样式
+    if (const auto& playManager = PlayManager::getInstance(); _songCtx.song != playManager.getCurrPlay()) {
+        setupHoverStyle();
+    }
+    QWidget::enterEvent(event);
+}
+
+void ListItem::leaveEvent(QEvent* event) {
+    _isHovered = false;
+    // 恢复之前的样式
+    highLightCurrPlay();
+    QWidget::leaveEvent(event);
 }
 
 void ListItem::mousePressEvent(QMouseEvent* event) {

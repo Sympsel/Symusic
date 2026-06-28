@@ -33,7 +33,7 @@ public:
     /**
     * @brief 设置最小宽度
     */
-    void setMinimumWidth(const int minWidth) {
+    void setMinWidth(const int minWidth) {
         _minWidth = minWidth;
         updateWidth();
     }
@@ -41,7 +41,7 @@ public:
     /**
     * @brief 设置最大宽度，-1 表示无限制
     */
-    void setMaximumWidth(const int maxWidth) {
+    void setMaxWidth(const int maxWidth) {
         _maxWidth = maxWidth;
         updateWidth();
     }
@@ -54,7 +54,7 @@ public:
         if (parentWidget()) {
             if (const int parentWidth = parentWidget()->width(); parentWidth > 0) {
                 const int targetWidth = static_cast<int>(parentWidth * percentage);
-                setMaximumWidth(targetWidth);
+                setMaxWidth(targetWidth);
             }
         }
     }

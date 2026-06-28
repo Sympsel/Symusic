@@ -17,8 +17,11 @@ NavigationButton::NavigationButton(const QString& iconPath, const QString& text,
 }
 
 void NavigationButton::setupDefaultStyle() {
-    const Color color;
-    setStyleSheet(
+    const auto& [hover, selected, selectedAndHover,
+            selectedAndPressed, leftHighlight,
+            text, textSelected]
+        = ColorTheme::getInstance().getNavigationColor();
+    this->setStyleSheet(
         QString("QToolButton {"
             "    background-color: transparent;"
             "    border-left: 3px solid transparent;"
@@ -31,15 +34,17 @@ void NavigationButton::setupDefaultStyle() {
             "    background-color: rgb(%3);"
             "}"
         ).arg(
-            color.navButtonText,
-            color.hoverOn,
-            color.pressed
+            text, hover, selectedAndPressed
         )
     );
 }
 
-void NavigationButton::setupSelectedStyle(const Color& color) {
-    setStyleSheet(
+void NavigationButton::setupSelectedStyle() {
+    const auto& [hover, selected, selectedAndHover,
+            selectedAndPressed, leftHighlight,
+            text, textSelected]
+        = ColorTheme::getInstance().getNavigationColor();
+    this->setStyleSheet(
         QString("QToolButton {"
             "    background-color: rgb(%1);"
             "    border-left: 3px solid rgb(%2);"
@@ -51,30 +56,30 @@ void NavigationButton::setupSelectedStyle(const Color& color) {
             "QToolButton:pressed {"
             "    background-color: rgb(%5);"
             "}")
-        .arg(color.navButtonSelected,
-             color.navButtonHighlight,
-             color.navButtonTextSelected,
-             color.navButtonSelectedHover,
-             color.navButtonSelectedPressed)
+        .arg(selected,
+             leftHighlight,
+             textSelected,
+             selectedAndHover,
+             selectedAndPressed)
     );
 }
 
-void NavigationButton::resetToDefaultStyle(const QString& originStyle, const Color& color) {
+void NavigationButton::resetToDefaultStyle(const QString& originStyle) {
     if (originStyle.isEmpty()) {
         setupDefaultStyle();
     } else {
-        setStyleSheet(originStyle);
+        this->setStyleSheet(originStyle);
     }
 }
 
-void NavigationButton::setSelected(const bool selected, const QString& originStyle, const Color& color) {
+void NavigationButton::setSelected(const bool selected, const QString& originStyle) {
     if (_selected == selected) {
         return;
     }
     _selected = selected;
     if (selected) {
-        setupSelectedStyle(color);
+        setupSelectedStyle();
     } else {
-        resetToDefaultStyle(originStyle, color);
+        resetToDefaultStyle(originStyle);
     }
 }
