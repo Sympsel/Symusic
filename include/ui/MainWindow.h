@@ -6,6 +6,7 @@
 #include <QPainterPath>
 
 #include "HeadWidget.h"
+#include "LyricsWidget.h"
 #include "SongInfoPage.h"
 #include "ui/NavigationButton.h"
 #include "ui/CommonPageWidget.h"
@@ -27,6 +28,7 @@ private:
     QWidget* createMainStackedWidget(QWidget* parent);
     QWidget* createBodyLeftWidget(QWidget* bodyWidget);
     QWidget* createControlWidget(QWidget* parent = nullptr);
+    void initLyricsWidget();
 
     // 样式设置
     void setupStyles();
@@ -41,8 +43,8 @@ private:
 
     // 同步辅助方法
     static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
-    void syncButtonToContain(const std::initializer_list<NavigationButton*>& buttons);
-    void syncWidgetToContain(const std::initializer_list<QWidget*>& widgets);
+    void syncButtonToContainer(const std::initializer_list<NavigationButton*>& buttons);
+    void syncWidgetToContainer(const std::initializer_list<QWidget*>& widgets);
     void syncCommonWidgetConnect(const std::initializer_list<CommonPageWidget*>& commonPages);
 
 protected:
@@ -54,14 +56,15 @@ private:
     // 窗口拖拽
     QPoint _dragPos;
 
-    // 主要 UI 组件
+    // UI 组件
     QStackedWidget* _mainStackedWidget{};
     VolumeSlider* _volumeSlider;
     SongInfoPage* _songInfoPage;
+    LyricsWidget* _lyricsWidget;
 
     // 导航相关
-    std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfNavigationButtonsToWidget;
-    int _pageCount = 6;
+    std::vector<std::pair<NavigationButton*, QWidget*>> _mapOfButtonsToWidget;
+    int _navPageCount = 6;
 
     // 控制区组件
     QPushButton* _playModeButton;
@@ -70,6 +73,7 @@ private:
     QPushButton* _nextButton;
     QPushButton* _volumeButton;
     QPushButton* _addToButton;
+    QPushButton* _lyricsButton;
     QLabel* _songCover;
     MarqueeLabel* _songNameLabel;
     MarqueeLabel* _singerLabel;

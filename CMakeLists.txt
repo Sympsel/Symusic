@@ -54,6 +54,10 @@ add_executable(SymMusic_2
         include/entity/StatusManager.hpp
         src/ui/MarqueeLabel.cpp
         include/ui/MarqueeLabel.h
+        src/ui/LyricsWidget.cpp
+        include/ui/LyricsWidget.h
+        src/ui/LyricsItem.cpp
+        include/ui/LyricsItem.h
 )
 
 target_link_libraries(SymMusic_2

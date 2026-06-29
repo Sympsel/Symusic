@@ -9,6 +9,7 @@
 #include "entity/PlayManager.hpp"
 #include "entity/StatusManager.hpp"
 #include "ui/HeadWidget.h"
+#include "ui/LyricsWidget.h"
 #include "ui/MarqueeLabel.h"
 #include "ui/NavigationWidget.h"
 #include "ui/PlaySlider.h"
@@ -21,18 +22,20 @@
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent)
-      , _volumeSlider(nullptr)
-      , _songInfoPage(nullptr)
-      , _playModeButton(nullptr)
-      , _prevButton(nullptr)
-      , _playButton(nullptr)
-      , _nextButton(nullptr)
-      , _volumeButton(nullptr)
-      , _addToButton(nullptr)
-      , _songCover(nullptr)
-      , _songNameLabel(nullptr)
-      , _singerLabel(nullptr)
-      , _processLabel(nullptr) {
+      , _volumeSlider()
+      , _songInfoPage()
+      , _lyricsWidget()
+      , _playModeButton()
+      , _prevButton()
+      , _playButton()
+      , _nextButton()
+      , _volumeButton()
+      , _addToButton()
+      , _lyricsButton()
+      , _songCover()
+      , _songNameLabel()
+      , _singerLabel()
+      , _processLabel() {
     {
         this->resize(848, 655);
         this->setWindowFlag(Qt::FramelessWindowHint);
@@ -52,7 +55,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
                 });
     }
 
-    _mapOfNavigationButtonsToWidget.resize(_pageCount);
+    _mapOfButtonsToWidget.resize(_navPageCount);
 
     const auto centralWidget = new QWidget(this);
     this->setCentralWidget(centralWidget);
@@ -70,6 +73,8 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
                          });
     headBodyLayout->addWidget(bodyWidget, 1);
 
+    initLyricsWidget();
+
     // 设置样式
     setupStyles();
     setBorder(debugBorder);
@@ -85,13 +90,13 @@ MainWindow::~MainWindow() {
 void MainWindow::setupStyles() {
     // 保存按钮原始样式
     std::vector<QString> originalStyleSheets;
-    for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
+    for (const auto& navigationButton : _mapOfButtonsToWidget | std::views::keys) {
         originalStyleSheets.emplace_back(navigationButton->styleSheet());
     }
 
     // 设置默认选中状态
-    if (!_mapOfNavigationButtonsToWidget.empty()) {
-        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0]);
+    if (!_mapOfButtonsToWidget.empty()) {
+        _mapOfButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0]);
     }
 
     // 设置控制按钮样式
@@ -111,13 +116,13 @@ void MainWindow::setupStyles() {
 void MainWindow::setupConnections() {
     // 保存按钮原始样式（用于页面切换）
     std::vector<QString> originalStyleSheets;
-    for (const auto& navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
+    for (const auto& navigationButton : _mapOfButtonsToWidget | std::views::keys) {
         originalStyleSheets.emplace_back(navigationButton->styleSheet());
     }
 
     // 点击按钮切换页面
-    for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
-        connect(_mapOfNavigationButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
+    for (size_t i = 0; i < _mapOfButtonsToWidget.size(); ++i) {
+        connect(_mapOfButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
             _mainStackedWidget->setCurrentIndex(static_cast<int>(i));
         });
     }
@@ -125,9 +130,16 @@ void MainWindow::setupConnections() {
     // 监听页面切换信号
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
             [this, originalStyleSheets](const int index) {
-                for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
+                if (index == _navPageCount) {
+                    // 歌词页在 _navPageCount 的位置
+                    StatusManager::getInstance().showMessage(
+                        std::format("切换到: {}", "歌词页面"), 2000
+                    );
+                    return;
+                }
+                for (size_t i = 0; i < _mapOfButtonsToWidget.size(); ++i) {
                     const bool selected = (static_cast<int>(i) == index);
-                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
+                    _mapOfButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
                 }
 
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
@@ -148,7 +160,7 @@ void MainWindow::setupConnections() {
     connect(&playManager, &PlayManager::songPlayed, this, [this, &playManager]() {
         const auto song = playManager.getCurrPlay();
         if (song) {
-            if (QPixmap cover = song->getCover(); !cover.isNull()) {
+            if (const QPixmap cover = song->getCover(); !cover.isNull()) {
                 _songCover->setPixmap(cover.scaled(50, 50, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
             } else {
                 _songCover->setPixmap(
@@ -326,11 +338,11 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     const auto rightWidget = new QWidget(controlWidget);
     const auto rightLayout = new QHBoxLayout(rightWidget);
     _processLabel = new QLabel("00:00/00:00");
-    const auto lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
-    lyricsButton->setFixedSize(QSize(30, 30));
-    syncButtonBackground({lyricsButton});
+    _lyricsButton = new QPushButton(QIcon(prefix::normalImages + "词.png"), "");
+    _lyricsButton->setFixedSize(QSize(30, 30));
+    syncButtonBackground({_lyricsButton});
     rightLayout->addWidget(_processLabel);
-    rightLayout->addWidget(lyricsButton, 0, Qt::AlignCenter);
+    rightLayout->addWidget(_lyricsButton, 0, Qt::AlignCenter);
 
     controlLayout->addWidget(leftWidget);
     controlLayout->addStretch(1);
@@ -339,6 +351,16 @@ QWidget* MainWindow::createControlWidget(QWidget* parent) {
     controlLayout->addWidget(rightWidget);
     Sync::clearLayoutVMargins({controlLayout, leftLayout, centralLayout, rightLayout});
     return controlWidget;
+}
+
+void MainWindow::initLyricsWidget() {
+    _lyricsWidget = new LyricsWidget(_mainStackedWidget);
+    _mainStackedWidget->addWidget(_lyricsWidget);
+
+    connect(_lyricsButton, &QPushButton::clicked, this, [this]() {
+        _mainStackedWidget->setCurrentIndex(_navPageCount);
+        // todo
+    });
 }
 
 QWidget* MainWindow::createBodyWidget(QWidget* parent) {
@@ -354,21 +376,21 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     Sync::widgetToLayout(bodyLayout, {leftWidget, line, rightWidget});
     // 将按钮与页面连接
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
-    if (size != _mapOfNavigationButtonsToWidget.size()) {
+    if (size != _mapOfButtonsToWidget.size()) {
         LOG_FATAL() << std::format("程序出错：页面数 {} 和 导航按钮数 {} 不匹配",
-                                   _mainStackedWidget->count(), _mapOfNavigationButtonsToWidget.size());
+                                   _mainStackedWidget->count(), _mapOfButtonsToWidget.size());
         exit(EXIT_FAILURE);
     }
 
     // 保存每个按钮的原始样式表
     std::vector<QString> originalStyleSheets;
-    for (const auto& _navigationButton : _mapOfNavigationButtonsToWidget | std::views::keys) {
+    for (const auto& _navigationButton : _mapOfButtonsToWidget | std::views::keys) {
         originalStyleSheets.emplace_back(_navigationButton->styleSheet());
     }
 
     // 点击按钮切换页面
     for (size_t i = 0; i < size; ++i) {
-        connect(_mapOfNavigationButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
+        connect(_mapOfButtonsToWidget[i].first, &QPushButton::clicked, this, [this, i]() {
             _mainStackedWidget->setCurrentIndex(static_cast<int>(i));
         });
     }
@@ -376,9 +398,10 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     // 监听页面切换信号
     connect(_mainStackedWidget, &QStackedWidget::currentChanged, this,
             [this, originalStyleSheets](const int index) {
-                for (size_t i = 0; i < _mapOfNavigationButtonsToWidget.size(); ++i) {
+                for (size_t i = 0; i < _mapOfButtonsToWidget.size(); ++i) {
                     const bool selected = (static_cast<int>(i) == index);
-                    _mapOfNavigationButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
+                    if (i != _mapOfButtonsToWidget.size())
+                        _mapOfButtonsToWidget[i].first->setSelected(selected, originalStyleSheets[i]);
                 }
 
                 if (const auto currentPage = _mainStackedWidget->widget(index)) {
@@ -393,8 +416,8 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
             });
 
     // 默认选中第一个页面
-    if (!_mapOfNavigationButtonsToWidget.empty()) {
-        _mapOfNavigationButtonsToWidget[0].first->setSelected(true, originalStyleSheets[0]);
+    if (_mapOfButtonsToWidget.size() != 1) {
+        qobject_cast<NavigationButton*>(_mapOfButtonsToWidget[0].first)->setSelected(true, originalStyleSheets[0]);
     }
 
     return bodyWidget;
@@ -406,6 +429,9 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
     bodyRightLayout->setContentsMargins(4, 0, 4, 0);
 
     _mainStackedWidget = new QStackedWidget(mainWidget);
+    // todo 动态扩高
+    _mainStackedWidget->setMinimumHeight(420);
+
 
     {
         // todo: 替换这段代码
@@ -414,7 +440,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             const auto page = new QWidget(stack);
             const auto layout = new QVBoxLayout(page);
             const auto btn = new QPushButton(text, page);
-    layout->addWidget(btn, 0, Qt::AlignCenter);
+            layout->addWidget(btn, 0, Qt::AlignCenter);
             layout->addStretch(1);
             return page;
         };
@@ -488,7 +514,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             我喜欢的_页, 本地下载_页, 最近播放_页
         });
         Sync::widgetToStackedWidget(_mainStackedWidget, pages);
-        syncWidgetToContain(pages);
+        syncWidgetToContainer(pages);
     }
 
     // 进度条
@@ -508,7 +534,7 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     leftWidget->setMaximumWidth(150);
     const auto leftLayout = new QVBoxLayout(leftWidget);
 
-// 这里文本缩进写死是因为按钮宽度固定
+    // 这里文本缩进写死是因为按钮宽度固定
     auto 推荐 = new NavigationButton("推荐.png", "     推荐");
     auto 电台 = new NavigationButton("电台.png", "     电台");
     auto 漫游 = new NavigationButton("漫游.png", "     漫游");
@@ -527,7 +553,7 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
     const auto buttons = {
         推荐, 电台, 漫游, 我喜欢的, 本地下载, 最近播放
     };
-    syncButtonToContain(buttons);
+    syncButtonToContainer(buttons);
     Sync::buttonNoFocus(buttons);
 
     leftLayout->addStretch(1);
@@ -565,22 +591,25 @@ void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>&
     Sync::buttonBackground(buttons, color.getGlobalBGColor(), hover, pressed);
 }
 
-void MainWindow::syncButtonToContain(
+void MainWindow::syncButtonToContainer(
     const std::initializer_list<NavigationButton*>& buttons) {
-    if (static_cast<int>(buttons.size()) == _pageCount) {
+    // 有一个页面是留给歌词页的
+    if (static_cast<int>(buttons.size()) == _navPageCount) {
         int i = 0;
         for (const auto& button : buttons) {
-            _mapOfNavigationButtonsToWidget[i++].first = button;
+            _mapOfButtonsToWidget[i++].first = button;
         }
+    } else {
+        LOG_ERROR() << "程序出错，页面数与按钮不匹配";
     }
 }
 
-void MainWindow::syncWidgetToContain(
+void MainWindow::syncWidgetToContainer(
     const std::initializer_list<QWidget*>& widgets) {
-    if (static_cast<int>(widgets.size()) == _pageCount) {
+    if (static_cast<int>(widgets.size()) == _navPageCount) {
         int i = 0;
         for (const auto& widget : widgets) {
-            _mapOfNavigationButtonsToWidget[i++].second = widget;
+            _mapOfButtonsToWidget[i++].second = widget;
         }
     }
 }
