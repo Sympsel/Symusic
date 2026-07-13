@@ -274,6 +274,10 @@ public:
         return _playMode;
     }
 
+    /**
+     *
+     * @return you may check weather the song point is nullptr
+     */
     [[nodiscard]] const SongPtr& getCurrPlay() const {
         return _songCtx.song;
     }

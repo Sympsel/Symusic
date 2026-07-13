@@ -173,6 +173,9 @@ void MainWindow::setupConnections() {
     // 歌曲信息更新
     connect(&playManager, &PlayManager::songPlayed, this, [this]() {
         const auto song = PlayManager::getInstance().getCurrPlay();
+        if (!song) {
+            return;
+        }
         _songNameLabel->setMarqueeText("歌曲：" + song->getName());
         const QString artist = song->getArtist();
         _singerLabel->setMarqueeText("歌手：" + (artist.isEmpty() ? "未知" : artist));
