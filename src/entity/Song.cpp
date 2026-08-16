@@ -1,3 +1,5 @@
+module symusic.entity.song;
+
 #include "entity/Song.h"
 
 #include <QCoreApplication>
@@ -11,14 +13,15 @@
 #include <taglib/id3v2tag.h>
 #include <taglib/mpegfile.h>
 
-#include "utils/Log.hpp"
+// #include "utils/Log.hpp"
+export import symusic.utils.log;
 
 /**
  * @brief 获取歌曲元数据，使用 Qt6 的 QMediaPlayer 读取有 bug，故使用了 TagLib 的库，QMediaPlayer 作为备用读取方式
  */
 void Song::parseMusicMeta() {
     if (!_url.isValid()) {
-        LOG_WARN() << "无效的URL";
+        logWarn() << "无效的URL";
         return;
     }
 
