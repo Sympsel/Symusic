@@ -10,7 +10,7 @@
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
 
-SongInfoPage::SongInfoPage(const SongContext& songCtx, QWidget* parent)
+SongInfoPage::SongInfoPage(const OlayContext& songCtx, QWidget* parent)
     : QWidget(parent)
       , _songCtx(songCtx)
       , _originLiked(songCtx.song->isLiked())

@@ -6,6 +6,18 @@ module;
 #include <sstream>
 #include <format>
 
+#include <QCoreApplication>
+#include <QTimer>
+#include <QPushButton>
+#include <utility>
+#include <QtMultimedia/QMediaMetaData>
+#include <QtMultimedia/QMediaPlayer>
+#include <QString>
+
+#include <taglib/attachedpictureframe.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/mpegfile.h>
+
 export module symusic.entity.song;
 export import symusic.common;
 
@@ -63,7 +75,7 @@ public:
     [[nodiscard]] QString getAlbum() const { return _album; }
     [[nodiscard]] QString getFilePath() const { return _url.toLocalFile(); }
     [[nodiscard]] QPixmap getCover() const { return _cover; }
-    [[nodiscard]] int getDuration() const { return _duration; }
+    [[nodiscard]] LL getDuration() const { return _duration; }
     [[nodiscard]] bool isLiked() const { return isInList(ExistIn::LIKED_LIST); }
 
     [[nodiscard]] int getPlayCount() const { return _playCount; }
@@ -99,8 +111,8 @@ public:
 
     [[nodiscard]] QString getFormattedDuration() const {
         const LL duration_s = _duration / 1000;
-        const int minutes = duration_s / 60;
-        const int seconds = duration_s % 60;
+        const LL minutes = duration_s / 60;
+        const LL seconds = duration_s % 60;
         return QString("%1:%2").
                arg(minutes, 2, 10, '0').
                arg(seconds, 2, 10, '0');

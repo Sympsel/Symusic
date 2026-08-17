@@ -130,14 +130,14 @@ namespace symlog {
             );
         }
 
-        static std::string logLevelToStr(const Level &level) {
+        static std::string logLevelToStr(const Level& level) {
             switch (level) {
-                case Level::DEBUG: return "DEBUG";
-                case Level::INFO: return "INFO";
-                case Level::WARN: return "WARNING";
-                case Level::ERROR: return "ERROR";
-                case Level::FATAL: return "FATAL";
-                default: return "UNKNOWN";
+            case Level::DEBUG: return "DEBUG";
+            case Level::INFO: return "INFO";
+            case Level::WARN: return "WARNING";
+            case Level::ERROR: return "ERROR";
+            case Level::FATAL: return "FATAL";
+            default: return "UNKNOWN";
             }
         }
 
@@ -145,11 +145,11 @@ namespace symlog {
             return logLevelToStr(static_cast<Level>(level));
         }
 
-        static std::string removeColorCodes(const std::string &msg) {
+        static std::string removeColorCodes(const std::string& msg) {
             std::string result;
             result.reserve(msg.size());
             bool inEscape = false;
-            for (const char c: msg) {
+            for (const char c : msg) {
                 if (c == '\033') {
                     inEscape = true;
                     continue;
@@ -165,14 +165,14 @@ namespace symlog {
             return result;
         }
 
-        static std::string getColorForLevel(const Level &level) {
+        static std::string getColorForLevel(const Level& level) {
             switch (level) {
-                case Level::DEBUG: return Color::BOLD_CYAN;
-                case Level::INFO: return Color::BOLD_BLUE;
-                case Level::WARN: return Color::BOLD_YELLOW;
-                case Level::ERROR: return Color::BOLD_RED;
-                case Level::FATAL: return Color::BOLD_MAGENTA;
-                default: return Color::RESET;
+            case Level::DEBUG: return Color::BOLD_CYAN;
+            case Level::INFO: return Color::BOLD_BLUE;
+            case Level::WARN: return Color::BOLD_YELLOW;
+            case Level::ERROR: return Color::BOLD_RED;
+            case Level::FATAL: return Color::BOLD_MAGENTA;
+            default: return Color::RESET;
             }
         }
 
@@ -208,18 +208,18 @@ namespace symlog {
         }
 
     public:
-        static ShowSetting &getInstance() {
+        static ShowSetting& getInstance() {
             static ShowSetting instance;
             return instance;
         }
 
-        ShowSetting(const ShowSetting &) = delete;
+        ShowSetting(const ShowSetting&) = delete;
 
-        ShowSetting(ShowSetting &&) = delete;
+        ShowSetting(ShowSetting&&) = delete;
 
-        ShowSetting &operator=(const ShowSetting &) = delete;
+        ShowSetting& operator=(const ShowSetting&) = delete;
 
-        ShowSetting &operator=(ShowSetting &&) = delete;
+        ShowSetting& operator=(ShowSetting&&) = delete;
 
         void set(LogElem elem) {
             _flags |= static_cast<uint32_t>(elem);
@@ -233,12 +233,12 @@ namespace symlog {
             return (_flags.to_ulong() & static_cast<uint32_t>(elem)) != 0;
         }
 
-        ShowSetting &enable(const LogElem elem) {
+        ShowSetting& enable(const LogElem elem) {
             set(elem);
             return *this;
         }
 
-        ShowSetting &disable(const LogElem elem) {
+        ShowSetting& disable(const LogElem elem) {
             unset(elem);
             return *this;
         }
@@ -263,67 +263,90 @@ namespace symlog {
 
     export class LogConfig {
     public:
-        LogConfig &enable(const LogElem elem) {
+        /**
+         * @brief Initialize ANSI color support for Windows console.
+         * Call this once at program startup for colored output on Windows 10+.
+         */
+        LogConfig& enableColorSupport() {
+            static bool flag = true;
+            if (flag) {
+                flag = false;
+#ifdef _WIN32
+                const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (hOut != INVALID_HANDLE_VALUE) {
+                    DWORD dwMode = 0;
+                    if (GetConsoleMode(hOut, &dwMode)) {
+                        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+                        SetConsoleMode(hOut, dwMode);
+                    }
+                }
+#endif
+            }
+
+            return *this;
+        }
+
+        LogConfig& enable(const LogElem elem) {
             ShowSetting::getInstance().enable(elem);
             return *this;
         }
 
-        LogConfig &disable(const LogElem elem) {
+        LogConfig& disable(const LogElem elem) {
             ShowSetting::getInstance().disable(elem);
             return *this;
         }
 
-        LogConfig &showAll() {
+        LogConfig& showAll() {
             enable(LogElem::DATE)
-                    .enable(LogElem::TIME)
-                    .enable(LogElem::LEVEL)
-                    .enable(LogElem::FILE_NAME)
-                    .enable(LogElem::LINE_NUMBER)
-                    .enable(LogElem::COLOR);
+                .enable(LogElem::TIME)
+                .enable(LogElem::LEVEL)
+                .enable(LogElem::FILE_NAME)
+                .enable(LogElem::LINE_NUMBER)
+                .enable(LogElem::COLOR);
             return *this;
         }
 
-        LogConfig &showMinimal() {
+        LogConfig& showMinimal() {
             disable(LogElem::DATE)
-                    .disable(LogElem::TIME)
-                    .disable(LogElem::FILE_NAME)
-                    .disable(LogElem::LINE_NUMBER)
-                    .disable(LogElem::PROCESS_ID)
-                    .disable(LogElem::THREAD_ID)
-                    .disable(LogElem::FILE_PATH)
-                    .disable(LogElem::FUNCTION_NAME)
-                    .enable(LogElem::LEVEL);
+                .disable(LogElem::TIME)
+                .disable(LogElem::FILE_NAME)
+                .disable(LogElem::LINE_NUMBER)
+                .disable(LogElem::PROCESS_ID)
+                .disable(LogElem::THREAD_ID)
+                .disable(LogElem::FILE_PATH)
+                .disable(LogElem::FUNCTION_NAME)
+                .enable(LogElem::LEVEL);
             return *this;
         }
 
-        LogConfig &showDetailed() {
+        LogConfig& showDetailed() {
             enable(LogElem::DATE)
-                    .enable(LogElem::TIME)
-                    .enable(LogElem::LEVEL)
-                    .enable(LogElem::FILE_PATH)
-                    .enable(LogElem::LINE_NUMBER)
-                    .enable(LogElem::PROCESS_ID)
-                    .enable(LogElem::THREAD_ID)
-                    .enable(LogElem::COLOR);
+                .enable(LogElem::TIME)
+                .enable(LogElem::LEVEL)
+                .enable(LogElem::FILE_PATH)
+                .enable(LogElem::LINE_NUMBER)
+                .enable(LogElem::PROCESS_ID)
+                .enable(LogElem::THREAD_ID)
+                .enable(LogElem::COLOR);
             return *this;
         }
 
-        LogConfig &showTimeOnly() {
+        LogConfig& showTimeOnly() {
             disable(LogElem::DATE).enable(LogElem::TIME);
             return *this;
         }
 
-        LogConfig &showDateOnly() {
+        LogConfig& showDateOnly() {
             enable(LogElem::DATE).disable(LogElem::TIME);
             return *this;
         }
 
-        LogConfig &showDateTime() {
+        LogConfig& showDateTime() {
             enable(LogElem::DATE).enable(LogElem::TIME);
             return *this;
         }
 
-        LogConfig &withLevel(const bool enabled = true) {
+        LogConfig& withLevel(const bool enabled = true) {
             if (enabled) {
                 enable(LogElem::LEVEL);
             } else {
@@ -332,7 +355,7 @@ namespace symlog {
             return *this;
         }
 
-        LogConfig &withColor(const bool enabled = true) {
+        LogConfig& withColor(const bool enabled = true) {
             if (enabled) {
                 enable(LogElem::COLOR);
             } else {
@@ -341,7 +364,7 @@ namespace symlog {
             return *this;
         }
 
-        LogConfig &withFile(const bool fullPath = false) {
+        LogConfig& withFile(const bool fullPath = false) {
             if (fullPath) {
                 enable(LogElem::FILE_PATH).disable(LogElem::FILE_NAME);
             } else {
@@ -350,7 +373,7 @@ namespace symlog {
             return *this;
         }
 
-        LogConfig &withLineNumber(const bool enabled = true) {
+        LogConfig& withLineNumber(const bool enabled = true) {
             if (enabled) {
                 enable(LogElem::LINE_NUMBER);
             } else {
@@ -359,7 +382,7 @@ namespace symlog {
             return *this;
         }
 
-        LogConfig &withPID(const bool enabled = true) {
+        LogConfig& withPID(const bool enabled = true) {
             if (enabled) {
                 enable(LogElem::PROCESS_ID);
             } else {
@@ -368,7 +391,7 @@ namespace symlog {
             return *this;
         }
 
-        LogConfig &withTID(const bool enabled = true) {
+        LogConfig& withTID(const bool enabled = true) {
             if (enabled) {
                 enable(LogElem::THREAD_ID);
             } else {
@@ -377,21 +400,21 @@ namespace symlog {
             return *this;
         }
 
-        static LogConfig &configure() {
+        static LogConfig& configure() {
             static LogConfig instance;
             return instance;
         }
 
-        LogConfig &filterLogLevel(Level minLevel);
+        LogConfig& filterLogLevel(Level minLevel);
 
-        LogConfig &filterLogLevel(int minLevel);
+        LogConfig& filterLogLevel(int minLevel);
     };
 
     class OutputStrategy {
     public:
         virtual ~OutputStrategy() = default;
 
-        virtual void sync(const std::string &) = 0;
+        virtual void sync(const std::string&) = 0;
 
         virtual void setColorEnabled(bool) = 0;
 
@@ -409,7 +432,7 @@ namespace symlog {
             : _colorEnabled(colorEnabled) {
         }
 
-        void sync(const std::string &logMsg) override {
+        void sync(const std::string& logMsg) override {
             std::lock_guard locker(_mutex);
             std::println("{}", logMsg);
         }
@@ -432,7 +455,7 @@ namespace symlog {
 
     class ToFile : public OutputStrategy {
     private:
-        std::string getFilenameHelper() const {
+        [[nodiscard]] std::string getFilenameHelper() const {
             if (_filename.empty()) {
                 return std::format("{}.symlog", _currDate);
             }
@@ -463,7 +486,7 @@ namespace symlog {
                 if (!_ofs.is_open()) {
                     std::println(stderr, "[Logger Error] Failed to open log file: {}", filepath.string());
                 }
-            } catch (const std::filesystem::filesystem_error &e) {
+            } catch (const std::filesystem::filesystem_error& e) {
                 std::println(stderr, "[Logger Error] Filesystem error: {}", e.what());
             }
         }
@@ -479,7 +502,7 @@ namespace symlog {
             if (!std::filesystem::exists(_dir)) {
                 try {
                     std::filesystem::create_directories(_dir);
-                } catch (const std::filesystem::filesystem_error &e) {
+                } catch (const std::filesystem::filesystem_error& e) {
                     std::println(stderr, "[Logger Error] Failed to create log directory: {}", e.what());
                 }
             }
@@ -493,7 +516,7 @@ namespace symlog {
             }
         }
 
-        void sync(const std::string &logMsg) override {
+        void sync(const std::string& logMsg) override {
             std::lock_guard locker(_mutex);
 
             if (const std::string today = Utils::getCurrDate(); today != _currDate) {
@@ -510,7 +533,7 @@ namespace symlog {
         void setColorEnabled(const bool enabled) override {
         }
 
-        bool isColorEnabled() const override {
+        [[nodiscard]] bool isColorEnabled() const override {
             return false;
         }
 
@@ -538,7 +561,7 @@ namespace symlog {
 
         ~ToBothFileAndConsole() override = default;
 
-        void sync(const std::string &logMsg) override {
+        void sync(const std::string& logMsg) override {
             _console->sync(logMsg);
             _file->sync(logMsg);
         }
@@ -583,7 +606,7 @@ namespace symlog {
         private:
             void buildMessage() {
                 std::stringstream ss;
-                const auto &setting = ShowSetting::getInstance();
+                const auto& setting = ShowSetting::getInstance();
 
                 if (setting.isEnabled(LogElem::COLOR)) {
                     ss << Utils::getColorForLevel(_head._level);
@@ -642,25 +665,25 @@ namespace symlog {
             }
 
             ~Msg() {
-                const auto &instance = getInstance();
+                const auto& instance = getInstance();
                 if (_head._level >= instance.getLogLevelFilter()) {
                     const std::string fullMessage = _formattedHeader + _body;
                     instance.sync(fullMessage);
                 }
             }
 
-            template<typename T>
-            Msg &operator<<(const T &value) {
+            template <typename T>
+            Msg& operator<<(const T& value) {
                 _body += std::to_string(value);
                 return *this;
             }
 
-            Msg &operator<<(const std::string &value) {
+            Msg& operator<<(const std::string& value) {
                 _body += value;
                 return *this;
             }
 
-            Msg &operator<<(const char *value) {
+            Msg& operator<<(const char* value) {
                 _body += value;
                 return *this;
             }
@@ -672,7 +695,7 @@ namespace symlog {
         };
 
     private:
-        void sync(const std::string &msg) const {
+        void sync(const std::string& msg) const {
             std::lock_guard<std::mutex> locker(_mutex);
             if (_output) {
                 _output->sync(msg);
@@ -685,20 +708,20 @@ namespace symlog {
         }
 
     public:
-        static Log &getInstance() {
+        static Log& getInstance() {
             static Log instance;
             return instance;
         }
 
         ~Log() = default;
 
-        Log(const Log &) = delete;
+        Log(const Log&) = delete;
 
-        Log &operator=(const Log &) = delete;
+        Log& operator=(const Log&) = delete;
 
-        Log(Log &&) = delete;
+        Log(Log&&) = delete;
 
-        Log &operator=(Log &&) = delete;
+        Log& operator=(Log&&) = delete;
 
         int getLogLevelFilter() const {
             return _filter;
@@ -719,14 +742,14 @@ namespace symlog {
             _output = std::make_unique<ToConsole>(colorEnabled);
         }
 
-        void outputToFile(const std::string &dir = "./log", const std::string &filename = "") {
+        void outputToFile(const std::string& dir = "./log", const std::string& filename = "") {
             std::lock_guard<std::mutex> locker(_mutex);
             _output = std::make_unique<ToFile>(dir, filename);
         }
 
         void outputToBoth(
-            const std::string &dir = "./log",
-            const std::string &filename = "",
+            const std::string& dir = "./log",
+            const std::string& filename = "",
             bool colorEnabled = true) {
             std::lock_guard<std::mutex> locker(_mutex);
             _output = std::make_unique<ToBothFileAndConsole>(
@@ -739,22 +762,22 @@ namespace symlog {
             std::lock_guard<std::mutex> locker(_mutex);
             _where = where;
             switch (where) {
-                case OutputTo::CONSOLE:
-                    _output = std::make_unique<ToConsole>(colorEnabled);
-                    break;
-                case OutputTo::FILE:
-                    _output = std::make_unique<ToFile>();
-                    break;
-                case OutputTo::BOTH:
-                    _output = std::make_unique<ToBothFileAndConsole>(
-                        std::make_unique<ToConsole>(colorEnabled), std::make_unique<ToFile>()
-                    );
-                    break;
+            case OutputTo::CONSOLE:
+                _output = std::make_unique<ToConsole>(colorEnabled);
+                break;
+            case OutputTo::FILE:
+                _output = std::make_unique<ToFile>();
+                break;
+            case OutputTo::BOTH:
+                _output = std::make_unique<ToBothFileAndConsole>(
+                    std::make_unique<ToConsole>(colorEnabled), std::make_unique<ToFile>()
+                );
+                break;
             }
         }
 
         Msg operator()(const int level,
-                       const std::string &filename,
+                       const std::string& filename,
                        const int line) const {
             return {
                 {
@@ -765,10 +788,10 @@ namespace symlog {
                     line,
 #ifdef _WIN32
                     static_cast<int>(GetCurrentProcessId()),
-                            static_cast<int>(GetCurrentThreadId())
+                    static_cast<int>(GetCurrentThreadId())
 #else
                     getpid(),
-                    gettid()
+                        gettid()
 #endif
                 },
                 {}
@@ -786,7 +809,7 @@ namespace symlog {
      *
      * @param minLevel min level of log to show
      */
-    inline LogConfig &LogConfig::filterLogLevel(const Level minLevel) {
+    inline LogConfig& LogConfig::filterLogLevel(const Level minLevel) {
         Log::getInstance().setLogLevelFilter(static_cast<int>(minLevel));
         return *this;
     }
@@ -795,12 +818,13 @@ namespace symlog {
     *
     * @param minLevel 最低日志级别（1=DEBUG, 2=INFO, 3=WARN, 4=ERROR, 5=FATAL）
     */
-    inline LogConfig &LogConfig::filterLogLevel(const int minLevel) {
+    inline LogConfig& LogConfig::filterLogLevel(const int minLevel) {
         Log::getInstance().setLogLevelFilter(minLevel);
         return *this;
     }
 
     inline Log::Msg log(const int level, const std::source_location& loc = std::source_location::current()) {
+        LogConfig::configure().enableColorSupport();
         return Log::getInstance()(level, loc.file_name(), static_cast<int>(loc.line()));
     }
 
@@ -833,12 +857,12 @@ namespace symlog {
         Log::getInstance().outputToConsole(colorEnabled);
     }
 
-    export inline void useFileLog(const std::string &dir = "./log", const std::string &filename = "") {
+    export inline void useFileLog(const std::string& dir = "./log", const std::string& filename = "") {
         Log::getInstance().outputToFile(dir, filename);
     }
 
-    export inline void useCombinedLog(const std::string &dir = "./log",
-                                      const std::string &filename = "",
+    export inline void useCombinedLog(const std::string& dir = "./log",
+                                      const std::string& filename = "",
                                       const bool colorEnabled = true) {
         Log::getInstance().outputToBoth(dir, filename, colorEnabled);
     }
@@ -855,16 +879,16 @@ namespace symlog {
         ShowSetting::getInstance().disable(elem);
     }
 
-    export inline LogConfig &logConfig() {
+    export inline LogConfig& logConfig() {
         return LogConfig::configure();
     }
 
 
-     /**
-     * @brief 设置日志过滤级别
-     * @param minLevel 最低日志级别（1=DEBUG, 2=INFO, 3=WARN, 4=ERROR, 5=FATAL）
-     */
-    export inline LogConfig &filterLogLevel(const int minLevel) {
+    /**
+    * @brief 设置日志过滤级别
+    * @param minLevel 最低日志级别（1=DEBUG, 2=INFO, 3=WARN, 4=ERROR, 5=FATAL）
+    */
+    export inline LogConfig& filterLogLevel(const int minLevel) {
         return logConfig().filterLogLevel(static_cast<Level>(minLevel));
     }
 }

@@ -6,12 +6,9 @@ module;
 #include <unordered_map>
 #include <vector>
 
-#include "Song.h"
-#include "entity/Common.hpp"
-#include "utils/Log.hpp"
-
 export module symusic.entity.song_manager;
-
+export import symusic.entity.song;
+export import symusic.utils.log;
 
 export using SongPtr = std::shared_ptr<Song>;
 export using SongList = std::vector<SongPtr>;
@@ -233,7 +230,7 @@ public:
 
     bool append(SongList& which, const SongPtr& song) {
         if (!ListMappingManager::getInstance().contains(&which)) {
-            LOG_ERROR() << "have no reflect";
+            logError() << "have no reflect";
             return false;
         }
         if (const auto listEnum = getListEnum(&which);
@@ -253,10 +250,10 @@ public:
             // 使用 mimeTypeForFile 而不是 mimeTypeForName
             QMimeType mimeType = mimeDb.mimeTypeForFile(url.toLocalFile());
             QString mime = mimeType.name();
-            LOG_DEBUG() << "文件:" << url.toLocalFile() << ", MIME类型:" << mime;
+            logDebug() << "文件:" << url.toLocalFile() << ", MIME类型:" << mime;
             if (const auto& supportedList = SupportSongType::getInstance().getList();
                 !supportedList.contains(mime)) {
-                LOG_WARN() << "不支持的文件类型:" << mime << "，已跳过";
+                logWarn() << "不支持的文件类型:" << mime << "，已跳过";
                 continue;
             }
             const auto song = std::make_shared<Song>(url);
@@ -267,7 +264,7 @@ public:
 
     bool remove(SongList& which, const QString& id) {
         if (!ListMappingManager::getInstance().contains(&which)) {
-            LOG_ERROR() << "have no reflect";
+            logError() << "have no reflect";
             return false;
         }
 
@@ -290,7 +287,7 @@ public:
     // 历史记录特化接口
     bool appendToHistoryList(const SongPtr& song) {
         if (!ListMappingManager::getInstance().contains(&_historyList)) {
-            LOG_ERROR() << "have no reflect";
+            logError() << "have no reflect";
             return false;
         }
         std::erase_if(_historyList, [&song](const SongPtr& item) {
@@ -307,7 +304,7 @@ public:
 
     bool removeFromHistoryList(const QString& id) {
         if (!ListMappingManager::getInstance().contains(&_historyList)) {
-            LOG_ERROR() << "have no reflect";
+            logError() << "have no reflect";
             return false;
         }
         if (!contains(_historyList, id)) {

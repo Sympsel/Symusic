@@ -1,38 +1,25 @@
-// #include <QApplication>
-// #include <QFile>
-// #include <QLoggingCategory>
-//
-// #include "ui/MainWindow.h"
-// #include "utils/Log.hpp"
-//
-// QString loadQss(const QString& path) {
-//     QFile file{path};
-//     if (!file.open(QFile::ReadOnly)) {
-//         return {};
-//     }
-//     return file.readAll();
-// }
-//
-// int main(int argc, char* argv[]) {
-//     // 启用 Windows 控制台 ANSI 颜色支持，用于输出带颜色的调试信息
-//     sym::InitAnsiSupport();
-//     QApplication a(argc, argv);
-//     // a.setStyleSheet(loadQss(prefix::styleFiles + "vscode-light.qss"));
-//     a.setStyleSheet(loadQss(prefix::styleFiles + "vscode.qss"));
-//     MainWindow w(nullptr, true, false);
-//     w.show();
-//
-//     return QApplication::exec();
-// }
+#include <QApplication>
+#include <QFile>
 
-// import std;
+import symusic.common;
+import symusic.ui.main_window;
 
-// #include <print>
-#include <QCoreApplication>
+QString loadQss(const QString& path) {
+    QFile file{path};
+    if (!file.open(QFile::ReadOnly)) {
+        return {};
+    }
+    return file.readAll();
+}
 
 int main(int argc, char* argv[]) {
-    // std::cout << "aaa";
-    QCoreApplication app(argc, argv);
-    // std::println("bbb");
-    return 0;
+    logConfig().filterLogLevel(1).showTimeOnly().withTID().withLineNumber().withColor();
+
+    QApplication a(argc, argv);
+    // a.setStyleSheet(loadQss(prefix::styleFiles + "vscode-light.qss"));
+    a.setStyleSheet(loadQss(prefix::styleFiles + "vscode.qss"));
+    MainWindow w(nullptr, true, false);
+    w.show();
+
+    return QApplication::exec();
 }

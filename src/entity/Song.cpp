@@ -1,19 +1,5 @@
 module symusic.entity.song;
 
-#include "entity/Song.h"
-
-#include <QCoreApplication>
-#include <QTimer>
-#include <QPushButton>
-#include <utility>
-#include <QtMultimedia/QMediaMetaData>
-#include <QtMultimedia/QMediaPlayer>
-
-#include <taglib/attachedpictureframe.h>
-#include <taglib/id3v2tag.h>
-#include <taglib/mpegfile.h>
-
-// #include "utils/Log.hpp"
 export import symusic.utils.log;
 
 /**
@@ -34,7 +20,7 @@ void Song::parseMusicMeta() {
     TagLib::MPEG::File mpegFile(filePath.toStdWString().c_str());
 
     if (!mpegFile.isOpen()) {
-        LOG_WARN() << "无法打开文件: " << filePath.toStdString();
+        logWarn() << "无法打开文件: " << filePath.toStdString();
         return;
     }
 
@@ -51,7 +37,7 @@ void Song::parseMusicMeta() {
                     ));
                 if (QImage image; image.loadFromData(imageData)) {
                     _cover = QPixmap::fromImage(image);
-                    LOG_DEBUG() << "成功通过 TagLib 读取封面图片，尺寸: "
+                    logDebug() << "成功通过 TagLib 读取封面图片，尺寸: "
                         << image.width() << "x" << image.height();
                 }
             }
@@ -94,7 +80,7 @@ void Song::parseMusicMeta() {
 
     QObject::connect(&player, &QMediaPlayer::errorOccurred,
                      [&](QMediaPlayer::Error, const QString& errorString) {
-                         LOG_WARN() << "播放器错误:" << errorString;
+                         logWarn() << "播放器错误:" << errorString;
                          hasError = true;
                          finished = true;
                      });
@@ -107,7 +93,7 @@ void Song::parseMusicMeta() {
     QObject::connect(&timer, &QTimer::timeout, [&]() {
         elapsed += 50;
         if (elapsed >= 10000) {
-            LOG_WARN() << "读取媒体元数据超时";
+            logWarn() << "读取媒体元数据超时";
             finished = true;
         }
     });
@@ -127,7 +113,7 @@ void Song::parseMusicMeta() {
             if (const auto title = metaData.value(QMediaMetaData::Title); title.isValid()) {
                 _name = title.toString();
             } else {
-                LOG_WARN() << std::format("{} 读取出错", "歌曲名");
+                logWarn() << std::format("{} 读取出错", "歌曲名");
                 _name = "出错";
             }
         }
@@ -136,7 +122,7 @@ void Song::parseMusicMeta() {
             if (const auto artist = metaData.value(QMediaMetaData::Author); artist.isValid()) {
                 _artist = artist.toString();
             } else {
-                LOG_WARN() << std::format("{} 读取出错", "作曲家");
+                logWarn() << std::format("{} 读取出错", "作曲家");
                 _artist = "未知";
             }
         }
@@ -145,7 +131,7 @@ void Song::parseMusicMeta() {
             if (const auto album = metaData.value(QMediaMetaData::AlbumTitle); album.isValid()) {
                 _album = album.toString();
             } else {
-                LOG_WARN() << std::format("{} 读取出错", "所在专辑");
+                logWarn() << std::format("{} 读取出错", "所在专辑");
                 _album = "未知";
             }
         }
@@ -155,13 +141,13 @@ void Song::parseMusicMeta() {
             duration.isValid() || duration.toLongLong() > 0) {
             _duration = duration.toLongLong();
         } else {
-            LOG_WARN() << std::format("{} 读取出错", "时长");
+            logWarn() << std::format("{} 读取出错", "时长");
             _duration = 0;
         }
 
-        LOG_DEBUG() << "歌曲对象创建成功: " << *this;
+        logDebug() << "歌曲对象创建成功: " << *this;
     } else {
-        LOG_WARN() << "无法加载媒体元数据: " << _url.toLocalFile().toStdString();
+        logWarn() << "无法加载媒体元数据: " << _url.toLocalFile().toStdString();
     }
 }
 

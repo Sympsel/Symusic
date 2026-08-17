@@ -1,11 +1,10 @@
-#include "ui/CommonPageWidget.h"
+module symusic.ui.common_page_widget;
 
 #include <QKeyEvent>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QLabel>
 
-#include "entity/PlayManager.hpp"
-#include "entity/SongManager.h"
-#include "entity/StatusManager.hpp"
 
 QWidget* CommonPageWidget::createHeadWidget(const QString& description) const {
     const auto headWidget = new QWidget();

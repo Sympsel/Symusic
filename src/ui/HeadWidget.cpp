@@ -1,12 +1,14 @@
-#include "ui/HeadWidget.h"
+module symusic.ui.head_widget;
 
 #include <QLineEdit>
 #include <QTimer>
+#include <QHBoxLayout>
+#include <QLabel>
 
-#include "entity/Common.hpp"
-#include "utils/Create.hpp"
-#include "utils/Log.hpp"
-#include "utils/Sync.hpp"
+import symusic.common;
+import symusic.utils.log;
+import symusic.utils.sync;
+import symusic.utils.create;
 
 HeadWidget::HeadWidget(QWidget* parent) {
     this->setFixedHeight(68);
@@ -62,7 +64,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
                 this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, true);
                 this->window()->show();
             }
-            LOG_DEBUG() << "窗口已置顶";
+            logDebug() << "窗口已置顶";
             fixedButton->setToolTip("取消置顶");
         } else {
             fixedButton->setStyleSheet(QString(
@@ -82,7 +84,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
                 this->window()->setWindowFlag(Qt::WindowStaysOnTopHint, false);
                 this->window()->show();
             }
-            LOG_DEBUG() << "取消窗口置顶";
+            logDebug() << "取消窗口置顶";
             fixedButton->setToolTip("置顶窗口");
         }
     });
@@ -95,7 +97,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
             emit minimizeRequested();
         } else {
             minimizeButton->setIcon(QPixmap(""));
-            LOG_INFO() << "HeadWidget控件 最大化";
+            logInfo() << "HeadWidget控件 最大化";
         }
     });
     const auto maximizeButton = Create::buttonOnlyIcon("最大化_1.png", functionWidget);
@@ -122,7 +124,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
         if (this->parent()) {
             emit closeRequested();
         } else {
-            LOG_INFO() << "HeadWidget控件 退出";
+            logInfo() << "HeadWidget控件 退出";
             this->close();
         }
     });

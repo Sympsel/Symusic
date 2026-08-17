@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 4.2)
 project(SymMusic_2)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -28,8 +28,27 @@ set(QT_INSTALL_PATH "D:/Software/Qt/6.9.3/msvc2022_64")
 set(CMAKE_PREFIX_PATH ${QT_INSTALL_PATH})
 set(Qt6_DIR "${QT_INSTALL_PATH}/lib/cmake/Qt6")
 
+set_property(SOURCE src/component/ListItem.ixx
+        PROPERTY SKIP_AUTOMOC ON)
+
 set(SOURCES
+        src/component/ListItem.cpp
+        src/component/MarqueeLabel.cpp
+        src/component/NavigationButton.cpp
+        src/component/PlaylistItem.cpp
+        src/component/PlaySlider.cpp
+        src/component/VolumeSlider.cpp
+
         src/entity/Song.cpp
+        src/entity/SongManager.cpp
+
+        src/ui/CommonPageWidget.cpp
+        src/ui/HeadWidget.cpp
+        src/ui/LyricsWidget.cpp
+        src/ui/MainWindow.cpp
+        src/ui/NavigationWidget.cpp
+        src/ui/RecommendWidget.cpp
+        src/ui/SongInfoPage.cpp
 )
 
 add_library(std_modules)
@@ -48,7 +67,6 @@ find_package(TagLib REQUIRED)
 include_directories(include)
 
 add_executable(SymMusic_2 Main.cpp ${SOURCES})
-find_package()
 
 target_link_libraries(SymMusic_2
         PRIVATE Qt6::Core
@@ -64,13 +82,38 @@ target_sources(SymMusic_2
         FILES
         src/common/Color.ixx
         src/common/Path.ixx
-        src/common/Common.ixx
+
+        src/component/ListItem.ixx
+        src/component/LyricsItem.ixx
+        src/component/MarqueeLabel.ixx
+        src/component/NavigationButton.ixx
+        src/component/PlaylistItem.ixx
+        src/component/PlaySlider.ixx
+        src/component/VolumeSlider.ixx
+
+        src/ui/CommonPageWidget.ixx
+        src/ui/HeadWidget.ixx
+        src/ui/LyricsWidget.ixx
+        src/ui/MainWindow.ixx
+        src/ui/NavigationWidget.ixx
+        src/ui/RecommendWidget.ixx
+        src/ui/SongInfoPage.ixx
+
+        src/entity/Song.ixx
+        src/entity/SongManager.ixx
+        src/entity/StatusManager.ixx
 
         src/utils/Create.ixx
         src/utils/FrameStyleSheet.ixx
         src/utils/Log.ixx
         src/utils/LyricsParser.ixx
         src/utils/Sync.ixx
+
+        src/Common.ixx
+        src/Component.ixx
+        src/Entity.ixx
+        src/Ui.ixx
+        src/Utils.ixx
 )
 
 # 复制 TagLib DLL 到输出目录（使用 vcpkg 的路径）

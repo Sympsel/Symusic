@@ -6,7 +6,7 @@ module;
 
 #include "ui/NavigationButton.h"
 
-export module symusic.uitls.sync;
+export module symusic.utils.sync;
 
 export class Sync {
 public:

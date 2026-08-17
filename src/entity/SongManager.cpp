@@ -1,6 +1,7 @@
-#include "entity/SongManager.h"
+module symusic.entity.song_manager;
 
 #include <random>
+#include <string>
 
 void SongManager::initData() {
     constexpr int maxIndex = 35;

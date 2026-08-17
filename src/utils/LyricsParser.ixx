@@ -4,10 +4,13 @@ module;
 #include <print>
 #include <fstream>
 #include <regex>
+#include <QString>
+#include <string>
 
 export module symusic.utils.lyrics_parser;
+export import symusic.common;
 
-struct LyricItem {
+export struct LyricItem {
     LL pos;
     std::string text;
 
@@ -25,7 +28,7 @@ public:
         while (std::getline(ifs, line)) {
             LL pos{};
             std::string text;
-            std::regex reg{"[(\\d+):(\\d+)\\.(\\d+)](.+)"};
+            std::regex reg{R"([(\d+):(\d+)\.(\d+)](.+))"};
             std::smatch matches;
             std::regex_match(line, matches, reg);
             if (matches.size() == 4) {
@@ -34,12 +37,12 @@ public:
                     const LL snd = std::stoll(matches[1]);
                     const LL mcs = std::stoll(matches[2]);
                     pos = (min * 60 + snd) * 1'000 + mcs;
-                } catch (const std::exception& e) {
-                    LOG_WARN() << std::format("Invalid lrc line: {}", line);
+                } catch (const std::exception& _) {
+                    logWarn() << std::format("Invalid lrc line: {}", line);
                 }
                 text = matches[3];
             } else {
-                LOG_WARN() << std::format("Invalid lrc line: {}", line);
+                logWarn() << std::format("Invalid lrc line: {}", line);
             }
 
             lrcs.emplace_back(pos, text);

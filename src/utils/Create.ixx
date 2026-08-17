@@ -3,13 +3,13 @@ module;
 #include <QLabel>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPushButton>
 
 export module symusic.utils.create;
 
-class QFrame;
-class QLabel;
+import symusic.common;
 
-class Create {
+export class Create {
 public:
     static QPixmap circularPixmap(const QString& picture, const int size) {
         const QPixmap source(picture);

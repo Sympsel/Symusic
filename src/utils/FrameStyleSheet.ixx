@@ -2,9 +2,8 @@ module;
 
 #include <QWidget>
 
-#include "entity/Common.hpp"
-
 export module symusic.utils.frame_style_sheet;
+export import symusic.common;
 
 export class FrameStyleSheet {
 public:

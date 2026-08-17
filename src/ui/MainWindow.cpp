@@ -1,24 +1,13 @@
-#include "ui/MainWindow.h"
+module symusic.ui.main_window;
 
 #include <QFileDialog>
 #include <QGraphicsDropShadowEffect>
 #include <QMouseEvent>
 #include <QStatusBar>
-#include <ranges>
+#include <QVBoxLayout>
+#include <QLabel>
 
-#include "entity/PlayManager.hpp"
-#include "entity/StatusManager.hpp"
-#include "ui/HeadWidget.h"
-#include "ui/LyricsWidget.h"
-#include "ui/MarqueeLabel.h"
-#include "ui/NavigationWidget.h"
-#include "ui/PlaySlider.h"
-#include "ui/RecommendWidget.h"
-#include "ui/SongInfoPage.h"
-#include "utils/Create.hpp"
-#include "utils/FrameStyleSheet.hpp"
-#include "utils/Log.hpp"
-#include "utils/Sync.hpp"
+#include <ranges>
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent)
@@ -83,7 +72,7 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
 }
 
 MainWindow::~MainWindow() {
-    LOG_DEBUG() << std::format("程序退出，退出时宽高为 [{}, {}]", this->width(), this->height());
+    logDebug() << std::format("程序退出，退出时宽高为 [{}, {}]", this->width(), this->height());
 }
 
 // ==================== 样式设置 ====================
@@ -244,7 +233,7 @@ void MainWindow::setupConnections() {
             _playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
             break;
         case PlayStatus::ERROR:
-            LOG_ERROR() << "播放错误";
+            logError() << "播放错误";
             break;
         }
     });
@@ -287,7 +276,7 @@ void MainWindow::setupConnections() {
                 }
             }
         } else {
-            LOG_DEBUG() << "用户取消添加";
+            logDebug() << "用户取消添加";
         }
     });
 }
@@ -380,7 +369,7 @@ QWidget* MainWindow::createBodyWidget(QWidget* parent) {
     // 将按钮与页面连接
     const auto size = static_cast<size_t>(_mainStackedWidget->count());
     if (size != _mapOfButtonsToWidget.size()) {
-        LOG_FATAL() << std::format("程序出错：页面数 {} 和 导航按钮数 {} 不匹配",
+        logFatal() << std::format("程序出错：页面数 {} 和 导航按钮数 {} 不匹配",
                                    _mainStackedWidget->count(), _mapOfButtonsToWidget.size());
         exit(EXIT_FAILURE);
     }
@@ -460,7 +449,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             StatusManager::getInstance().showMessage(
                 std::format("页面 {} 正常加载", "我喜欢的"), 2000
             );
-            LOG_INFO() << std::format("页面 {} 正常加载", "我喜欢的");
+            logInfo() << std::format("页面 {} 正常加载", "我喜欢的");
         });
         auto& songManager = SongManager::getInstance();
         我喜欢的_页->setReloadCallback([&songManager](CommonPageWidget* page) {
@@ -483,7 +472,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             StatusManager::getInstance().showMessage(
                 std::format("页面 {} 正常加载", "本地下载"), 2000
             );
-            LOG_INFO() << std::format("页面 {} 正常加载", "本地下载");
+            logInfo() << std::format("页面 {} 正常加载", "本地下载");
         });
         本地下载_页->initData(songManager.getDownloadList());
         connect(本地下载_页, &CommonPageWidget::songItemDoubleClicked, this,
@@ -499,7 +488,7 @@ QWidget* MainWindow::createMainStackedWidget(QWidget* parent) {
             StatusManager::getInstance().showMessage(
                 std::format("页面 {} 正常加载", "最近播放"), 2000
             );
-            LOG_INFO() << std::format("页面 {} 正常加载", "最近播放");
+            logInfo() << std::format("页面 {} 正常加载", "最近播放");
         });
         最近播放_页->setReloadCallback([&songManager](CommonPageWidget* page) {
             page->reloadData(songManager.getHistoryList());
@@ -564,7 +553,7 @@ QWidget* MainWindow::createBodyLeftWidget(QWidget* bodyWidget) {
 }
 
 void MainWindow::setBorder(const bool enabled) const {
-    LOG_DEBUG() << std::format("启用{}边框", enabled ? "调试" : "常规");
+    logDebug() << std::format("启用{}边框", enabled ? "调试" : "常规");
     FrameStyleSheet::setBorder(this->centralWidget(), enabled);
 }
 
@@ -575,7 +564,7 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
     }
     SongList* list = commonPageWidget->getSongList();
     if (!list) {
-        LOG_ERROR() << "未注册播放列表";
+        logError() << "未注册播放列表";
         return;
     }
     _songInfoPage = new SongInfoPage({song, *list});
@@ -603,7 +592,7 @@ void MainWindow::syncButtonToContainer(
             _mapOfButtonsToWidget[i++].first = button;
         }
     } else {
-        LOG_ERROR() << "程序出错，页面数与按钮不匹配";
+        logError() << "程序出错，页面数与按钮不匹配";
     }
 }
 
@@ -628,21 +617,21 @@ void MainWindow::syncCommonWidgetConnect(const std::initializer_list<CommonPageW
 void MainWindow::handleRequestFromHeadButton(const HeadWidget* headWidget) {
     connect(headWidget, &HeadWidget::maximizeRequested, this, [this]() {
         if (this->isMaximized()) {
-            LOG_INFO() << "窗口恢复正常大小";
+            logInfo() << "窗口恢复正常大小";
             this->showNormal();
         } else {
-            LOG_INFO() << "窗口最大化";
+            logInfo() << "窗口最大化";
             this->showMaximized();
         }
     });
 
     connect(headWidget, &HeadWidget::minimizeRequested, this, [this]() {
-        LOG_INFO() << "窗口最小化";
+        logInfo() << "窗口最小化";
         this->showMinimized();
     });
 
     connect(headWidget, &HeadWidget::closeRequested, this, [this]() {
-        LOG_INFO() << "程序正常退出";
+        logInfo() << "程序正常退出";
         this->close();
     });
 }
