@@ -6,6 +6,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.9.3/mingw_64")
+set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
+
 find_package(Qt6 REQUIRED COMPONENTS
         Core
         Gui
@@ -61,6 +64,7 @@ add_executable(SymMusic_2
         include/utils/LyricsParser.hpp
 )
 
+
 target_link_libraries(SymMusic_2
         Qt6::Core
         Qt6::Gui
@@ -69,8 +73,6 @@ target_link_libraries(SymMusic_2
         TagLib::tag
 )
 
-set(CMAKE_PREFIX_PATH "D:/Software/Qt/6.9.3/mingw_64")
-set(QT_INSTALL_PATH "${CMAKE_PREFIX_PATH}")
 
 # 复制 TagLib DLL 到输出目录
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
