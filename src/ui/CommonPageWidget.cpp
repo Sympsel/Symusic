@@ -127,17 +127,6 @@ void CommonPageWidget::keyPressEvent(QKeyEvent* event) {
 }
 
 bool CommonPageWidget::eventFilter(QObject* watched, QEvent* event) {
-    if (watched == _playlist && event->type() == QEvent::KeyPress) {
-        if (const auto keyEvent = dynamic_cast<QKeyEvent*>(event); keyEvent->key() == Qt::Key_Space) {
-            if (const auto currItem = _playlist->currentItem()) {
-                if (const auto listItemWidget = qobject_cast<ListItem*>(_playlist->itemWidget(currItem))) {
-                    const auto song = listItemWidget->getSong();
-                    emit songItemDoubleClicked(song);
-                }
-            }
-        }
-    }
-
     return QWidget::eventFilter(watched, event);
 }
 

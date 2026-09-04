@@ -29,6 +29,7 @@ HeadWidget::HeadWidget(QWidget* parent) {
     searchLineEdit->setPlaceholderText("搜索");
 
     const auto ensureButton = new QPushButton("确认", this);
+    Sync::disableFocus({ensureButton});
 
     QWidget* functionWidget = createFunctionWidget(this);
 
@@ -127,7 +128,7 @@ QWidget* HeadWidget::createFunctionWidget(QWidget* parent) {
         }
     });
     const auto buttons = {fixedButton, settingsButton, minimizeButton, maximizeButton, closeButton};
-    this->syncButtonBackground(buttons);
+    syncButtonBackground(buttons);
     Sync::buttonFixedSize(QSize(30, 30), buttons);
     Sync::buttonNoFocus(buttons);
 

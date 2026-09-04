@@ -77,6 +77,8 @@ void SongInfoPage::updateSong(const SongPtr& song) {
     _listsLabel->setText(listsStr);
 }
 
+
+
 void SongInfoPage::setupUI() {
     const auto& _song = _songCtx.song;
     const auto mainLayout = new QVBoxLayout(this);
@@ -228,16 +230,36 @@ void SongInfoPage::setupButtonConnect() {
         }
         // 这里将添加或移除到喜欢列表推迟到当前界面关闭
     });
+
+    Sync::disableFocus({
+        _closeButton, _likeButton
+    });
 }
 
-void SongInfoPage::keyPressEvent(QKeyEvent* event) {
+void SongInfoPage::keyReleaseEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Space) {
-        // 标记事件已处理，即消费了该事件
-        this->close();
-        event->accept();
-        return;
+        if (event->modifiers() & Qt::ShiftModifier) {
+            // 标记事件已处理，即消费了该事件
+            this->close();
+            event->accept();
+            return;
+        }
+        auto& playManager = PlayManager::getInstance();
+
+        switch (playManager.getPlayStatus()) {
+        case PlayStatus::PLAYING:
+            playManager.pause();
+            StatusManager::getInstance().showMessage("已暂停", 1000);
+            break;
+        case PlayStatus::PAUSED:
+            playManager.start();
+            StatusManager::getInstance().showMessage("继续播放", 1000);
+            break;
+        default:
+            break;
+        }
     }
-    QWidget::keyPressEvent(event);
+    QWidget::keyReleaseEvent(event);
 }
 
 void SongInfoPage::mouseMoveEvent(QMouseEvent* event) {

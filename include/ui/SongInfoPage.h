@@ -20,7 +20,7 @@ public:
     void updateSong(const SongPtr& song);
 
 protected:
-    void keyPressEvent(QKeyEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void closeEvent(QCloseEvent* event) override;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mpegfile.h>
+#include <QFile>
 #include <QLabel>
 #include <QVBoxLayout>
 #include "entity/Common.hpp"
@@ -7,6 +9,7 @@
 #include "entity/SongManager.h"
 #include "utils/LyricsParser.hpp"
 #include "utils/Sync.hpp"
+#include <QGraphicsDropShadowEffect>
 
 class LyricsWidget final : public QWidget {
     Q_OBJECT
@@ -26,42 +29,69 @@ private:
         }
     }
 
+    // static std::string getEmbeddedLyrics(const QString& filePath) {
+    //     TagLib::MPEG::File file(filePath.toStdString().c_str());
+    //     // ID3v2Tag
+    //     if (!file.isValid() || !file.ID3v2Tag()) {
+    //         return {};
+    //     }
+    //     auto frames = file.ID3v2Tag()->frameListMap()["USLT"];
+    //     if (!frames.isEmpty()) {
+    //         if (auto* uslt = dynamic_cast<TagLib::ID3v2::UnsynchronizedLyricsFrame*>(frames.front())) {
+    //             return uslt->text().to8Bit(true);
+    //         }
+    //     }
+    //     return "";
+    // }
+
     void setHighlight(QLabel* label, const bool yes) const {
         if (yes) {
             label->setStyleSheet(
                 QString(
                     "QLabel {"
-                    "   background-color: rgb(%1);"
+                    "   background-color: rgba(%1, 80);"
                     "   color: white;"
-                    "   font-size: 16px;"
+                    "   font-size: 18px;"
+                    "   font-weight: bold;"
+                    "   border-left: 3px solid rgb(%1);"
+                    "   padding-left: 10px;"
+                    "   border-radius: 4px;"
                     "}"
                 ).arg(_hoverColor.isEmpty() ? "40,40,40" : _hoverColor)
             );
+            auto* glow = new QGraphicsDropShadowEffect(label);
+            glow->setBlurRadius(20);
+            glow->setColor(QColor(255, 255, 255, 120));
+            glow->setOffset(0, 0);
+            label->setGraphicsEffect(glow);
         } else {
             label->setStyleSheet(
                 "QLabel {"
                 "   background-color: transparent;"
-                "   color: white;"
+                "   color: rgba(255, 255, 255, 140);"
                 "   font-size: 14px;"
+                "   border-left: none;"
+                "   padding-left: 10px;"
                 "}"
             );
+            label->setGraphicsEffect(nullptr);
         }
     }
 
-    int findCurrentLyricIndex(LL currentPosition) const {
+    ssize_t findCurrentLyricIndex(LL currentPosition) const {
         if (_lyricItems.empty()) {
             return -1;
         }
-
-        int index = -1;
-        for (size_t i = 0; i < _lyricItems.size(); ++i) {
-            if (_lyricItems[i].pos <= currentPosition) {
-                index = static_cast<int>(i);
+        ssize_t left = 0, right = _lyricItems.size() - 1;
+        while (left <= right) {
+            ssize_t mid = left + (right - left) / 2;
+            if (_lyricItems[mid].pos <= currentPosition) {
+                left = mid + 1;
             } else {
-                break;
+                right = mid - 1;
             }
         }
-        return index;
+        return right;
     }
 
     void updateLyricsDisplay() {
@@ -81,11 +111,17 @@ private:
         const int currentIndex = findCurrentLyricIndex(currPos);
 
         if (currentIndex == -1) {
-            showWaitingMessage();
+            if (_lastIndex != -1) {
+                _lastIndex = -1;
+                showWaitingMessage();
+            }
             return;
         }
 
-        updateLyricsLabels(currentIndex);
+        if (currentIndex != _lastIndex) {
+            _lastIndex = currentIndex;
+            updateLyricsLabels(currentIndex);
+        }
     }
 
     void showNoSongMessage() {
@@ -148,7 +184,7 @@ private:
         container->setFixedHeight(totalHeight);
     }
 
-    void updateLyricsLabels(int currentIndex) {
+    void updateLyricsLabels(ssize_t currentIndex) {
         clearLayout();
 
         const auto container = new QWidget(this);
@@ -162,12 +198,12 @@ private:
         mainLayout->addStretch(1);
         Sync::clearLayoutMargins(mainLayout);
 
-        const int startIndex = std::max(0, currentIndex - 3);
-        const int endIndex = std::min(static_cast<int>(_lyricItems.size()) - 1, currentIndex + 3);
+        const ssize_t startIndex = std::max(0ll, currentIndex - 3);
+        const ssize_t endIndex = std::min(static_cast<ssize_t>(_lyricItems.size()) - 1, currentIndex + 3);
 
-        for (int i = startIndex; i <= endIndex; ++i) {
-            const QString lyricText = _lyricItems[i].text.isEmpty() ? "..." : _lyricItems[i].text;
-            auto* label = new QLabel(lyricText, container);
+        for (ssize_t i = startIndex; i <= endIndex; ++i) {
+            const std::string lyricText = _lyricItems[i].text.empty() ? "..." : _lyricItems[i].text;
+            auto* label = new QLabel(QString::fromStdString(lyricText), container);
             setAttribute(label);
 
             const bool isCenter = (i == currentIndex);
@@ -194,6 +230,23 @@ private:
         }
     }
 
+    // void loadLyricsForSong(const SongPtr& song) {
+    //     // 尝试读取内嵌歌词
+    //     // 尝试读取同目录下的同名 lrc 文件
+    //     std::string embedded = getEmbeddedLyrics(song->getFilePath());
+    //     if (!embedded.empty()) {
+    //         _lyricItems = LyricsParser::parseString(embedded);
+    //         return;
+    //     }
+    //     QString lrcPath = song->getLrcPathFromName();
+    //     if (QFile::exists(lrcPath)) {
+    //         _lyricItems = LyricsParser::parse(lrcPath);
+    //         return;
+    //     }
+    //     // 无歌词
+    //     _lyricItems.clear();
+    // }
+
     void loadLyricsFile(const QString& lrcPath) {
         _lrcFile = lrcPath;
         _lyricItems = LyricsParser::parse(lrcPath);
@@ -205,9 +258,22 @@ public:
         connect(&PlayManager::getInstance(), &PlayManager::songPlayed, this, [this]() {
             const auto& currPlay = PlayManager::getInstance().getCurrPlay();
             if (currPlay) {
-                const QString lrcPath = currPlay->getLrcPath();
-                loadLyricsFile(lrcPath);
+                // 1. 尝试从 MP3 内嵌歌词读取
+                _lyricItems = LyricsParser::extractLyricsFromMP3(currPlay->getUrl().toLocalFile());
+
+                // 2. 内嵌歌词为空，尝试同名 .lrc 文件
+                if (_lyricItems.empty()) {
+                    const QString lrcPath = currPlay->getLrcPath();
+                    LOG_DEBUG() << lrcPath;
+                    if (QFile::exists(lrcPath)) {
+                        _lyricItems = LyricsParser::parse(lrcPath);
+                    }
+                }
+                // const QString lrcPath = currPlay->getLrcPath();
+                // loadLyricsFile(lrcPath);
+                // loadLyricsFile("D:/shared/Code/qtCode/SymMusic_2/utils/1.lrc");
             }
+            _lastIndex = -1;
             updateLyricsDisplay();
         });
 
@@ -223,4 +289,5 @@ private:
     QString _hoverColor = ColorTheme::getInstance().getPlayItemColor().hover;
     QString _lrcFile;
     std::vector<LyricItem> _lyricItems;
+    ssize_t _lastIndex = -1;
 };

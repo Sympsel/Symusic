@@ -80,6 +80,9 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
     setBorder(debugBorder);
     // 连接信号
     setupConnections();
+    Sync::disableFocus({
+        _lyricsButton
+    });
 }
 
 MainWindow::~MainWindow() {
@@ -227,26 +230,7 @@ void MainWindow::setupConnections() {
 
     // 播放/暂停
     connect(_playButton, &QPushButton::clicked, this, [this]() {
-        auto& playManager = PlayManager::getInstance();
-        auto& statusManager = StatusManager::getInstance();
-        switch (playManager.getPlayStatus()) {
-        case PlayStatus::STOPPED:
-            statusManager.showMessage("请先选则要播放的歌曲");
-            break;
-        case PlayStatus::PLAYING:
-            playManager.pause();
-            statusManager.showMessage("已暂停", 1000);
-            _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
-            break;
-        case PlayStatus::PAUSED:
-            playManager.start();
-            statusManager.showMessage("继续播放", 1000);
-            _playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
-            break;
-        case PlayStatus::ERROR:
-            LOG_ERROR() << "播放错误";
-            break;
-        }
+        handleTransPlayStatus();
     });
 
     // 下一首
@@ -586,6 +570,29 @@ void MainWindow::handleRequestFromListWidgetItem(CommonPageWidget* commonPageWid
     _songInfoPage->show();
 }
 
+void MainWindow::handleTransPlayStatus() const {
+    auto& playManager = PlayManager::getInstance();
+    auto& statusManager = StatusManager::getInstance();
+    switch (playManager.getPlayStatus()) {
+    case PlayStatus::STOPPED:
+        statusManager.showMessage("请先选则要播放的歌曲");
+        break;
+    case PlayStatus::PLAYING:
+        playManager.pause();
+        statusManager.showMessage("已暂停", 1000);
+        _playButton->setIcon(QIcon(prefix::normalImages + "播放.png"));
+        break;
+    case PlayStatus::PAUSED:
+        playManager.start();
+        statusManager.showMessage("继续播放", 1000);
+        _playButton->setIcon(QIcon(prefix::normalImages + "停止.png"));
+        break;
+    case PlayStatus::ERROR:
+        LOG_ERROR() << "播放错误";
+        break;
+    }
+}
+
 
 // ============= Sync ==============
 void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
@@ -677,4 +684,11 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         _songInfoPage = nullptr;
     }
     QMainWindow::closeEvent(event);
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Space) {
+        handleTransPlayStatus();
+    }
+    QMainWindow::keyReleaseEvent(event);
 }

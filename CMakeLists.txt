@@ -25,6 +25,7 @@ include_directories(include)
 add_executable(SymMusic_2
         Main.cpp
         resources.qrc
+        resource/app.rc
         src/ui/MainWindow.cpp
         include/ui/MainWindow.h
         src/ui/NavigationWidget.cpp
@@ -66,13 +67,17 @@ add_executable(SymMusic_2
 
 
 target_link_libraries(SymMusic_2
+        PUBLIC
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
         Qt6::Multimedia
         TagLib::tag
+        PRIVATE
+        # 链接实验性标准库
+        # <print> 里 Windows 终端相关的两个实现函数 std::__open_terminal / std::__write_to_terminal 被 GCC 放进了 libstdc++exp.a（实验性标准库），而 winlibs 这类 MinGW 发行版不会自动链接它
+        stdc++exp
 )
-
 
 # 复制 TagLib DLL 到输出目录
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -90,6 +95,7 @@ if(WINDEPLOYQT_EXECUTABLE)
             COMMAND "${WINDEPLOYQT_EXECUTABLE}"
             --dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
             --no-translations
+            --no-compiler-runtime
             "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.exe"
             COMMENT "Deploying Qt dependencies with windeployqt..."
     )

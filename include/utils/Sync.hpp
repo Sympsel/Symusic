@@ -159,4 +159,10 @@ public:
             );
         }
     }
+
+    static void disableFocus(const std::initializer_list<QPushButton*> buttons) {
+        for (auto& button : buttons) {
+            button->setFocusPolicy(Qt::NoFocus);
+        }
+    }
 };

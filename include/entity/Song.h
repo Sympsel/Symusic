@@ -5,6 +5,7 @@
 #include <QPixmap>
 #include <sstream>
 #include <format>
+#include <qfileinfo.h>
 
 #include "entity/Common.hpp"
 
@@ -119,6 +120,17 @@ public:
 
     bool operator!=(const Song& other) const {
         return !(*this == other);
+    }
+
+    // QString getLrcPathFromName() const {
+    //     const auto& songPath = _url.path().toStdString();
+    //     const size_t dotPos = songPath.find_last_of('.');
+    //     return QString::fromStdString(songPath.substr(0, dotPos)) + ".lrc";
+    // }
+
+    QString getLrcPath() const {
+        return QFileInfo(_url.toLocalFile()).absolutePath()
+               + "/" + QFileInfo(_url.toLocalFile()).completeBaseName() + ".lrc";
     }
 
 private:

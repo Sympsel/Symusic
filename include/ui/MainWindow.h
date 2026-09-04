@@ -40,6 +40,7 @@ private:
     // 业务逻辑
     void handleRequestFromHeadButton(const HeadWidget* headWidget);
     void handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song);
+    void handleTransPlayStatus() const;
 
     // 同步辅助方法
     static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
@@ -51,6 +52,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void closeEvent(QCloseEvent* event) override;
+    void keyReleaseEvent(QKeyEvent* event) override;
 
 private:
     // 窗口拖拽
