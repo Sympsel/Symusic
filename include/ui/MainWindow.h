@@ -42,6 +42,9 @@ private:
     void handleRequestFromListWidgetItem(CommonPageWidget* commonPageWidget, const SongPtr& song);
     void handleTransPlayStatus() const;
 
+    // 数据库
+    void initSqlLite();
+
     // 同步辅助方法
     static void syncButtonBackground(const std::initializer_list<QPushButton*>& buttons);
     void syncButtonToContainer(const std::initializer_list<NavigationButton*>& buttons);

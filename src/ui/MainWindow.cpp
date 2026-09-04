@@ -19,6 +19,7 @@
 #include "utils/FrameStyleSheet.hpp"
 #include "utils/Log.hpp"
 #include "utils/Sync.hpp"
+#include "entity/DatabaseManager.h"
 
 MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool debugBorder)
     : QMainWindow(parent)
@@ -37,6 +38,8 @@ MainWindow::MainWindow(QWidget* parent, const bool statusBarVisible, const bool 
       , _singerLabel()
       , _processLabel() {
     {
+        initSqlLite();
+
         this->resize(848, 655);
         this->setWindowFlag(Qt::FramelessWindowHint);
         QStatusBar* statusBar = this->statusBar();
@@ -593,6 +596,11 @@ void MainWindow::handleTransPlayStatus() const {
     }
 }
 
+void MainWindow::initSqlLite() {
+    auto& dbManager = DatabaseManager::getInstance();
+    dbManager.initDatabase(this);
+}
+
 
 // ============= Sync ==============
 void MainWindow::syncButtonBackground(const std::initializer_list<QPushButton*>& buttons) {
@@ -683,7 +691,15 @@ void MainWindow::closeEvent(QCloseEvent* event) {
         _songInfoPage->close();
         _songInfoPage = nullptr;
     }
+    LOG_DEBUG() << "退出: 停止播放器";
+    PlayManager::getInstance().shutdown();
+    // LOG_DEBUG() << "退出: 保存数据";
+    DatabaseManager::getInstance().saveData();
+    LOG_DEBUG() << "退出: closeEvent 完成";
     QMainWindow::closeEvent(event);
+    // PlayManager::getInstance().getPlayer()->stop();
+    // DatabaseManager::getInstance().saveData();
+    // QMainWindow::closeEvent(event);
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event) {

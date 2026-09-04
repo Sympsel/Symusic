@@ -14,6 +14,7 @@ find_package(Qt6 REQUIRED COMPONENTS
         Gui
         Widgets
         Multimedia
+        Sql
 )
 
 # 设置 TagLib 路径
@@ -63,6 +64,8 @@ add_executable(SymMusic_2
         src/ui/LyricsItem.cpp
         include/ui/LyricsItem.h
         include/utils/LyricsParser.hpp
+        include/entity/DatabaseManager.h
+        src/entity/DatabaseManager.cpp
 )
 
 
@@ -72,6 +75,7 @@ target_link_libraries(SymMusic_2
         Qt6::Gui
         Qt6::Widgets
         Qt6::Multimedia
+        Qt6::Sql
         TagLib::tag
         PRIVATE
         # 链接实验性标准库

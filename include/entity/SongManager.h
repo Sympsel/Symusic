@@ -6,13 +6,13 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DatabaseManager.h"
 #include "Song.h"
 #include "entity/Common.hpp"
 #include "utils/Log.hpp"
 
 using SongPtr = std::shared_ptr<Song>;
 using SongList = std::vector<SongPtr>;
-// using SongHistoryList = std::vector<SongPtr>;
 
 /**
  * @brief 多向映射管理器，管理 ExistIn、SongList* 和 列表名称 之间的映射关系
@@ -126,15 +126,10 @@ class SongManager : public QObject {
     Q_OBJECT
 
 private:
-    SongManager() {
-        // 注册映射关系
-        mapTo();
-        // 初始化数据
-        initData();
-    }
+    SongManager();
 
-    // todo 改为从数据库读取
-    void initData();
+    // 用于测试的数据，改为从数据库读取
+    [[deprecated]] void initData();
 
     /**
      * @brief 映射枚举值到对应的列表，并反向映射
@@ -256,6 +251,21 @@ public:
                 LOG_WARN() << "不支持的文件类型:" << mime << "，已跳过";
                 continue;
             }
+            const QString localPath = url.toLocalFile();
+            bool duplicate = false;
+            for (const auto& listInfo : ListMappingManager::getInstance().getAllLists()) {
+                for (const auto& item : *(listInfo.list)) {
+                    if (item->getFilePath() == localPath) {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (duplicate) break;
+            }
+            if (duplicate) {
+                LOG_WARN() << "歌曲已存在，跳过重复添加: " << localPath;
+                continue;
+            }
             const auto song = std::make_shared<Song>(url);
             append(which, song);
         }
@@ -326,6 +336,15 @@ public:
         return true;
     }
 
+    SongList packUp() {
+        SongList allMusic = _recommendList;
+        allMusic.insert(allMusic.end(), _youMayLikeList.begin(), _youMayLikeList.end());
+        allMusic.insert(allMusic.end(), _likedList.begin(), _likedList.end());
+        allMusic.insert(allMusic.end(), _downloadList.begin(), _downloadList.end());
+        allMusic.insert(allMusic.end(), _historyList.begin(), _historyList.end());
+        return allMusic;
+    }
+
 signals:
     void updated(const SongList&);
 
@@ -337,4 +356,5 @@ private:
     SongList _downloadList;
     SongList _historyList;
     int _historySize{HISTORY_SIZE};
+    friend class DatabaseManager;
 };

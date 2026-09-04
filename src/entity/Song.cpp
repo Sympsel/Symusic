@@ -4,6 +4,7 @@
 #include <QTimer>
 #include <QPushButton>
 #include <utility>
+#include <QDir>
 #include <QtMultimedia/QMediaMetaData>
 #include <QtMultimedia/QMediaPlayer>
 
@@ -12,18 +13,23 @@
 #include <taglib/mpegfile.h>
 
 #include "utils/Log.hpp"
+#include "entity/DatabaseManager.h"
 
 /**
  * @brief 获取歌曲元数据，使用 Qt6 的 QMediaPlayer 读取有 bug，故使用了 TagLib 的库，QMediaPlayer 作为备用读取方式
  */
 void Song::parseMusicMeta() {
+    const QString coverDir = prefix::cacheCoverDir();
+    if (!QDir().mkpath(coverDir)) {
+        LOG_WARN() << "无法创建缓存目录: " << coverDir;
+    }
     if (!_url.isValid()) {
-        LOG_WARN() << "无效的URL";
+        LOG_WARN() << "无效的URL：" << _url.path();
         return;
     }
 
     // 先设置默认封面
-    _cover = QPixmap(prefix::itemImages + "Sympsel.png");
+    _coverPath = prefix::itemImages + "Sympsel.png";
 
     const QString filePath = _url.toLocalFile();
 
@@ -47,9 +53,16 @@ void Song::parseMusicMeta() {
                         picFrame->picture().data()), static_cast<int>(picFrame->picture().size()
                     ));
                 if (QImage image; image.loadFromData(imageData)) {
-                    _cover = QPixmap::fromImage(image);
-                    LOG_DEBUG() << "成功通过 TagLib 读取封面图片，尺寸: "
-                        << image.width() << "x" << image.height();
+                    const QString coverPath = coverDir + _id + ".png";
+                    if (QFile::exists(coverPath)) {
+                        _coverPath = coverPath;
+                        LOG_DEBUG() << "封面已存在，跳过保存: " << coverPath.toStdString();
+                    } else if (!image.save(coverPath, "PNG")) {
+                        LOG_WARN() << "无法保存封面图片到: " << coverPath.toStdString();
+                    } else {
+                        _coverPath = coverPath;
+                        LOG_DEBUG() << "成功保存封面图片到: " << coverPath.toStdString();
+                    }
                 }
             }
         }

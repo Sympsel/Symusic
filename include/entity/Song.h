@@ -30,9 +30,40 @@ public:
     };
 
     friend std::ostream& operator<<(std::ostream& os, const Song& song);
+    friend class DatabaseManager;
 
 private:
     void parseMusicMeta();
+
+    // 从数据库读取需要完整构造
+    explicit Song(QString id,
+                  QString name,
+                  QString artist,
+                  QString album,
+                  QUrl url,
+                  QString coverPath,
+                  const LL duration,
+                  const int playCount,
+                  const int tagsFlag,
+                  const int belongingList)
+        : _id(std::move(id))
+          , _name(std::move(name))
+          , _artist(std::move(artist))
+          , _album(std::move(album))
+          , _coverPath(std::move(coverPath))
+          , _duration(duration)
+          , _playCount(playCount)
+          , _tagsFlag(tagsFlag)
+          , _belongingList(belongingList)
+          , _url(std::move(url)) {
+    }
+
+    void ensureCover() {
+        if (_coverPath.isEmpty() || !QFile::exists(_coverPath)) {
+            parseMusicMeta();
+        }
+    }
+
 
 public:
     explicit Song(QString name,
@@ -46,28 +77,51 @@ public:
           , _name(std::move(name))
           , _artist(std::move(artist))
           , _album(std::move(album))
-          , _cover(QPixmap(prefix::itemImages + coverPath))
+          , _coverPath(prefix::itemImages + coverPath)
           , _duration(duration)
           , _tagsFlag(tagsFlag)
           , _belongingList(isLiked ? static_cast<int>(ExistIn::LIKED_LIST) : 0) {
     }
 
-    explicit Song(QUrl  url, bool isLiked = false);
+    static std::shared_ptr<Song> createFromDatabase(
+        QString id,
+        QString name,
+        QString artist,
+        QString album,
+        QUrl url,
+        QString coverPath,
+        LL duration,
+        int playCount,
+        int tagsFlag,
+        int belongingList) {
+        return std::shared_ptr<Song>(new Song(
+            std::move(id), std::move(name), std::move(artist), std::move(album),
+            std::move(url), std::move(coverPath),
+            duration, playCount, tagsFlag, belongingList));
+    }
+
+    explicit Song(QUrl url, bool isLiked = false);
 
     [[nodiscard]] static TagList getTags(int flag);
 
+    [[nodiscard]] QString getId() const {
+        return _id;
+    }
+
     [[nodiscard]] QString getName() const { return _name; }
+
     [[nodiscard]] QString getArtist() const {
         return _artist;
     }
+
     [[nodiscard]] QString getAlbum() const { return _album; }
     [[nodiscard]] QString getFilePath() const { return _url.toLocalFile(); }
-    [[nodiscard]] QPixmap getCover() const { return _cover; }
+    [[nodiscard]] QString getCoverPath() const { return _coverPath; }
+    [[nodiscard]] QPixmap getCover() const { return QPixmap(_coverPath); }
     [[nodiscard]] int getDuration() const { return _duration; }
     [[nodiscard]] bool isLiked() const { return isInList(ExistIn::LIKED_LIST); }
 
     [[nodiscard]] int getPlayCount() const { return _playCount; }
-    [[nodiscard]] QString getId() const { return _id; }
     [[nodiscard]] int getTagsFlag() const { return _tagsFlag; }
     [[nodiscard]] int getBelongStatus() const { return _belongingList; }
     [[nodiscard]] QUrl getUrl() const { return _url; }
@@ -95,7 +149,7 @@ public:
     }
 
     void incrementPlayCount() { _playCount++; }
-    void setCover(const QPixmap& cover) { _cover = cover; }
+    void setCover(const QString& coverPath) { _coverPath = coverPath; }
 
     [[nodiscard]] QString getFormattedDuration() const {
         const LL duration_s = _duration / 1000;
@@ -122,23 +176,18 @@ public:
         return !(*this == other);
     }
 
-    // QString getLrcPathFromName() const {
-    //     const auto& songPath = _url.path().toStdString();
-    //     const size_t dotPos = songPath.find_last_of('.');
-    //     return QString::fromStdString(songPath.substr(0, dotPos)) + ".lrc";
-    // }
-
     QString getLrcPath() const {
         return QFileInfo(_url.toLocalFile()).absolutePath()
-               + "/" + QFileInfo(_url.toLocalFile()).completeBaseName() + ".lrc";
+            + "/" + QFileInfo(_url.toLocalFile()).completeBaseName() + ".lrc";
     }
 
 private:
+    // UUID
     QString _id;
     QString _name;
     QString _artist;
     QString _album;
-    QPixmap _cover;
+    QString _coverPath;
     // 单位：毫秒
     LL _duration;
     int _playCount = 0;

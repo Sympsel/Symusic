@@ -2,6 +2,7 @@
 
 #include <QSet>
 #include <QString>
+#include <QStandardPaths>
 
 namespace Color {
     struct Base {
@@ -134,6 +135,10 @@ private:
 };
 
 namespace prefix {
+    inline QString cacheCoverDir() {
+        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/cache/cover/";
+    }
+
     inline QString normalImages = ":/resource/images/";
     inline QString itemImages = ":/resource/images/items/";
 

@@ -2,6 +2,17 @@
 
 #include <random>
 
+SongManager::SongManager() {
+    // 注册映射关系
+    mapTo();
+    // 初始化数据
+    DatabaseManager::getInstance().loadData(*this);
+    // 如果数据库没有数据，则生成假数据用作测试
+    if (packUp().empty()) {
+        initData();
+    }
+}
+
 void SongManager::initData() {
     constexpr int maxIndex = 35;
     std::vector<int> indexs;

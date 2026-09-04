@@ -1,12 +1,12 @@
 #pragma once
 
+#include <QCoreApplication>
 #include <QThread>
 #include <QTimer>
 #include <random>
 #include <QtMultimedia/QAudioDevice>
 #include <QtMultimedia/QAudioOutput>
 #include <QtMultimedia/QMediaDevices>
-#include <QtMultimedia/QMediaMetaData>
 #include <QtMultimedia/QMediaPlayer>
 
 #include "Common.hpp"
@@ -344,6 +344,23 @@ public:
         _player->play();
 
         emit songPlayed(song);
+    }
+
+    void shutdown() {
+        if (_deviceCheckTimer) {
+            _deviceCheckTimer->stop();
+            delete _deviceCheckTimer;
+            _deviceCheckTimer = nullptr;
+        }
+        if (_player) {
+            _player->stop();
+            delete _player;
+            _player = nullptr;
+        }
+        if (_audioOutput) {
+            delete _audioOutput;
+            _audioOutput = nullptr;
+        }
     }
 
     [[nodiscard]] PlayStatus getPlayStatus() const {
